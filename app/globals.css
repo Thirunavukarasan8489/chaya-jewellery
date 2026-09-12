@@ -1,0 +1,525 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+/* ============================================================================
+   CHAYA JEWELLERY — DESIGN TOKENS  ("Royal Purple & Gold")
+   ----------------------------------------------------------------------------
+   Palette rationale (official brand palette, 2026 rebrand from gemstone
+   retailer "A1 Gems" to jewellery house "Chaya Jewellery"):
+   - PLUM  : now the brand's Royal/Primary Purple family (Deep Purple #2B0A31
+             → Light Purple #8B4A9B), used for text-ink, dark "premium"
+             surfaces (hero/banner sections) and primary CTAs. Kept the token
+             name so every component that already references plum-* repaints
+             for free — only the hex values changed, not the token contract.
+   - GOLD  : primary action / brand accent — anchored to Luxury Gold #D6A04F,
+             with Button Hover Gold #B98232 as the 600 hover step and Dark
+             Gold #A8752E as 700.
+   - EMERALD: secondary/functional accent (in-stock, success states) — not
+             part of the brand palette, left unchanged on purpose.
+   - IVORY : page background — anchored to White/Warm White/Cream.
+   - INK   : text colour now taken literally from brand Text Black / Soft
+             Grey rather than derived from the purple scale.
+   ========================================================================= */
+
+@theme {
+  /* ---- Plum → Royal Purple (brand primary) -------------------------------
+     Anchors are the four brand purples; 50-300/600/800/950 are interpolated
+     tints/shades to keep a full, evenly-stepped Tailwind-style scale. */
+  --color-plum-50: #f3edf5;
+  --color-plum-100: #e2d2e6;
+  --color-plum-200: #c5a4cd;
+  --color-plum-300: #a877b4;
+  --color-plum-400: #8b4a9b; /* Light Purple */
+  --color-plum-500: #5a1766; /* Royal Purple */
+  --color-plum-600: #4e1359;
+  --color-plum-700: #430f4d; /* Primary Purple */
+  --color-plum-800: #370c3f;
+  --color-plum-900: #2b0a31; /* Deep Purple */
+  --color-plum-950: #1e0722;
+
+  /* ---- Gold (primary accent) ---------------------------------------------
+     Anchors are the four brand golds; Button Hover Gold is the dedicated
+     600 hover step so `hover:bg-gold-600` matches the brand spec exactly. */
+  --color-gold-50: #fcf6eb;
+  --color-gold-100: #f8e9cd;
+  --color-gold-200: #f2d49b; /* Champagne Gold */
+  --color-gold-300: #e7be70; /* Bright Gold */
+  --color-gold-400: #deaf5f;
+  --color-gold-500: #d6a04f; /* Luxury Gold */
+  --color-gold-600: #b98232; /* Button Hover Gold */
+  --color-gold-700: #a8752e; /* Dark Gold */
+  --color-gold-800: #865e25;
+  --color-gold-900: #65461c;
+  --color-gold-950: #3b2910;
+
+  /* ---- Emerald (secondary) ---------------------------------------------- */
+  --color-emerald-50: #ecfdf6;
+  --color-emerald-100: #d1fae7;
+  --color-emerald-200: #a6f3d2;
+  --color-emerald-300: #6de5b7;
+  --color-emerald-400: #33ce99;
+  --color-emerald-500: #10b481;
+  --color-emerald-600: #059068;
+  --color-emerald-700: #067354;
+  --color-emerald-800: #085b45;
+  --color-emerald-900: #084b3a;
+
+  /* ---- Ivory (surfaces) — brand White / Warm White / Cream --------------- */
+  --color-ivory-50: #ffffff; /* White */
+  --color-ivory-100: #faf8f5; /* Warm White */
+  --color-ivory-200: #f7f0e5; /* Cream */
+  --color-ivory-300: #e3ddd3;
+
+  /* ---- Semantic --------------------------------------------------------- */
+  --color-danger-50: #fff1f2;
+  --color-danger-100: #ffe4e6;
+  --color-danger-500: #e11d48;
+  --color-danger-600: #be123c;
+  --color-danger-700: #9f1239;
+
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-500: #f59e0b;
+  --color-warning-700: #b45309;
+
+  --color-info-50: #eff6ff;
+  --color-info-100: #dbeafe;
+  --color-info-500: #3b82f6;
+  --color-info-700: #1d4ed8;
+
+  /* ---- Aliases used across the UI --------------------------------------- */
+  --color-canvas: var(--color-ivory-50); /* Primary Background: #FFFFFF */
+  --color-surface: #ffffff;
+  --color-surface-sunken: var(--color-ivory-200);
+  --color-premium-bg: var(--color-plum-700); /* Premium Background: #430F4D */
+  --color-ink: #171717; /* Text Black */
+  --color-ink-soft: #6b6870; /* Soft Grey */
+  --color-ink-muted: #8a8790;
+  --color-hairline: var(--color-ivory-300);
+
+  /* ---- Type --------------------------------------------------------------
+     Cormorant (tall, engraved-catalogue serif) + Hind (a Latin/Devanagari
+     sibling pair from Ek Type, designed for Indian use — not the
+     Playfair+Jakarta combo every "elegant jewellery site" AI output defaults
+     to) + Noto Sans Devanagari for the handful of Hindi accent words. */
+  --font-display: var(--font-cormorant), ui-serif, Georgia, serif;
+  --font-sans: var(--font-hind), ui-sans-serif, system-ui, sans-serif;
+  --font-devanagari: var(--font-noto-devanagari), var(--font-hind), sans-serif;
+
+  /* ---- Radius ----------------------------------------------------------- */
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.75rem;
+
+  /* ---- Elevation — warm purple-tinted shadows, never grey ---------------- */
+  --shadow-xs: 0 1px 2px 0 rgb(30 7 34 / 0.06);
+  --shadow-sm: 0 1px 3px 0 rgb(30 7 34 / 0.08), 0 1px 2px -1px rgb(30 7 34 / 0.06);
+  --shadow-md: 0 4px 14px -4px rgb(30 7 34 / 0.14), 0 2px 6px -2px rgb(30 7 34 / 0.07);
+  --shadow-lg: 0 12px 32px -8px rgb(30 7 34 / 0.18), 0 4px 10px -4px rgb(30 7 34 / 0.08);
+  --shadow-gold: 0 6px 20px -6px rgb(214 160 79 / 0.45);
+
+  /* ---- Motion ----------------------------------------------------------- */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-shimmer: shimmer 2.2s linear infinite;
+  --animate-rise: rise 0.5s var(--ease-out-soft) both;
+  --animate-marquee: marquee 26s linear infinite;
+  --animate-twinkle: twinkle 2.6s ease-in-out infinite;
+
+  /* ---- Admin Neutral Palette (Grays/Blues/Whites) ----------------------- */
+  --color-admin-gray-50: #f8fafc;
+  --color-admin-gray-100: #f1f5f9;
+  --color-admin-gray-200: #e2e8f0;
+  --color-admin-gray-300: #cbd5e1;
+  --color-admin-gray-400: #94a3b8;
+  --color-admin-gray-500: #64748b;
+  --color-admin-gray-600: #475569;
+  --color-admin-gray-700: #334155;
+  --color-admin-gray-800: #1e293b;
+  --color-admin-gray-900: #0f172a;
+
+  /* Admin primary now follows the brand gold accent (was generic dashboard
+     blue) so the admin panel reads as the same product as the storefront. */
+  --color-admin-primary-50: #fcf6eb;
+  --color-admin-primary-100: #f8e9cd;
+  --color-admin-primary-500: #d6a04f;
+  --color-admin-primary-600: #b98232;
+  --color-admin-primary-700: #a8752e;
+
+  --color-admin-bg: #f8fafc;
+  --color-admin-surface: #ffffff;
+  --color-admin-border: #e2e8f0;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -180% 0;
+  }
+
+  100% {
+    background-position: 180% 0;
+  }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.6) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15) rotate(25deg);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ============================================================================
+   BASE
+   ========================================================================= */
+
+@layer base {
+  html {
+    width: 100%;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+    /* Sticky header height so in-page anchors are not hidden behind it. */
+    scroll-padding-top: 6.5rem;
+  }
+
+  body {
+    width: 100%;
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    /* Prevents horizontal-scroll rails from widening the document viewport on mobile */
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* 16px minimum on form controls — anything smaller makes iOS Safari zoom in
+     when the field is focused, which feels broken on a phone. */
+  input,
+  select,
+  textarea {
+    font-size: max(1rem, 16px);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-gold-500);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+  }
+
+  ::selection {
+    background-color: var(--color-gold-200);
+    color: var(--color-plum-900);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Thin scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-gold-300);
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-gold-500);
+  }
+}
+
+/* ============================================================================
+   UTILITIES
+   ========================================================================= */
+
+/* Horizontal product rails: swipeable on mobile, no visible scrollbar. */
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Page gutter. Tightest on phones where screen width is the scarce resource. */
+@utility gutter {
+  padding-inline: 1rem;
+
+  @media (width >=40rem) {
+    padding-inline: 1.5rem;
+  }
+
+  @media (width >=64rem) {
+    padding-inline: 2rem;
+  }
+}
+
+@utility shell {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 80rem;
+}
+
+/* Clears the fixed mobile tab bar + the iOS home indicator. */
+@utility pb-tabbar {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+
+  @media (width >=64rem) {
+    padding-bottom: 0;
+  }
+}
+
+@utility safe-b {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* The gold foil treatment used on section eyebrows and the wordmark. */
+@utility text-foil {
+  background-image: linear-gradient(100deg,
+      var(--color-gold-600) 0%,
+      var(--color-gold-300) 30%,
+      var(--color-gold-100) 45%,
+      var(--color-gold-300) 60%,
+      var(--color-gold-600) 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility hairline {
+  border-color: var(--color-hairline);
+}
+
+/* A light sweep across the primary CTA on hover — a catalogue-foil glint
+   rather than a permanent distracting animation. */
+@utility shine-sweep {
+  position: relative;
+  overflow: hidden;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      115deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.55) 48%,
+      transparent 66%
+    );
+    transform: translateX(-120%);
+    transition: transform 0.7s var(--ease-out-soft);
+  }
+  &:hover::after {
+    transform: translateX(120%);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      display: none;
+    }
+  }
+}
+
+/* Loading placeholder for images and skeletons. */
+@utility skeleton {
+  background-image: linear-gradient(100deg,
+      var(--color-ivory-200) 20%,
+      var(--color-ivory-300) 40%,
+      var(--color-ivory-200) 60%);
+  background-size: 220% 100%;
+  animation: var(--animate-shimmer);
+}
+
+@utility line-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@utility line-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ============================================================================
+   RICH TEXT FORMATTING UTILITY
+   Used for rendering dangerouslySetInnerHTML content from rich-text CMS/editors.
+   ========================================================================= */
+.rich-text {
+  color: var(--color-plum-800);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.rich-text p {
+  margin-bottom: 1rem;
+}
+
+.rich-text p:last-child {
+  margin-bottom: 0;
+}
+
+.rich-text h1,
+.rich-text h2,
+.rich-text h3,
+.rich-text h4,
+.rich-text h5,
+.rich-text h6 {
+  font-family: var(--font-display);
+  color: var(--color-plum-950);
+  font-weight: 600;
+  line-height: 1.25;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.rich-text h1 { font-size: 1.5rem; }
+.rich-text h2 { font-size: 1.25rem; }
+.rich-text h3 { font-size: 1.125rem; }
+.rich-text h4 { font-size: 1rem; }
+
+.rich-text ul {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.rich-text ol {
+  list-style-type: decimal;
+  padding-left: 1.25rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.rich-text li {
+  margin-bottom: 0.375rem;
+}
+
+.rich-text strong,
+.rich-text b {
+  font-weight: 600;
+  color: var(--color-plum-950);
+}
+
+.rich-text em,
+.rich-text i {
+  font-style: italic;
+}
+
+.rich-text a {
+  color: var(--color-gold-600);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: color 0.2s ease;
+}
+
+.rich-text a:hover {
+  color: var(--color-gold-700);
+}
+
+.rich-text blockquote {
+  border-left: 3px solid var(--color-gold-400);
+  padding: 0.75rem 1rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  font-style: italic;
+  color: var(--color-plum-900);
+  background-color: var(--color-ivory-200);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.rich-text table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.rich-text th,
+.rich-text td {
+  border: 1px solid var(--color-hairline);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.rich-text th {
+  background-color: var(--color-ivory-200);
+  font-weight: 600;
+  color: var(--color-plum-900);
+}
+
+.rich-text img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  object-fit: cover;
+}
+
+.rich-text hr {
+  border: 0;
+  border-top: 1px solid var(--color-hairline);
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
