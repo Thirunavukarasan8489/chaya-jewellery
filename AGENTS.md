@@ -51,10 +51,13 @@ the exact hex from the token list below so it stays in sync.
 - A handful of places use **hardcoded gemstone-hue swatches** (ruby red
   `#c81e4a`, sapphire blue `#1f4fd8`, emerald green `#0f9c68`, topaz
   `#e0a713`, etc.) for placeholder product-category art —
-  `components/*/gem-image.tsx`, `promo-banners.tsx`, `about-section.tsx`,
-  and the `gemColor` field on the `Category` model. These are literal
-  per-category colors, not brand chrome, and were deliberately left
-  unchanged during the color rebrand.
+  `components/*/gem-image.tsx`, `promo-banners.tsx`, `about-section.tsx`.
+  These are literal per-category colors, not brand chrome, and were
+  deliberately left unchanged during the color rebrand. Note: `gemColor`
+  is NOT an actual field on the `Category`/`Product` Mongoose schemas —
+  see the 2026-09-12 homepage redesign entry below for the hash-based
+  `gemColorFor()` fallback that replaced the old silent `'#000000'`
+  default.
 - WhatsApp CTA buttons use WhatsApp's own brand green (`#25D366`) —
   intentionally outside the Chaya palette; that's their brand mark, not
   ours.
@@ -103,3 +106,111 @@ the exact hex from the token list below so it stays in sync.
   `chayajewellery.cart.v1`. Any customer with an in-progress cart from
   before this deploy will see an empty cart once — expected one-time
   side effect of the rename, not a bug.
+
+## 2026-09-12 homepage redesign ("full redesign", "Rich Indian luxury" direction)
+
+User asked to redesign the homepage to look like an attractive, animated,
+responsive jewellery e-commerce site (chosen explicitly over a lighter
+"visual polish only" option). Scope was homepage-first; a few shared
+components got touched because they're rendered on the homepage.
+
+**Found first, changed the plan:** the live database had 0 products and
+1 leftover category ("Gemstone", from the old business). User opted to
+seed demo data rather than build purely for the empty state — see
+`scripts/seed-catalog.js` (`npm run seed:catalog`, safe to re-run —
+every insert is guarded by a lookup, nothing duplicates).
+
+**Data-layer changes (not just visual):**
+- `lib/models/product.ts` — added `featured`/`bestseller` boolean fields.
+  These were already read by `getFeaturedProducts()`/`getBestsellers()` in
+  `lib/services/product-service.ts` but never existed on the schema or
+  anywhere in the admin UI, so those two rails always silently fell back
+  to "all products" with no real curation. Toggling them still has no
+  admin UI — set directly in the database, or wire up a checkbox in the
+  admin product form as a follow-up.
+- `lib/services/product-service.ts` — added `getNewArrivals()` (sorts by
+  `createdAt desc`, powers the new "New Arrivals" homepage rail).
+- `lib/models/hero-section.ts` — `image` is now optional (was
+  `required: true`). `HeroSlider` falls back to the `GemImage` placeholder
+  art when a banner has no photo, same as products/categories without one.
+- `lib/utils.ts` — added `gemColorFor(seed)`, a deterministic hash into a
+  small jewel-tone palette. `gemColor` isn't an actual schema field on
+  Category/Product, so every placeholder card was silently rendering
+  flat black before this; now every product/category/hero-banner
+  placeholder gets a stable, varied colour instead. Wired into
+  `product-service.ts`'s `mapToPublicProduct`, `featured-categories.tsx`,
+  and `mobile-drawer.tsx`.
+- Fixed a leftover old-oxblood-palette value (`rgba(25,10,9,.55)`, missed
+  by the color-rebrand hex sweep because it wasn't `#rrggbb` format) in
+  both `gem-image.tsx` copies.
+- Set the legacy "Gemstone" category to `DRAFT` (hidden, not deleted —
+  reversible from `/admin/categories`) so it doesn't show alongside the
+  new jewellery categories in Shop by Category.
+
+**New homepage sections:**
+- `trust-marquee.tsx` — infinite scrolling trust-message ribbon under the
+  hero, using the `--animate-marquee` keyframe that already existed in
+  `globals.css` but was unused anywhere.
+- `new-arrivals.tsx` — product rail sorted by recency.
+- `promo-banners.tsx` was fully built but never imported/rendered on any
+  page — wired it into the homepage as a "shop by occasion" carousel and
+  reworded its content from gemstone parcels to jewellery categories.
+- `reveal.tsx` — scroll-triggered fade/rise wrapper (IntersectionObserver
+  based). Renders fully visible with no extra classes until mounted, so a
+  reduced-motion preference or a JS failure never leaves content stuck
+  hidden. Used at the section level in `page.tsx`, and for staggered
+  grids inside `featured-categories.tsx` and `how-it-works.tsx`.
+
+**Retired gemstone-specific content (homepage + shared components only,
+per the "full redesign" choice):**
+- `certification-trust-section.tsx` — was a GIA/IGI/GRS gemstone lab
+  certificate section, including a static image of an actual gemstone
+  lab report (`public/images/grsss-bg-img-040324.png`, now unused —
+  left in place, just unreferenced). Replaced with a jewellery
+  craftsmanship/trust section using generic, non-fabricated industry
+  marks (BIS Hallmark, IGI, 925 Silver, Certificate of Authenticity) —
+  deliberately no fake specific certificate numbers or scanned documents.
+- `how-it-works.tsx` (also rendered on `/about`) — was a 4-step "share
+  your birth chart → astrologer recommends a gemstone" flow. Replaced
+  with a generic browse → consult → customise → delivery flow.
+- `rashi-finder.tsx` (zodiac gemstone finder) was already unused/dead —
+  left as-is, out of scope.
+- Reworded homepage-visible copy that referenced "gemmologist" /
+  "gemstone" to jewellery-appropriate language (WhatsApp CTA text, trust
+  strip, consultation CTA, final CTA, FAQ intro line). Did **not** touch
+  the site-wide `<meta>` title/description/keywords in `app/layout.tsx`
+  or the nav's "Gemstone Guides" label — those are sitewide, not
+  homepage, and are still the open follow-up noted in the rebrand entry
+  above (needs the user's input on product taxonomy).
+
+**Demo content seeded (clearly placeholder, flag before launch):**
+- 6 categories (Rings, Necklaces, Earrings, Bangles & Bracelets, Pendants,
+  Mangalsutra) and 18 products/variants with realistic INR pricing —
+  prices are in **plain rupees**, not paise, matching the actual runtime
+  convention (`CheckoutClient.tsx` displays `totals.total` directly and
+  only `× 100`s it right at the Razorpay API call — `lib/types.ts`'s
+  "Money in paise" comment and `lib/filters.ts`'s price-band constants
+  are stale/inconsistent with this and were NOT relied on or fixed here;
+  the price-band filter is a pre-existing, separate bug on `/products`).
+- 2 new hero banners, 5 testimonials, 6 FAQs — all placeholder/demo
+  content written for this task, not real customer data.
+- The one real hero banner the user had already created in `/admin/website`
+  (title/subtitle literally "test") was edited in place — same document,
+  same uploaded image, same links — replacing the placeholder copy with
+  real brand copy. Nothing else the user created was modified or deleted.
+
+**Verification:** `tsc --noEmit` clean; fetched the live dev server's
+rendered `/`, `/about`, `/products`, and a product detail page after
+seeding to confirm the new sections, categories and copy actually render
+(and that no stale category leftover or gemstone copy remained in the
+page body — sitewide nav/meta excepted, see above).
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

@@ -3,6 +3,7 @@ import { Product } from '@/lib/models/product';
 import { ProductVariant } from '@/lib/models/product-variant';
 import { Category } from '@/lib/models/category';
 import type { Product as PublicProduct } from '@/lib/types';
+import { gemColorFor } from '@/lib/utils';
 import { unstable_cache } from 'next/cache';
 
 async function attachVariants(docs: any[]): Promise<any[]> {
@@ -22,7 +23,7 @@ if (!Category) console.warn("Category model not loaded");
 
 function mapToPublicProduct(doc: any): PublicProduct {
   const defaultVariant = doc.variants?.[0] || {};
-  const categoryColor = doc.category?.gemColor || '#000000';
+  const categoryColor = doc.category?.gemColor || gemColorFor(doc.category?.slug || doc.slug);
   
   return {
     id: doc._id.toString(),
@@ -148,6 +149,23 @@ export const getBestsellers = unstable_cache(async () => {
   const bestsellers = allProducts.filter(p => p.bestseller);
   return bestsellers.length > 0 ? bestsellers : allProducts;
 }, ['public-products-bestsellers-v6'], { revalidate: 60, tags: ['products'] });
+
+export const getNewArrivals = unstable_cache(async () => {
+  try {
+    await dbConnect();
+    let docs = await Product.find({ status: 'ACTIVE' }).sort({ createdAt: -1 }).limit(12).populate('category').lean();
+    if (!docs || docs.length === 0) {
+      docs = await Product.find({}).sort({ createdAt: -1 }).limit(12).populate('category').lean();
+    }
+    if (docs && docs.length > 0) {
+      const withVariants = await attachVariants(docs);
+      return withVariants.map(mapToPublicProduct);
+    }
+  } catch (error) {
+    console.error("Error fetching new arrivals:", error);
+  }
+  return [];
+}, ['public-products-new-arrivals-v6'], { revalidate: 60, tags: ['products'] });
 
 export const getRelatedProducts = unstable_cache(async (productId: string, categorySlug: string, limit = 6) => {
   const allProducts = await getProducts();

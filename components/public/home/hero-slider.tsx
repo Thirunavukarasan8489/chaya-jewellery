@@ -22,20 +22,32 @@ import Image from "next/image";
  */
 const AUTOPLAY_MS = 6000;
 
+// Slide accent presets, cycled by index so a multi-slide carousel reads as
+// varied rather than every banner sharing one hardcoded colour — the admin
+// banner form doesn't (yet) capture per-slide colour/gradient fields.
+const SLIDE_ACCENTS = [
+  { gemColor: "#D6A04F", bgGradient: "from-plum-950 via-plum-900 to-plum-800" },
+  { gemColor: "#8B4A9B", bgGradient: "from-plum-950 via-[#3a1044] to-plum-900" },
+  { gemColor: "#5A1766", bgGradient: "from-plum-950 via-plum-800 to-[#3a1044]" },
+];
+
 export function HeroSlider({ categories, banners }: { categories?: any[], banners?: any[] }) {
-  const activeSlides = banners ? banners.map((b) => ({
-    badge: b.badge,
-    title: b.title,
-    subtitle: b.subtitle,
-    ctaText: b.ctaText,
-    ctaHref: b.ctaHref,
-    secondaryCtaText: b.secondaryCtaText,
-    secondaryCtaHref: b.secondaryCtaHref,
-    gemColor: "#10b481", // Can be customized later in admin
-    bgGradient: "from-plum-950 via-plum-900 to-emerald-950/80", // Can be customized later in admin
-    glowColor: "#10b481", // Can be customized later in admin
-    image: b.image,
-  })) : [];
+  const activeSlides = banners ? banners.map((b, i) => {
+    const accent = SLIDE_ACCENTS[i % SLIDE_ACCENTS.length];
+    return {
+      badge: b.badge,
+      title: b.title,
+      subtitle: b.subtitle,
+      ctaText: b.ctaText,
+      ctaHref: b.ctaHref,
+      secondaryCtaText: b.secondaryCtaText,
+      secondaryCtaHref: b.secondaryCtaHref,
+      gemColor: accent.gemColor,
+      bgGradient: accent.bgGradient,
+      glowColor: accent.gemColor,
+      image: b.image as string | undefined,
+    };
+  }) : [];
 
   const [active, setActive] = React.useState(0);
   const trackRef = React.useRef<HTMLUListElement>(null);
@@ -152,7 +164,7 @@ export function HeroSlider({ categories, banners }: { categories?: any[], banner
                       <a
                         href={whatsappLink(
                           null,
-                          "Hi Chaya Jewellery, I would like to consult a gemmologist.",
+                          "Hi Chaya Jewellery, I would like to speak with a jewellery consultant.",
                         )}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -172,23 +184,26 @@ export function HeroSlider({ categories, banners }: { categories?: any[], banner
                   {/* Gemstone Graphic / Visual Preview */}
                   <div className="hidden lg:flex justify-center items-center relative">
                     <div className="relative size-72 lg:size-80 rounded-3xl overflow-hidden shadow-2xl ring-1 ring-gold-500/30">
-                      {/* <GemImage
-                        color={slide.gemColor}
-                        seed={i * 7 + 1}
-                        framed
-                        className="aspect-square w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      /> */}
-                      <Image
-                        src={slide.image}
-                        alt={slide.title}
-                        width={1254}
-                        height={1254}
-                        priority={i === 0}
-                        className="aspect-square w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      />
+                      {slide.image ? (
+                        <Image
+                          src={slide.image}
+                          alt={slide.title}
+                          width={1254}
+                          height={1254}
+                          priority={i === 0}
+                          className="aspect-square w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      ) : (
+                        <GemImage
+                          color={slide.gemColor}
+                          seed={i * 7 + 1}
+                          framed
+                          className="aspect-square w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      )}
                       <div className="absolute inset-0 bg-gradient-to-t from-plum-950/80 via-transparent to-transparent p-4 flex flex-col justify-end">
                         <span className="inline-flex items-center gap-1 text-[0.6875rem] font-semibold tracking-wider text-gold-300 uppercase">
-                          <Sparkles size={12} /> 100% Certified Natural
+                          <Sparkles size={12} /> Certified Craftsmanship
                         </span>
                         <p className="text-sm font-semibold text-ivory-100 mt-0.5">
                           {slide.badge}

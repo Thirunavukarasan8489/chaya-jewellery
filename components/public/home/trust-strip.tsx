@@ -1,7 +1,7 @@
 import { Gem, RefreshCcw, ScrollText, ShieldCheck } from "lucide-react";
 const trustHighlights = [
-  { icon: "gem", title: "Ethically Sourced", body: "Direct from mines." },
-  { icon: "certificate", title: "Certified Natural", body: "Independently tested." },
+  { icon: "gem", title: "Handcrafted Quality", body: "Made to order." },
+  { icon: "certificate", title: "Hallmarked & Certified", body: "Purity guaranteed." },
   { icon: "refresh", title: "Lifetime Exchange", body: "100% value upgrade." },
   { icon: "shield", title: "Secure Checkout", body: "100% encrypted." },
 ];

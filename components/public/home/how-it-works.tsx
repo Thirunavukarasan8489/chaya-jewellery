@@ -1,28 +1,28 @@
-import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { buttonStyles } from "@/components/public/ui/button";
+import { Reveal } from "@/components/public/ui/reveal";
 import { whatsappLink } from "@/lib/utils";
 
 const STEPS = [
   {
     step: 1,
-    title: "Share Your Details",
-    body: "Provide your birth details and tell us about the challenges you are facing.",
+    title: "Browse the collection",
+    body: "Explore rings, necklaces, earrings and more by category, occasion or budget.",
   },
   {
     step: 2,
-    title: "Expert Chart Analysis",
-    body: "Our astrologers carefully analyze your chart and planetary positions.",
+    title: "Talk to a consultant",
+    body: "Message us on WhatsApp with your requirements — sizing, budget or customisation.",
   },
   {
     step: 3,
-    title: "Personalized Recommendation",
-    body: "Get a gemstone recommendation designed specifically for your situation.",
+    title: "Confirm & customise",
+    body: "Adjust size, weight or engraving where possible, then confirm your order.",
   },
   {
     step: 4,
-    title: "Certified Gemstone Delivery",
-    body: "Receive a 100% natural, lab-certified gemstone energized before delivery.",
+    title: "Insured delivery",
+    body: "Receive your piece fully insured, hallmarked, with a certificate of authenticity.",
   },
 ];
 
@@ -33,10 +33,10 @@ export function HowItWorks() {
         {/* Title Heading */}
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="font-display text-2xl leading-tight font-semibold text-plum-950 sm:text-3xl lg:text-4xl">
-            How Chaya Jewellery Helps You Find the Right Gemstone
+            How shopping with Chaya Jewellery works
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-plum-700 sm:text-base">
-            Four simple steps to authentic astrological guidance & certified gemstone selection.
+            Four simple steps from browsing to a piece at your door.
           </p>
         </div>
 
@@ -49,20 +49,22 @@ export function HowItWorks() {
           />
 
           <ol className="relative z-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
-            {STEPS.map((s) => (
-              <li key={s.step} className="flex flex-col items-center text-center">
-                {/* Number Badge */}
-                <div className="relative flex size-14 shrink-0 items-center justify-center rounded-full border-2 border-gold-400 bg-white font-display text-lg font-bold text-gold-700 shadow-md transition-transform duration-300 hover:scale-110">
-                  {s.step}
-                </div>
+            {STEPS.map((s, i) => (
+              <Reveal key={s.step} delay={i * 90}>
+                <li className="flex flex-col items-center text-center">
+                  {/* Number Badge */}
+                  <div className="relative flex size-14 shrink-0 items-center justify-center rounded-full border-2 border-gold-400 bg-white font-display text-lg font-bold text-gold-700 shadow-md transition-transform duration-300 hover:scale-110">
+                    {s.step}
+                  </div>
 
-                <h3 className="mt-5 font-display text-lg font-semibold text-plum-950">
-                  {s.title}
-                </h3>
-                <p className="mt-2.5 max-w-xs text-xs leading-relaxed text-plum-700 sm:text-sm">
-                  {s.body}
-                </p>
-              </li>
+                  <h3 className="mt-5 font-display text-lg font-semibold text-plum-950">
+                    {s.title}
+                  </h3>
+                  <p className="mt-2.5 max-w-xs text-xs leading-relaxed text-plum-700 sm:text-sm">
+                    {s.body}
+                  </p>
+                </li>
+              </Reveal>
             ))}
           </ol>
         </div>
@@ -72,7 +74,7 @@ export function HowItWorks() {
           <a
             href={whatsappLink(
               null,
-              "Hi Chaya Jewellery, I would like to get a free gemstone recommendation."
+              "Hi Chaya Jewellery, I would like to speak with a jewellery consultant."
             )}
             target="_blank"
             rel="noopener noreferrer"
@@ -83,7 +85,7 @@ export function HowItWorks() {
             })}
           >
             <MessageCircle size={20} className="mr-2 text-plum-950" />
-            Start My Analysis
+            Start a Conversation
           </a>
         </div>
       </div>

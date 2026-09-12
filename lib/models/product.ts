@@ -27,6 +27,13 @@ const ProductSchema = new mongoose.Schema(
     stockStatus: { type: String, enum: ['IN_STOCK', 'LOW_STOCK', 'OUT_OF_STOCK'], default: 'IN_STOCK' },
     status: { type: String, enum: ['ACTIVE', 'DRAFT'], default: 'DRAFT' },
 
+    // Homepage curation — surfaced by getFeaturedProducts()/getBestsellers()
+    // in lib/services/product-service.ts. Not yet exposed in the admin
+    // product form; toggle directly in the database or wire up an admin
+    // checkbox in a follow-up.
+    featured: { type: Boolean, default: false },
+    bestseller: { type: Boolean, default: false },
+
     // Purchase Config
     purchaseType: {
       type: String,

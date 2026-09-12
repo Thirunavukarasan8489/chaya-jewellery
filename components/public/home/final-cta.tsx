@@ -15,11 +15,11 @@ export function FinalCta() {
           <span className="text-foil">Ready when you are</span>
         </p>
         <h2 className="mx-auto mt-4 max-w-2xl text-[2rem] leading-[1.1] font-semibold sm:text-5xl">
-          Own a stone with a name, an origin and a report.
+          Own a piece with a purpose, a purity mark and a promise.
         </h2>
         <p className="mx-auto mt-4 max-w-lg text-[0.9375rem] leading-relaxed text-plum-200">
           Browse the catalogue, or tell us what you are looking for and we will
-          find it.
+          help you find it.
         </p>
 
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
@@ -27,7 +27,7 @@ export function FinalCta() {
             href="/products"
             className={buttonStyles({ size: "lg", className: "sm:w-auto" })}
           >
-            Shop all gemstones
+            Shop all jewellery
             <ArrowRight size={18} />
           </Link>
           <Link

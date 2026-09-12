@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { ArrowRight, Menu, MessageCircle, Phone, X, User } from "lucide-react";
 import { Logo } from "@/components/public/layout/logo";
 import { buttonStyles } from "@/components/public/ui/button";
-import { categoryTerms, NAV_DATA, whatsappLink } from "@/lib/utils";
+import { categoryTerms, gemColorFor, NAV_DATA, whatsappLink } from "@/lib/utils";
 import { useSession, signOut } from "next-auth/react";
 
 function AuthLinksMobile({ close }: { close: () => void }) {
@@ -152,6 +152,7 @@ export function MobileDrawer({ categories }: { categories: any[] }) {
               <ul className="mb-7 grid grid-cols-2 gap-2">
                 {categories.map((cat) => {
                   const terms = categoryTerms(cat.name);
+                  const color = cat.gemColor || gemColorFor(cat.slug);
                   return (
                     <li key={cat.slug}>
                       <Link
@@ -162,7 +163,7 @@ export function MobileDrawer({ categories }: { categories: any[] }) {
                           aria-hidden
                           className="size-6 shrink-0 rotate-45 rounded-[0.3rem]"
                           style={{
-                            background: `linear-gradient(135deg, ${cat.gemColor}, color-mix(in oklab, ${cat.gemColor} 45%, #1e0722))`,
+                            background: `linear-gradient(135deg, ${color}, color-mix(in oklab, ${color} 45%, #1e0722))`,
                           }}
                         />
                         <span>

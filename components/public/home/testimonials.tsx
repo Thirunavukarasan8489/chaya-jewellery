@@ -37,7 +37,7 @@ export function Testimonials({ items }: { items?: any[] }) {
         <SectionHeading
           eyebrow="Testimonials"
           title="What buyers say"
-          body="Unedited, authentic reviews from verified gemstone buyers."
+          body="Unedited, authentic reviews from verified customers."
           href="/testimonials"
         />
       </div>

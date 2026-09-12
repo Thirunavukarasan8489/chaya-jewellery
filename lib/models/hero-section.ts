@@ -10,7 +10,10 @@ const HeroSectionSchema = new mongoose.Schema(
     ctaHref: { type: String, required: true },
     secondaryCtaText: { type: String, required: true },
     secondaryCtaHref: { type: String, required: true },
-    image: { type: String, required: true },
+    // Optional: banners without photography fall back to the GemImage
+    // placeholder art (see components/public/ui/gem-image.tsx) instead of
+    // requiring real Cloudinary media up front.
+    image: { type: String },
     displayOrder: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
   },

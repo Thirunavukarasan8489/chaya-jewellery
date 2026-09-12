@@ -121,7 +121,7 @@ export function GemImage({
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(75% 65% at 50% 45%, transparent 40%, rgba(25,10,9,.55) 100%)",
+              "radial-gradient(75% 65% at 50% 45%, transparent 40%, rgba(30,7,34,.55) 100%)",
           }}
         />
       )}

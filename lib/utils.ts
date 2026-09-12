@@ -35,6 +35,32 @@ export function discountPercent(sellingPaise: number, comparePaise?: number) {
   return Math.round(((comparePaise - sellingPaise) / comparePaise) * 100);
 }
 
+/**
+ * Deterministic placeholder colour for GemImage when a product/category has
+ * no `gemColor` set (the field isn't on the current Category/Product schema,
+ * so this is always the case for anything entered via the admin today).
+ * Hashing the slug keeps a given item's placeholder stable across renders
+ * instead of every card falling back to the same flat colour.
+ */
+const JEWEL_TONE_PALETTE = [
+  "#8B4A9B", // light purple
+  "#D6A04F", // luxury gold
+  "#5A1766", // royal purple
+  "#C81E4A", // ruby
+  "#0F9C68", // emerald
+  "#1F4FD8", // sapphire
+  "#E0A713", // amber/topaz
+  "#A8752E", // dark gold
+];
+
+export function gemColorFor(seed: string) {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return JEWEL_TONE_PALETTE[hash % JEWEL_TONE_PALETTE.length];
+}
+
 export function slugify(value: string) {
   return value
     .toLowerCase()
