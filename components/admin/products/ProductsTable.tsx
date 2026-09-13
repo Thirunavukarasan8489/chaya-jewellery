@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { deleteProduct } from '@/lib/actions/product.actions';
 import DeleteConfirmButton from '@/components/admin/ui/DeleteConfirmButton';
 
-import Image from 'next/image';
+import { CldImage } from '@/components/shared/CldImage';
 
 type ProductRow = {
   _id: string;
@@ -115,12 +115,12 @@ export default function ProductsTable({ products }: { products: ProductRow[] }) 
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gold-100 dark:bg-gold-800 rounded-md overflow-hidden flex-shrink-0 border border-gold-200 dark:border-gold-700">
             {item.primaryImage?.url ? (
-              <Image 
-                src={item.primaryImage.url} 
-                alt={item.primaryImage.altText || item.name} 
-                width={40} 
-                height={40} 
-                className="w-full h-full object-cover" 
+              <CldImage
+                src={item.primaryImage.url}
+                alt={item.primaryImage.altText || item.name}
+                width={40}
+                height={40}
+                className="w-full h-full object-cover"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gold-400 text-xs">No img</div>

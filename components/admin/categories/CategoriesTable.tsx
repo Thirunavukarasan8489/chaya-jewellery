@@ -2,7 +2,7 @@
 
 import DataTable from '@/components/admin/ui/DataTable';
 import StatusBadge from '@/components/admin/ui/StatusBadge';
-import { Edit } from 'lucide-react';
+import { Eye, Edit } from 'lucide-react';
 import Link from 'next/link';
 import { deleteCategory } from '@/lib/actions/category.actions';
 import DeleteConfirmButton from '@/components/admin/ui/DeleteConfirmButton';
@@ -43,6 +43,12 @@ export default function CategoriesTable({ categories }: { categories: CategoryRo
       header: 'Actions',
       cell: (item: CategoryRow) => (
         <div className="flex items-center gap-2">
+          <Link
+            href={`/admin/categories/${item._id}`}
+            className="p-1 text-gold-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
+          >
+            <Eye size={16} />
+          </Link>
           <Link
             href={`/admin/categories/${item._id}/edit`}
             className="p-1 text-gold-400 hover:text-gold-600 dark:hover:text-gold-400 transition-colors"

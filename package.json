@@ -25,6 +25,7 @@
     "mongoose": "^9.9.3",
     "next": "16.3.1",
     "next-auth": "^4.24.15",
+    "next-cloudinary": "^6.19.0",
     "nodemailer": "^7.0.13",
     "quill": "^2.0.3",
     "razorpay": "^2.9.8",
