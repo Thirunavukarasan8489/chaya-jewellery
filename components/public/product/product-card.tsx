@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { CldImage } from "@/components/shared/CldImage";
 import { MessageSquareText } from "lucide-react";
 import { QuickAdd } from "@/components/public/cart/add-to-cart";
 import { Badge } from "@/components/public/ui/badge";
@@ -34,7 +34,13 @@ export function ProductCard({
     >
       <div className="relative">
         {product.primaryImage ? (
-          <Image
+          // CldImage (next-cloudinary) instead of next/image: primaryImage.url is
+          // always a Cloudinary secure_url (set by lib/actions/media.actions.ts on
+          // upload), so this gets Cloudinary's own auto format/quality (f_auto,
+          // q_auto) delivery transforms instead of routing through Next's built-in
+          // image optimizer. Same prop surface as next/image (width/height/priority/
+          // loading/className all still apply).
+          <CldImage
             src={product.primaryImage.url}
             alt={product.primaryImage.altText || product.name}
             width={400}

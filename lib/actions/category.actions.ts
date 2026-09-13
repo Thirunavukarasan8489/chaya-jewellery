@@ -35,7 +35,11 @@ export async function getCategoryById(id: string) {
     await dbConnect();
     const category = await Category.findById(id).lean();
     if (!category) return { success: false, error: 'Category not found' };
-    return { success: true, data: JSON.parse(JSON.stringify(category)) };
+    // Not stored on the Category document itself — computed here so the view
+    // page (and, incidentally, the list table's "Total Products" column) show
+    // a real count instead of always 0.
+    const productCount = await Product.countDocuments({ category: id });
+    return { success: true, data: JSON.parse(JSON.stringify({ ...category, productCount })) };
   } catch (error: any) {
     return { success: false, error: error.message };
   }

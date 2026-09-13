@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import Image from 'next/image';
+import { CldImage } from '@/components/shared/CldImage';
 import DataTable from '@/components/admin/ui/DataTable';
 import StatusBadge from '@/components/admin/ui/StatusBadge';
 import { Eye, Edit, Image as ImageIcon } from 'lucide-react';
@@ -26,7 +26,7 @@ export default function ProductVariantsTable({ variants }: { variants: VariantRo
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-plum-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200 dark:border-plum-700 relative">
             {item.primaryImage?.url ? (
-              <Image src={item.primaryImage.url} alt="" fill sizes="40px" className="object-cover" />
+              <CldImage src={item.primaryImage.url} alt="" fill sizes="40px" className="object-cover" />
             ) : (
               <ImageIcon size={16} className="text-gray-300" />
             )}
