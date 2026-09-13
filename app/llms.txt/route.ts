@@ -34,7 +34,6 @@ Products on our site may have different purchase modes:
 ## Important Links
 - Main Site: https://chayajewellery.com
 - Customer Support: https://chayajewellery.com/contact
-- Gemstone Education Guides: https://chayajewellery.com/guides
 `;
 
   return new NextResponse(content, {

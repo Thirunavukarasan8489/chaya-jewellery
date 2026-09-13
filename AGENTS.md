@@ -205,6 +205,54 @@ seeding to confirm the new sections, categories and copy actually render
 (and that no stale category leftover or gemstone copy remained in the
 page body — sitewide nav/meta excepted, see above).
 
+## 2026-09-13 hero banner rework (image-first, optional overlay/buttons)
+
+User had uploaded a real banner creative (a pre-designed sale graphic with
+its own baked-in text/offer) via `/admin/website/hero-section`, and it was
+being squeezed into a small square card off to one side while our own
+badge/title/subtitle/buttons filled the rest of the slide — redundant and,
+for a creative that's already a whole composition, actively lossy (the
+image got cropped to a square, cutting off parts of it).
+
+**Model change:** every `HeroSection` field except `name` and `image` is
+now optional (`lib/models/hero-section.ts`) — badge/title/subtitle/both
+CTA pairs can all be left blank. `image` itself was already optional
+(falls back to `GemImage` placeholder art, from the previous redesign).
+
+**`hero-slider.tsx` rework:** the banner image is now the full-bleed
+background of the whole slide (`fill` + `object-cover`, no more
+`size-72` square card). What renders on top is entirely conditional:
+- No badge/title/subtitle and no buttons → no text overlay, no scrim, and
+  the *entire slide* becomes a link to `ctaHref` (a plain, fully-clickable
+  banner image — the common case for a designer-provided creative).
+- Any of badge/title/subtitle present → renders that overlay (with the
+  gradient scrim for legibility), same visual style as before.
+- `ctaText`+`ctaHref` and/or `secondaryCtaText`+`secondaryCtaHref` present
+  → renders that button (each pair independently optional).
+- **Bug fixed in passing:** the secondary button previously always linked
+  to a hardcoded WhatsApp message, ignoring whatever `secondaryCtaHref`/
+  `secondaryCtaText` the admin actually set in the form — it now uses the
+  CMS fields like the primary button always did.
+
+**`HeroSectionForm.tsx`:** removed the `required` attribute (and the red
+`*`) from badge/title/subtitle/both CTA pairs, and added inline help text
+explaining the optional/fallback behavior above. `name` and the image are
+still required — client-side validation for "an image is required" was
+already correct and untouched.
+
+**Left alone:** the demo hero banners and testimonials/FAQs seeded in the
+previous session are gone from the database — the user deleted them
+directly through `/admin/website` while testing (confirmed via a
+read-only DB check, not assumed). That's their call; nothing here
+re-seeds or restores them. `npm run seed:catalog` still exists if demo
+hero/testimonial/FAQ content is wanted again (categories/products from
+that seed were left untouched and are still in the database).
+
+**Verification:** `tsc --noEmit` and `eslint` clean; fetched the live
+homepage before and after to confirm the old small-image-card markup
+(`size-72`) is gone and the existing real "slider 1" banner (badge+title+
+subtitle+both buttons all filled in) still renders correctly full-bleed.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

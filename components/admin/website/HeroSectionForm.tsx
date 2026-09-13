@@ -143,44 +143,46 @@ export default function HeroSectionForm({ initialData }: { initialData?: any }) 
 
         {/* Content */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gold-800 dark:text-white border-b border-gold-100 dark:border-gold-700 pb-2">Content</h2>
-          
+          <h2 className="text-lg font-semibold text-gold-800 dark:text-white border-b border-gold-100 dark:border-gold-700 pb-2">Content (optional)</h2>
+          <p className="text-xs text-gold-500 dark:text-gold-400 -mt-2">
+            Leave all of this blank to show just the banner image, full-bleed —
+            good for a pre-designed creative that already has its own text.
+            Fill any of it in to overlay a badge/title/subtitle on top of the image.
+          </p>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1 md:col-span-2">
-              <label className="text-sm font-medium text-gold-700 dark:text-gold-300">Badge Text <span className="text-red-500">*</span></label>
-              <input 
-                type="text" 
-                name="badge" 
+              <label className="text-sm font-medium text-gold-700 dark:text-gold-300">Badge Text</label>
+              <input
+                type="text"
+                name="badge"
                 value={formData.badge}
                 onChange={handleChange}
-                required
-                placeholder="e.g. Certified Unheated Gemstones"
+                placeholder="e.g. New Collection"
                 className="w-full px-3 py-2 bg-gold-50 dark:bg-gold-900 border border-gold-200 dark:border-gold-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500"
               />
             </div>
 
             <div className="space-y-1 md:col-span-2">
-              <label className="text-sm font-medium text-gold-700 dark:text-gold-300">Hero Slide Title <span className="text-red-500">*</span></label>
-              <input 
-                type="text" 
+              <label className="text-sm font-medium text-gold-700 dark:text-gold-300">Hero Slide Title</label>
+              <input
+                type="text"
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                required
-                placeholder="e.g. Stones you can verify, not just admire."
+                placeholder="e.g. Timeless Gold, Modern Craft"
                 className="w-full px-3 py-2 bg-gold-50 dark:bg-gold-900 border border-gold-200 dark:border-gold-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500"
               />
             </div>
 
             <div className="space-y-1 md:col-span-2">
-              <label className="text-sm font-medium text-gold-700 dark:text-gold-300">Subtitle <span className="text-red-500">*</span></label>
-              <textarea 
-                name="subtitle" 
+              <label className="text-sm font-medium text-gold-700 dark:text-gold-300">Subtitle</label>
+              <textarea
+                name="subtitle"
                 rows={3}
                 value={formData.subtitle}
                 onChange={handleChange}
-                required
-                placeholder="e.g. Every gemstone carries an independent laboratory report."
+                placeholder="e.g. Handcrafted rings, necklaces and bangles in 18K & 22K gold."
                 className="w-full px-3 py-2 bg-gold-50 dark:bg-gold-900 border border-gold-200 dark:border-gold-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500"
               />
             </div>
@@ -189,57 +191,63 @@ export default function HeroSectionForm({ initialData }: { initialData?: any }) 
 
         {/* Actions */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gold-800 dark:text-white border-b border-gold-100 dark:border-gold-700 pb-2">Call to Action (CTA) Buttons</h2>
-          
+          <h2 className="text-lg font-semibold text-gold-800 dark:text-white border-b border-gold-100 dark:border-gold-700 pb-2">Buttons (optional)</h2>
+          <p className="text-xs text-gold-500 dark:text-gold-400 -mt-2">
+            A button only appears if you fill in both its text and link. With
+            no buttons and no content above, the whole banner image becomes
+            clickable using the Primary Button Link below (e.g. link straight
+            to a product or category). Text can be anything — Buy Now,
+            Enquire Now, Shop the Collection, etc.
+          </p>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-sm font-medium text-gold-700 dark:text-gold-300">Primary Button Text <span className="text-red-500">*</span></label>
-              <input 
-                type="text" 
-                name="ctaText" 
+              <label className="text-sm font-medium text-gold-700 dark:text-gold-300">Primary Button Text</label>
+              <input
+                type="text"
+                name="ctaText"
                 value={formData.ctaText}
                 onChange={handleChange}
-                required
-                placeholder="Explore Collection"
+                placeholder="Buy Now"
                 className="w-full px-3 py-2 bg-gold-50 dark:bg-gold-900 border border-gold-200 dark:border-gold-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-medium text-gold-700 dark:text-gold-300">Primary Button Link <span className="text-red-500">*</span></label>
-              <input 
-                type="text" 
-                name="ctaHref" 
+              <label className="text-sm font-medium text-gold-700 dark:text-gold-300">Primary Button Link</label>
+              <input
+                type="text"
+                name="ctaHref"
                 value={formData.ctaHref}
                 onChange={handleChange}
-                required
-                placeholder="/products"
+                placeholder="/products/some-product"
                 className="w-full px-3 py-2 bg-gold-50 dark:bg-gold-900 border border-gold-200 dark:border-gold-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500"
               />
+              <p className="text-xs text-gold-500 dark:text-gold-400">
+                Also used as the redirect link for the whole image when no buttons or text are set.
+              </p>
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-medium text-gold-700 dark:text-gold-300">Secondary Button Text <span className="text-red-500">*</span></label>
-              <input 
-                type="text" 
-                name="secondaryCtaText" 
+              <label className="text-sm font-medium text-gold-700 dark:text-gold-300">Secondary Button Text</label>
+              <input
+                type="text"
+                name="secondaryCtaText"
                 value={formData.secondaryCtaText}
                 onChange={handleChange}
-                required
-                placeholder="Free Consultation"
+                placeholder="Enquire Now"
                 className="w-full px-3 py-2 bg-gold-50 dark:bg-gold-900 border border-gold-200 dark:border-gold-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-medium text-gold-700 dark:text-gold-300">Secondary Button Link <span className="text-red-500">*</span></label>
-              <input 
-                type="text" 
-                name="secondaryCtaHref" 
+              <label className="text-sm font-medium text-gold-700 dark:text-gold-300">Secondary Button Link</label>
+              <input
+                type="text"
+                name="secondaryCtaHref"
                 value={formData.secondaryCtaHref}
                 onChange={handleChange}
-                required
-                placeholder="/contact"
+                placeholder="/contact or a WhatsApp link"
                 className="w-full px-3 py-2 bg-gold-50 dark:bg-gold-900 border border-gold-200 dark:border-gold-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500"
               />
             </div>

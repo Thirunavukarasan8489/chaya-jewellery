@@ -2,56 +2,157 @@
 
 import * as React from "react";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  ArrowRight,
-  BadgeCheck,
-  MessageCircle,
-  Sparkles,
-} from "lucide-react";
+import Image from "next/image";
+import { ArrowLeft, ArrowRight, BadgeCheck, MessageCircle } from "lucide-react";
 import { buttonStyles } from "@/components/public/ui/button";
 import { GemImage } from "@/components/public/ui/gem-image";
-import { OrnamentalBg } from "@/components/public/ui/ornamental-bg";
-import { cn, whatsappLink } from "@/lib/utils";
-import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 /**
- * Premium Hero Slider replacing the static text section.
- * Features auto-playing high-impact slides, category highlights, GIA/IGI trust badge,
- * smooth sliding transitions, and interactive controls.
+ * Hero banner carousel. Every field below is optional except the image
+ * itself — a slide can be a plain, fully-clickable banner image (the kind
+ * a designer hands over as one finished creative, badge/offer baked in),
+ * or that same image with our own badge/title/subtitle/button overlay on
+ * top. HeroSlider only renders what the admin actually filled in via
+ * /admin/website/hero-section; nothing here is a forced placeholder.
  */
 const AUTOPLAY_MS = 6000;
 
-// Slide accent presets, cycled by index so a multi-slide carousel reads as
-// varied rather than every banner sharing one hardcoded colour — the admin
-// banner form doesn't (yet) capture per-slide colour/gradient fields.
-const SLIDE_ACCENTS = [
-  { gemColor: "#D6A04F", bgGradient: "from-plum-950 via-plum-900 to-plum-800" },
-  { gemColor: "#8B4A9B", bgGradient: "from-plum-950 via-[#3a1044] to-plum-900" },
-  { gemColor: "#5A1766", bgGradient: "from-plum-950 via-plum-800 to-[#3a1044]" },
-];
+// Placeholder-art accent, cycled by index, for slides with no uploaded image.
+const SLIDE_ACCENTS = ["#D6A04F", "#8B4A9B", "#5A1766"];
 
-export function HeroSlider({ categories, banners }: { categories?: any[], banners?: any[] }) {
-  const activeSlides = banners ? banners.map((b, i) => {
-    const accent = SLIDE_ACCENTS[i % SLIDE_ACCENTS.length];
-    return {
-      badge: b.badge,
-      title: b.title,
-      subtitle: b.subtitle,
-      ctaText: b.ctaText,
-      ctaHref: b.ctaHref,
-      secondaryCtaText: b.secondaryCtaText,
-      secondaryCtaHref: b.secondaryCtaHref,
-      gemColor: accent.gemColor,
-      bgGradient: accent.bgGradient,
-      glowColor: accent.gemColor,
-      image: b.image as string | undefined,
-    };
-  }) : [];
+type Slide = {
+  badge?: string;
+  title?: string;
+  subtitle?: string;
+  ctaText?: string;
+  ctaHref?: string;
+  secondaryCtaText?: string;
+  secondaryCtaHref?: string;
+  gemColor: string;
+  image?: string;
+};
+
+function HeroSlide({ slide, index }: { slide: Slide; index: number }) {
+  const hasCaption = Boolean(slide.badge || slide.title || slide.subtitle);
+  const hasPrimaryCta = Boolean(slide.ctaText && slide.ctaHref);
+  const hasSecondaryCta = Boolean(slide.secondaryCtaText && slide.secondaryCtaHref);
+  const hasOverlay = hasCaption || hasPrimaryCta || hasSecondaryCta;
+  // A pure image banner (no caption, no buttons) links out entirely on
+  // click instead of needing a button drawn on top of it.
+  const wholeSlideHref = !hasOverlay ? slide.ctaHref : undefined;
+
+  return (
+    <div className="relative min-h-[360px] w-full overflow-hidden sm:min-h-[440px] lg:min-h-[520px]">
+      {slide.image ? (
+        <Image
+          src={slide.image}
+          alt={slide.title || "Chaya Jewellery"}
+          fill
+          priority={index === 0}
+          sizes="100vw"
+          className="object-cover"
+        />
+      ) : (
+        <GemImage
+          color={slide.gemColor}
+          seed={index * 7 + 1}
+          className="absolute inset-0 h-full w-full"
+        />
+      )}
+
+      {hasOverlay && (
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-t from-plum-950/90 via-plum-950/25 to-transparent"
+        />
+      )}
+
+      {hasOverlay && (
+        <div className="shell gutter absolute inset-0 z-10 flex flex-col justify-end pb-9 sm:pb-12 lg:pb-16">
+          <div className="animate-rise max-w-2xl">
+            {slide.badge && (
+              <p className="inline-flex items-center gap-2 rounded-full border border-gold-500/30 bg-gold-500/10 px-3.5 py-1.5 text-[0.6875rem] font-semibold tracking-[0.14em] text-gold-300 uppercase">
+                <BadgeCheck size={14} className="text-gold-400" />
+                <span>{slide.badge}</span>
+              </p>
+            )}
+
+            {slide.title && (
+              <h1 className="mt-5 text-3xl leading-[1.1] font-semibold text-ivory-100 sm:text-5xl lg:text-6xl">
+                {slide.title}
+              </h1>
+            )}
+
+            {slide.subtitle && (
+              <p className="mt-4 max-w-xl text-sm leading-relaxed text-plum-200 sm:text-base lg:text-lg">
+                {slide.subtitle}
+              </p>
+            )}
+
+            {(hasPrimaryCta || hasSecondaryCta) && (
+              <div className="mt-7 flex flex-wrap gap-3">
+                {hasPrimaryCta && (
+                  <Link
+                    href={slide.ctaHref!}
+                    className={buttonStyles({
+                      size: "lg",
+                      className: "sm:w-auto font-semibold shadow-lg",
+                    })}
+                  >
+                    {slide.ctaText}
+                    <ArrowRight size={18} />
+                  </Link>
+                )}
+
+                {hasSecondaryCta && (
+                  <Link
+                    href={slide.secondaryCtaHref!}
+                    className={buttonStyles({
+                      variant: "outline",
+                      size: "lg",
+                      className:
+                        "border-ivory-100/25 bg-white/10 text-ivory-100 hover:border-ivory-100/50 hover:bg-white/15 sm:w-auto",
+                    })}
+                  >
+                    <MessageCircle size={18} />
+                    {slide.secondaryCtaText}
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {wholeSlideHref && (
+        <Link href={wholeSlideHref} className="absolute inset-0">
+          <span className="sr-only">{slide.title || "View banner"}</span>
+        </Link>
+      )}
+    </div>
+  );
+}
+
+export function HeroSlider({ banners }: { categories?: any[]; banners?: any[] }) {
+  const activeSlides: Slide[] = banners
+    ? banners.map((b, i) => ({
+        badge: b.badge,
+        title: b.title,
+        subtitle: b.subtitle,
+        ctaText: b.ctaText,
+        ctaHref: b.ctaHref,
+        secondaryCtaText: b.secondaryCtaText,
+        secondaryCtaHref: b.secondaryCtaHref,
+        gemColor: SLIDE_ACCENTS[i % SLIDE_ACCENTS.length],
+        image: b.image,
+      }))
+    : [];
 
   const [active, setActive] = React.useState(0);
   const trackRef = React.useRef<HTMLUListElement>(null);
   const pausedRef = React.useRef(false);
+  const isCarousel = activeSlides.length > 1;
 
   const goTo = React.useCallback((index: number) => {
     const track = trackRef.current;
@@ -62,7 +163,7 @@ export function HeroSlider({ categories, banners }: { categories?: any[], banner
 
   React.useEffect(() => {
     const track = trackRef.current;
-    if (!track) return;
+    if (!track || !isCarousel) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -77,24 +178,34 @@ export function HeroSlider({ categories, banners }: { categories?: any[], banner
 
     for (const child of Array.from(track.children)) observer.observe(child);
     return () => observer.disconnect();
-  }, []);
+  }, [isCarousel]);
 
   React.useEffect(() => {
+    if (!isCarousel) return;
     const interval = window.setInterval(() => {
       if (pausedRef.current) return;
       goTo((active + 1) % activeSlides.length);
     }, AUTOPLAY_MS);
     return () => window.clearInterval(interval);
-  }, [active, goTo, activeSlides?.length]);
+  }, [active, goTo, activeSlides.length, isCarousel]);
 
-  if (!banners || banners.length === 0 || !activeSlides) {
+  if (activeSlides.length === 0) {
     return null; // Don't render the slider if there are no active banners
+  }
+
+  // A single banner is just a static image/overlay — no drag-to-scroll
+  // track, nav arrows or dots, so there is nothing that could ever show a
+  // scrollbar or invite a swipe gesture that goes nowhere.
+  if (!isCarousel) {
+    return (
+      <section className="relative w-full max-w-full overflow-hidden bg-plum-950 text-ivory-100">
+        <HeroSlide slide={activeSlides[0]} index={0} />
+      </section>
+    );
   }
 
   return (
     <section className="relative w-full max-w-full overflow-hidden bg-plum-950 text-ivory-100">
-      <OrnamentalBg glowPosition="50% 20%" />
-
       <div
         className="group relative w-full overflow-hidden"
         onMouseEnter={() => {
@@ -115,104 +226,8 @@ export function HeroSlider({ categories, banners }: { categories?: any[], banner
           className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto scroll-smooth"
         >
           {activeSlides.map((slide, i) => (
-            <li
-              key={i}
-              data-index={i}
-              className="w-full shrink-0 snap-center"
-            >
-              <div
-                className={cn(
-                  "relative flex min-h-[480px] sm:min-h-[540px] lg:min-h-[580px] flex-col justify-center bg-gradient-to-br p-6 sm:p-12 lg:p-16",
-                  slide.bgGradient,
-                )}
-              >
-                {/* Glow Backdrop Accent */}
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute -top-24 right-1/4 size-96 rounded-full opacity-30 blur-3xl"
-                  style={{ background: slide.glowColor }}
-                />
-
-                <div className="shell gutter relative z-10 grid items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-                  {/* Text Content */}
-                  <div className="animate-rise max-w-2xl">
-                    <p className="inline-flex items-center gap-2 rounded-full border border-gold-500/30 bg-gold-500/10 px-3.5 py-1.5 text-[0.6875rem] font-semibold tracking-[0.14em] text-gold-300 uppercase">
-                      <BadgeCheck size={14} className="text-gold-400" />
-                      <span>{slide.badge}</span>
-                    </p>
-
-                    <h1 className="mt-5 text-3xl leading-[1.1] font-semibold sm:text-5xl lg:text-6xl text-ivory-100">
-                      {slide.title}
-                    </h1>
-
-                    <p className="mt-4 max-w-xl text-sm leading-relaxed text-plum-200 sm:text-base lg:text-lg">
-                      {slide.subtitle}
-                    </p>
-
-                    <div className="mt-7 flex flex-wrap gap-3">
-                      <Link
-                        href={slide.ctaHref}
-                        className={buttonStyles({
-                          size: "lg",
-                          className: "sm:w-auto font-semibold shadow-lg",
-                        })}
-                      >
-                        {slide.ctaText}
-                        <ArrowRight size={18} />
-                      </Link>
-
-                      <a
-                        href={whatsappLink(
-                          null,
-                          "Hi Chaya Jewellery, I would like to speak with a jewellery consultant.",
-                        )}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={buttonStyles({
-                          variant: "outline",
-                          size: "lg",
-                          className:
-                            "border-ivory-100/25 bg-white/10 text-ivory-100 hover:border-ivory-100/50 hover:bg-white/15 sm:w-auto",
-                        })}
-                      >
-                        <MessageCircle size={18} />
-                        {slide.secondaryCtaText}
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* Gemstone Graphic / Visual Preview */}
-                  <div className="hidden lg:flex justify-center items-center relative">
-                    <div className="relative size-72 lg:size-80 rounded-3xl overflow-hidden shadow-2xl ring-1 ring-gold-500/30">
-                      {slide.image ? (
-                        <Image
-                          src={slide.image}
-                          alt={slide.title}
-                          width={1254}
-                          height={1254}
-                          priority={i === 0}
-                          className="aspect-square w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                        />
-                      ) : (
-                        <GemImage
-                          color={slide.gemColor}
-                          seed={i * 7 + 1}
-                          framed
-                          className="aspect-square w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                        />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-plum-950/80 via-transparent to-transparent p-4 flex flex-col justify-end">
-                        <span className="inline-flex items-center gap-1 text-[0.6875rem] font-semibold tracking-wider text-gold-300 uppercase">
-                          <Sparkles size={12} /> Certified Craftsmanship
-                        </span>
-                        <p className="text-sm font-semibold text-ivory-100 mt-0.5">
-                          {slide.badge}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <li key={i} data-index={i} className="w-full shrink-0 snap-center">
+              <HeroSlide slide={slide} index={i} />
             </li>
           ))}
         </ul>
