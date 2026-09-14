@@ -140,7 +140,7 @@ export async function updatePaymentStatus(id: string, status: string, syncOrder:
     session.startTransaction();
 
     try {
-      const payment = await Payment.findByIdAndUpdate(id, updateData, { new: true, session });
+      const payment = await Payment.findByIdAndUpdate(id, updateData, { returnDocument: 'after', session });
       if (!payment) throw new Error('Payment not found');
 
       if (syncOrder) {

@@ -1,7 +1,12 @@
 import { Order } from '../models/order';
 
 /**
- * Generic Payment Service mapping to future Gateway integrations
+ * DEAD CODE — generic Payment Service, never finished and only consumed by
+ * the also-dead `app/api/webhooks/payment/route.ts`. `initializePayment`
+ * returns a mock response and `verifyWebhookSignature` always returns
+ * `true` — neither does real work. The live payment integration is
+ * Razorpay directly, called from `lib/actions/checkout.actions.ts` and
+ * verified in `app/api/webhooks/razorpay/route.ts`. Candidate for deletion.
  */
 export class PaymentService {
   /**

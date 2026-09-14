@@ -32,9 +32,12 @@ export async function getReturns() {
   try {
     await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER', 'LEAD_MANAGER']);
     await dbConnect();
+    // PERFORMANCE: .lean() — read-only display data, matching the pattern
+    // used everywhere else in the codebase. See shipment.actions.ts.
     const returns = await ReturnRequest.find()
       .populate('orderId', 'orderNumber customerName total')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
     return { success: true, data: JSON.parse(JSON.stringify(returns)) };
   } catch (error: any) {
     return { success: false, error: error.message };

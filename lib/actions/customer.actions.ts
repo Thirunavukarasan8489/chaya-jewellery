@@ -66,9 +66,9 @@ export async function updateCustomerProfile(userId: string, data: { firstName: s
           'profile.firstName': data.firstName,
           'profile.lastName': data.lastName,
           'contact.phone': data.phone
-        } 
+        }
       },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!updatedCustomer) return { success: false, error: 'Customer not found' };

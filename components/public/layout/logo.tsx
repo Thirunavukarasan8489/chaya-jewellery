@@ -22,13 +22,18 @@ export function Logo({
         />
         </span>
       </span> */}
-      <span className="relative grid shrink-0 place-items-center">
+      <span className="relative grid size-11 shrink-0 place-items-center lg:size-12">
         <Image
           src="/logo.png"
           alt="Chaya Jewellery Logo"
-          width={50}
-          height={50}
-          className="object-contain w-auto h-auto"
+          width={48}
+          height={48}
+          // Fixed size classes, not w-auto/h-auto: with next/image, `auto` on
+          // both axes defers to whichever optimized source the browser
+          // happens to pick rather than the width/height props above, so the
+          // logo was rendering at ~64px inside this 60px-tall header row —
+          // spilling into the announcement bar above and the border below.
+          className="size-11 object-contain lg:size-12"
           priority
         />
       </span>

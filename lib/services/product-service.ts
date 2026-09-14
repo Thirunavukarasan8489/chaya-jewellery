@@ -4,6 +4,7 @@ import { ProductVariant } from '@/lib/models/product-variant';
 import { Category } from '@/lib/models/category';
 import type { Product as PublicProduct } from '@/lib/types';
 import { gemColorFor } from '@/lib/utils';
+import { sanitizeRichText } from '@/lib/sanitize';
 import { unstable_cache } from 'next/cache';
 
 async function attachVariants(docs: any[]): Promise<any[]> {
@@ -30,8 +31,13 @@ function mapToPublicProduct(doc: any): PublicProduct {
     name: doc.name,
     slug: doc.slug,
     categorySlug: doc.category?.slug || '',
-    shortDescription: doc.shortDescription || '',
-    description: doc.description || '',
+    // Sanitized here — mapToPublicProduct is the single translation
+    // boundary between Mongo docs and every storefront consumer (server
+    // and client components alike), so this is the one place that has to
+    // cover both new writes (already sanitized in product.actions.ts) and
+    // any product stored before that fix shipped. See lib/sanitize.ts.
+    shortDescription: sanitizeRichText(doc.shortDescription),
+    description: sanitizeRichText(doc.description),
     sellingPrice: defaultVariant.price || doc.sellingPrice || 0,
     comparePrice: defaultVariant.comparePrice || doc.comparePrice,
     sku: doc.sku || `SKU-${doc._id.toString().substring(0, 6)}`,

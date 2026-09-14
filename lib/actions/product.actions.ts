@@ -13,6 +13,7 @@ import { ProductSchema } from '@/lib/validations/product.schema';
 import { revalidatePath } from 'next/cache';
 import mongoose from 'mongoose';
 import { variantTypeLabel } from '@/lib/utils';
+import { sanitizeRichText } from '@/lib/sanitize';
 
 async function checkAuth(allowedRoles: string[]) {
   const session = await getSession();
@@ -147,9 +148,15 @@ export async function getProductById(id: string) {
   try {
     await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER', 'LEAD_MANAGER']);
     await dbConnect();
-    const product = await Product.findById(id).populate('category', 'name').lean();
+    const product: any = await Product.findById(id).populate('category', 'name').lean();
     if (!product) return { success: false, error: 'Product not found' };
-    const [withVariants] = await attachVariants([product as any]);
+    // Sanitize on the way out too, not just on write — covers products
+    // stored before the write-time sanitization in createProduct/
+    // updateProduct shipped, and this feeds both the admin view page and
+    // the edit form's Quill editor. See lib/sanitize.ts.
+    product.description = sanitizeRichText(product.description);
+    product.shortDescription = sanitizeRichText(product.shortDescription);
+    const [withVariants] = await attachVariants([product]);
     return { success: true, data: JSON.parse(JSON.stringify(withVariants)) };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -165,6 +172,11 @@ export async function createProduct(data: any) {
       return { success: false, error: parsed.error.issues[0].message };
     }
     const validatedData = parsed.data;
+    // SECURITY: sanitize admin-authored rich text before it's stored — see
+    // lib/sanitize.ts. This is rendered raw on public product pages and
+    // inside the admin panel itself, so this is the only real gate.
+    validatedData.description = sanitizeRichText(validatedData.description);
+    validatedData.shortDescription = sanitizeRichText(validatedData.shortDescription);
 
     await dbConnect();
 
@@ -266,6 +278,9 @@ export async function updateProduct(id: string, data: any) {
       return { success: false, error: parsed.error.issues[0].message };
     }
     const validatedData = parsed.data;
+    // SECURITY: see createProduct above / lib/sanitize.ts.
+    validatedData.description = sanitizeRichText(validatedData.description);
+    validatedData.shortDescription = sanitizeRichText(validatedData.shortDescription);
 
     await dbConnect();
 
@@ -301,7 +316,7 @@ export async function updateProduct(id: string, data: any) {
       mappedData.baseSku = `${baseSkuPrefix}-001`;
     }
 
-    const product = await Product.findByIdAndUpdate(id, mappedData, { new: true });
+    const product = await Product.findByIdAndUpdate(id, mappedData, { returnDocument: 'after' });
 
     // Clean up orphaned images asynchronously
     if (oldProduct) {
@@ -407,7 +422,7 @@ export async function updateVariant(productId: string, variantId: string, data: 
     const variant = await ProductVariant.findOneAndUpdate(
       { _id: variantId, productId },
       { $set: data },
-      { new: true }
+      { returnDocument: 'after' }
     );
     if (!variant) throw new Error('Variant not found');
 

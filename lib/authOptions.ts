@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { User } from "@/lib/models/user";
 import connectDB from "@/lib/db";
+import { requireSecret } from "@/lib/env";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -13,7 +14,17 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        if (
+          typeof credentials?.email !== "string" ||
+          typeof credentials?.password !== "string" ||
+          !credentials.email ||
+          !credentials.password
+        ) {
+          // SECURITY: without the typeof checks, a direct POST to the
+          // credentials callback (bypassing NextAuth's own client, which
+          // always sends strings) could pass e.g. { "$regex": "^admin" } as
+          // email — Mongoose doesn't cast query filters, so that reaches
+          // User.findOne() as a live Mongo operator.
           throw new Error("Missing credentials");
         }
 
@@ -63,5 +74,5 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
     maxAge: 24 * 60 * 60, // 24 hours
   },
-  secret: process.env.NEXTAUTH_SECRET || "fallback-secret-for-development",
+  secret: requireSecret("NEXTAUTH_SECRET", "fallback-secret-for-development"),
 };

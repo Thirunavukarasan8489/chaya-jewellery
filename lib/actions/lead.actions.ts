@@ -80,7 +80,7 @@ export async function updateLead(id: string, data: any) {
 
     await dbConnect();
     
-    const lead = await Lead.findByIdAndUpdate(id, validatedData, { new: true }).lean();
+    const lead = await Lead.findByIdAndUpdate(id, validatedData, { returnDocument: 'after' }).lean();
     revalidatePath('/admin/leads');
     revalidatePath(`/admin/leads/${id}`);
     return { success: true, data: JSON.parse(JSON.stringify(lead)) };
@@ -116,7 +116,7 @@ export async function updateLeadStatus(id: string, status: string) {
     await checkAuth(['SUPER_ADMIN', 'LEAD_MANAGER']);
     await dbConnect();
     
-    const lead = await Lead.findByIdAndUpdate(id, { status }, { new: true }).lean();
+    const lead = await Lead.findByIdAndUpdate(id, { status }, { returnDocument: 'after' }).lean();
     revalidatePath('/admin/leads');
     revalidatePath(`/admin/leads/${id}`);
     return { success: true, data: JSON.parse(JSON.stringify(lead)) };

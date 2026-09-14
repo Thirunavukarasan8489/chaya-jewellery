@@ -29,9 +29,14 @@ export async function getShipments() {
   try {
     await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER', 'LEAD_MANAGER']); // Add appropriate roles
     await dbConnect();
+    // PERFORMANCE: .lean() — this is read-only display data, not saved
+    // back, so there's no need for Mongoose to hydrate full documents
+    // (change-tracking, getters/setters) for it. Every other list query in
+    // the codebase already does this; this one didn't.
     const shipments = await Shipment.find()
       .populate('orderId', 'orderNumber customerName shippingAddress')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
     return { success: true, data: JSON.parse(JSON.stringify(shipments)) };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -114,7 +119,7 @@ export async function updateShipmentStatus(id: string, status: string, syncOrder
     session.startTransaction();
 
     try {
-      const shipment = await Shipment.findByIdAndUpdate(id, updateData, { new: true, session });
+      const shipment = await Shipment.findByIdAndUpdate(id, updateData, { returnDocument: 'after', session });
       if (!shipment) throw new Error('Shipment not found');
 
       if (syncOrder) {

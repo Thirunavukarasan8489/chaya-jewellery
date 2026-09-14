@@ -1,6 +1,13 @@
 import { cn } from "@/lib/utils";
 
 /**
+ * DEAD CODE — orphaned duplicate, not imported anywhere in app/components/lib.
+ * The live version every call site actually uses is
+ * `components/public/ui/gem-image.tsx`, and the two have already drifted
+ * apart. Edit that one, not this one; this file is a candidate for deletion.
+ */
+
+/**
  * Placeholder artwork for products, categories and guides.
  *
  * Real photography goes through Cloudinary in Phase 16 (§29 Media Flow). Until

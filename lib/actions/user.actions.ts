@@ -113,7 +113,7 @@ export async function updateAdminUser(
       updatePayload.password = await bcrypt.hash(validatedData.password, 10);
     }
 
-    const updatedUser = await User.findByIdAndUpdate(id, updatePayload, { new: true })
+    const updatedUser = await User.findByIdAndUpdate(id, updatePayload, { returnDocument: 'after' })
       .select('-password')
       .lean();
 

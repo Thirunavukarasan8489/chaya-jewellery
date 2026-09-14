@@ -94,7 +94,7 @@ export async function createOrder(data: any) {
       const counter = await Counter.findOneAndUpdate(
         { id: 'orderId' },
         { $inc: { seq: 1 } },
-        { new: true, upsert: true, session }
+        { returnDocument: 'after', upsert: true, session }
       );
       const orderNumber = `ORD-${new Date().getFullYear()}-${counter.seq.toString().padStart(4, '0')}`;
 
@@ -146,7 +146,7 @@ export async function updateOrderStatus(id: string, updateData: { orderStatus?: 
 
     await dbConnect();
 
-    const order = await Order.findByIdAndUpdate(id, parsed.data, { new: true }).lean();
+    const order = await Order.findByIdAndUpdate(id, parsed.data, { returnDocument: 'after' }).lean();
     if (!order) return { success: false, error: 'Order not found' };
 
     await logAuditAction({

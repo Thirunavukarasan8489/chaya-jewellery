@@ -6,62 +6,89 @@ import { User } from '@/lib/models/user';
 import { Product } from '@/lib/models/product';
 import { Lead } from '@/lib/models/lead';
 import { ReturnRequest } from '@/lib/models/return';
+import { getSession } from '@/lib/auth';
+
+async function checkAuth(allowedRoles: string[]) {
+  const session = await getSession();
+  if (!session) throw new Error('Unauthorized');
+  const sessionRole = String(session.role || '').replace(/\s+/g, '_').toUpperCase();
+  const normalizedRoles = allowedRoles.map((r) => r.replace(/\s+/g, '_').toUpperCase());
+  if (!normalizedRoles.includes(sessionRole)) throw new Error('Forbidden: Insufficient permissions');
+  return session;
+}
 
 export async function getDashboardKpis() {
+  // SECURITY: this is the only exported action in this file, and unlike
+  // every other admin data action in the codebase, it had no role check of
+  // its own — only relying on route-level middleware. It's revenue and
+  // customer-count data, so gate it the same way admin/products.actions.ts
+  // gates its own KPI-adjacent reads.
+  await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER', 'LEAD_MANAGER']);
   await connectDB();
 
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Commerce
-    const revenueResult = await Order.aggregate([
-      { $match: { orderStatus: { $nin: ['CANCELLED', 'DELIVERY_FAILED', 'PAYMENT_FAILED'] } } },
-      { $group: { _id: null, totalRevenue: { $sum: '$total' } } }
-    ]);
-    const totalRevenue = revenueResult[0]?.totalRevenue || 0;
-
-    const totalOrders = await Order.countDocuments();
-    const todaysOrders = await Order.countDocuments({ createdAt: { $gte: today } });
-    const pendingPayments = await Order.countDocuments({ paymentStatus: 'PENDING' });
-    const pendingOrders = await Order.countDocuments({ orderStatus: 'PROCESSING' });
-    const lowStockCount = await Product.countDocuments({ stockStatus: { $in: ['LOW_STOCK', 'OUT_OF_STOCK'] } });
-    const returnsCount = await ReturnRequest.countDocuments({ status: { $ne: 'REJECTED' } });
-
-    // Leads
-    const totalLeads = await Lead.countDocuments();
-    const newLeads = await Lead.countDocuments({ status: 'NEW' });
-    const contactEnquiries = await Lead.countDocuments({ source: 'contact-page' });
-    const productEnquiries = await Lead.countDocuments({ source: 'product-enquiry' });
-    
-    // Customers
-    const customerCount = await User.countDocuments({ role: 'CUSTOMER' });
-
-    // Monthly Revenue for Charts (Last 6 months)
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
     sixMonthsAgo.setDate(1);
     sixMonthsAgo.setHours(0, 0, 0, 0);
 
-    const monthlyRevenue = await Order.aggregate([
-      { 
-        $match: { 
-          createdAt: { $gte: sixMonthsAgo },
-          orderStatus: { $nin: ['CANCELLED', 'DELIVERY_FAILED', 'PAYMENT_FAILED'] }
-        } 
-      },
-      {
-        $group: {
-          _id: {
-            year: { $year: '$createdAt' },
-            month: { $month: '$createdAt' }
-          },
-          total: { $sum: '$total' },
-          orders: { $sum: 1 }
-        }
-      },
-      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    // PERFORMANCE: these 13 queries have no dependency on each other — they
+    // used to run one at a time, serially, stacking their latencies on
+    // every dashboard load. Promise.all runs them concurrently instead.
+    const [
+      revenueResult,
+      totalOrders,
+      todaysOrders,
+      pendingPayments,
+      pendingOrders,
+      lowStockCount,
+      returnsCount,
+      totalLeads,
+      newLeads,
+      contactEnquiries,
+      productEnquiries,
+      customerCount,
+      monthlyRevenue,
+    ] = await Promise.all([
+      Order.aggregate([
+        { $match: { orderStatus: { $nin: ['CANCELLED', 'DELIVERY_FAILED', 'PAYMENT_FAILED'] } } },
+        { $group: { _id: null, totalRevenue: { $sum: '$total' } } }
+      ]),
+      Order.countDocuments(),
+      Order.countDocuments({ createdAt: { $gte: today } }),
+      Order.countDocuments({ paymentStatus: 'PENDING' }),
+      Order.countDocuments({ orderStatus: 'PROCESSING' }),
+      Product.countDocuments({ stockStatus: { $in: ['LOW_STOCK', 'OUT_OF_STOCK'] } }),
+      ReturnRequest.countDocuments({ status: { $ne: 'REJECTED' } }),
+      Lead.countDocuments(),
+      Lead.countDocuments({ status: 'NEW' }),
+      Lead.countDocuments({ source: 'contact-page' }),
+      Lead.countDocuments({ source: 'product-enquiry' }),
+      User.countDocuments({ role: 'CUSTOMER' }),
+      Order.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: sixMonthsAgo },
+            orderStatus: { $nin: ['CANCELLED', 'DELIVERY_FAILED', 'PAYMENT_FAILED'] }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              year: { $year: '$createdAt' },
+              month: { $month: '$createdAt' }
+            },
+            total: { $sum: '$total' },
+            orders: { $sum: 1 }
+          }
+        },
+        { $sort: { '_id.year': 1, '_id.month': 1 } }
+      ]),
     ]);
+    const totalRevenue = revenueResult[0]?.totalRevenue || 0;
 
     // Format for chart: ['Jan', 'Feb'...] and [12000, 15000...]
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import { FAQ } from '@/lib/models/faq';
 import { Testimonial } from '@/lib/models/testimonial';
 import { Policy } from '@/lib/models/policy';
+import { sanitizeRichText } from '@/lib/sanitize';
 
 // Prevent Turbopack tree-shaking
 if (!FAQ) console.warn("FAQ model not loaded");
@@ -60,7 +61,13 @@ export const getPolicyBySlug = unstable_cache(async (slug: string) => {
     await dbConnect();
     const policy = await Policy.findOne({ slug, isActive: true }).lean();
     if (!policy) return null;
-    return { ...policy, _id: (policy as any)._id.toString() };
+    // Rendered raw via dangerouslySetInnerHTML on the public policy page —
+    // sanitize here, at the one read path that page uses. See lib/sanitize.ts.
+    return {
+      ...policy,
+      _id: (policy as any)._id.toString(),
+      content: sanitizeRichText((policy as any).content),
+    };
   } catch (error) {
     console.error("Error in getPolicyBySlug:", error);
     return null;

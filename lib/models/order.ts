@@ -6,7 +6,13 @@ const OrderItemSchema = new mongoose.Schema({
   sku: { type: String },
   name: { type: String, required: true },
   quantity: { type: Number, required: true },
-  price: { type: Number, required: true }
+  price: { type: Number, required: true },
+  // Per-unit price above; when calculatePriceOnVariantValue is true (set by
+  // the item's category), the true line total is price * quantity *
+  // variantValue (e.g. price-per-carat * carats). Both are resolved
+  // server-side in checkout.actions.ts, never trusted from the client.
+  variantValue: { type: Number },
+  calculatePriceOnVariantValue: { type: Boolean, default: false },
 });
 
 const OrderSchema = new mongoose.Schema(
@@ -56,5 +62,8 @@ const OrderSchema = new mongoose.Schema(
 
 OrderSchema.index({ orderStatus: 1 });
 OrderSchema.index({ paymentStatus: 1 });
+// PERFORMANCE: the admin order list's default sort (order.actions.ts) is
+// createdAt descending with no status filter — unindexed before this.
+OrderSchema.index({ createdAt: -1 });
 
 export const Order = mongoose.models.Order || mongoose.model('Order', OrderSchema);

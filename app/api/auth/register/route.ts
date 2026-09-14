@@ -3,17 +3,24 @@ import bcrypt from "bcryptjs";
 import connectDB from "@/lib/db";
 import { User } from "@/lib/models/user";
 import { Customer } from "@/lib/models/customer";
+import { registerSchema } from "@/lib/validations/auth";
 
 export async function POST(req: Request) {
   try {
-    const { firstName, lastName, email, password } = await req.json();
-
-    if (!firstName || !lastName || !email || !password) {
+    const body = await req.json();
+    // SECURITY: validate types before any field reaches a DB query.
+    // Mongoose doesn't cast query filters, so an unvalidated `email` could
+    // be sent as e.g. { "$regex": "^admin" } and used as a yes/no oracle
+    // against the "account already exists" branch below to enumerate
+    // registered emails.
+    const parsed = registerSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: parsed.error.issues[0]?.message || "Invalid input" },
         { status: 400 }
       );
     }
+    const { firstName, lastName, email, password } = parsed.data;
 
     await connectDB();
 

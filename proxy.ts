@@ -1,11 +1,36 @@
 import { getToken } from "next-auth/jwt";
 import { NextResponse, type NextRequest } from "next/server";
+import { requireSecret } from "@/lib/env";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // SECURITY: nothing throttled login or registration — see lib/rate-limit.ts
+  // for why this is a simple per-instance limiter rather than a distributed
+  // one. Both admin and customer credential logins go through this same
+  // NextAuth callback route.
+  if (req.method === "POST") {
+    if (pathname === "/api/auth/callback/credentials") {
+      const ip = getClientIp(req);
+      if (!checkRateLimit(`login:${ip}`, 10, 5 * 60 * 1000)) {
+        return new NextResponse("Too many login attempts. Please try again in a few minutes.", {
+          status: 429,
+        });
+      }
+    } else if (pathname === "/api/auth/register") {
+      const ip = getClientIp(req);
+      if (!checkRateLimit(`register:${ip}`, 5, 60 * 60 * 1000)) {
+        return new NextResponse("Too many registration attempts. Please try again later.", {
+          status: 429,
+        });
+      }
+    }
+  }
+
   const token = await getToken({
     req,
-    secret: process.env.NEXTAUTH_SECRET || "fallback-secret-for-development",
+    secret: requireSecret("NEXTAUTH_SECRET", "fallback-secret-for-development"),
   });
 
   const isAuthRoute =
@@ -117,5 +142,19 @@ export async function proxy(req: NextRequest) {
 export default proxy;
 
 export const config = {
-  matcher: ["/admin/:path*", "/account/:path*", "/checkout/:path*", "/checkout", "/login", "/register", "/forgot-password", "/reset-password"],
+  matcher: [
+    "/admin/:path*",
+    "/account/:path*",
+    "/checkout/:path*",
+    "/checkout",
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/reset-password",
+    // Rate-limited only (see the POST check above) — every other branch in
+    // this function is a no-op for these two paths since neither matches
+    // isProtectedRoute/isPublicAuthRoute/etc.
+    "/api/auth/callback/credentials",
+    "/api/auth/register",
+  ],
 };

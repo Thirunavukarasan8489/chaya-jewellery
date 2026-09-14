@@ -30,7 +30,7 @@ export async function syncCart(sessionId: string, lines: CartLine[]) {
         items,
         expiresAt
       },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
 
     return { success: true };
@@ -50,11 +50,28 @@ export async function validateCart(sessionId: string) {
       return { success: false, error: 'Cart is empty or expired' };
     }
 
+    // PERFORMANCE: was one Product query plus one ProductVariant query per
+    // cart line, serially awaited — a 3-8 item cart meant 6-16 round trips
+    // right when a customer is trying to check out. Batch both up front.
+    const productIds = [...new Set(cart.items.map((item: any) => String(item.productId)))];
+    const [products, variants] = await Promise.all([
+      Product.find({ _id: { $in: productIds } }).lean(),
+      ProductVariant.find({ productId: { $in: productIds } }).lean(),
+    ]);
+
+    const productById = new Map(products.map((p: any) => [p._id.toString(), p]));
+    const variantsByProduct = new Map<string, any[]>();
+    for (const v of variants) {
+      const key = v.productId.toString();
+      if (!variantsByProduct.has(key)) variantsByProduct.set(key, []);
+      variantsByProduct.get(key)!.push(v);
+    }
+
     const validations = [];
 
     for (const item of cart.items) {
-      const product = await Product.findById(item.productId).lean();
-      
+      const product = productById.get(String(item.productId));
+
       if (!product) {
         validations.push(`Product no longer exists.`);
         continue;
@@ -65,19 +82,19 @@ export async function validateCart(sessionId: string) {
         continue;
       }
 
+      const productVariants = variantsByProduct.get(String(item.productId)) || [];
       let stock = 0;
       let reserved = 0;
       if (item.variantId) {
-        const variant = await ProductVariant.findOne({ _id: item.variantId, productId: item.productId }).lean();
+        const variant = productVariants.find((v) => v._id.toString() === String(item.variantId));
         if (variant) {
           stock = variant.stock || 0;
           reserved = variant.reservedQuantity || 0;
         }
       } else {
         // No specific variant selected — validate against the product's total stock.
-        const variants = await ProductVariant.find({ productId: item.productId }).lean();
-        stock = variants.reduce((acc, v) => acc + (v.stock || 0), 0);
-        reserved = variants.reduce((acc, v) => acc + (v.reservedQuantity || 0), 0);
+        stock = productVariants.reduce((acc, v) => acc + (v.stock || 0), 0);
+        reserved = productVariants.reduce((acc, v) => acc + (v.reservedQuantity || 0), 0);
       }
 
       const available = Math.max(0, stock - reserved);

@@ -93,7 +93,7 @@ export async function updateCategory(id: string, data: any) {
     // If we wanted to, we would check if the name changed, but it's safer
     // to leave the slug alone unless explicitly requested.
     
-    const category = await Category.findByIdAndUpdate(id, validatedData, { new: true }).lean();
+    const category = await Category.findByIdAndUpdate(id, validatedData, { returnDocument: 'after' }).lean();
     revalidatePath('/admin/categories');
     return { success: true, data: JSON.parse(JSON.stringify(category)) };
   } catch (error: any) {

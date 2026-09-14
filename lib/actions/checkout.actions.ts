@@ -4,21 +4,128 @@ import dbConnect from '@/lib/db';
 import { Order } from '@/lib/models/order';
 import { Customer } from '@/lib/models/customer';
 import { Product } from '@/lib/models/product';
+import { ProductVariant } from '@/lib/models/product-variant';
+import { Category } from '@/lib/models/category';
 import Counter from '@/lib/models/counter';
 import mongoose from 'mongoose';
 import { getSession } from '@/lib/auth';
 import { reserveInventory } from '@/lib/inventory';
 
+/**
+ * Resolves the REAL, database-backed price/quantity for every cart line
+ * submitted by the client. SECURITY: `item.price` (and `item.variantValue`)
+ * from the client are never trusted for money — placeOrder used to multiply
+ * the client-submitted price straight into the order total and, downstream,
+ * into the Razorpay payment amount, so a forged `price: 1` in the request
+ * body would let anyone pay a token amount for real stock. Every line's
+ * price now comes from `ProductVariant.price` looked up here, matching
+ * `resolveVariant()`'s "fall back to the product's only variant" rule in
+ * lib/inventory.ts so single-SKU checkout keeps working the same way.
+ * Batches its lookups ($in) instead of querying per line.
+ */
+async function resolveOrderItems(items: any[]) {
+  if (!Array.isArray(items) || items.length === 0) {
+    throw new Error('Cart is empty');
+  }
+
+  const variantIds = items.map((i) => i?.variantId).filter(Boolean);
+  const productIdsNeedingFallback = items
+    .filter((i) => !i?.variantId)
+    .map((i) => i?.productId)
+    .filter(Boolean);
+
+  const [variantsById, fallbackVariants] = await Promise.all([
+    variantIds.length ? ProductVariant.find({ _id: { $in: variantIds } }) : [],
+    productIdsNeedingFallback.length
+      ? ProductVariant.find({ productId: { $in: productIdsNeedingFallback } })
+      : [],
+  ]);
+
+  const variantByIdMap = new Map(variantsById.map((v: any) => [v._id.toString(), v]));
+  const fallbackByProductMap = new Map<string, any>();
+  for (const v of fallbackVariants) {
+    const pid = v.productId.toString();
+    if (!fallbackByProductMap.has(pid)) fallbackByProductMap.set(pid, v);
+  }
+
+  const categoryIds = new Set<string>();
+  for (const v of [...variantsById, ...fallbackVariants]) {
+    if (v.categoryId) categoryIds.add(v.categoryId.toString());
+  }
+  const categories = categoryIds.size
+    ? await Category.find({ _id: { $in: Array.from(categoryIds) } })
+    : [];
+  const calcOnValueByCategory = new Map(
+    categories.map((c: any) => [c._id.toString(), !!c.calculatePriceOnVariantValue]),
+  );
+
+  const resolved: Array<{
+    productId: string;
+    variantId: string;
+    sku?: string;
+    name: string;
+    quantity: number;
+    price: number;
+    variantValue?: number;
+    calculatePriceOnVariantValue: boolean;
+    lineTotal: number;
+  }> = [];
+
+  for (const item of items) {
+    const quantity = Number(item?.quantity);
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+      throw new Error('Invalid item quantity');
+    }
+
+    let variant = item?.variantId ? variantByIdMap.get(String(item.variantId)) : undefined;
+    if (!variant && item?.productId) variant = fallbackByProductMap.get(String(item.productId));
+    if (!variant) {
+      throw new Error('One of the items in your cart is no longer available.');
+    }
+
+    const calcOnValue = variant.categoryId
+      ? !!calcOnValueByCategory.get(variant.categoryId.toString())
+      : false;
+    const price = variant.price; // canonical, from the database — never from `item.price`
+    const variantValue = variant.variantValue;
+    const lineTotal = calcOnValue && variantValue ? price * quantity * variantValue : price * quantity;
+
+    resolved.push({
+      productId: variant.productId.toString(),
+      variantId: variant._id.toString(),
+      sku: variant.sku,
+      name: variant.name,
+      quantity,
+      price,
+      variantValue,
+      calculatePriceOnVariantValue: calcOnValue,
+      lineTotal,
+    });
+  }
+
+  return resolved;
+}
+
 export async function placeOrder(data: any) {
   try {
     await dbConnect();
-    
+
     // Validate required fields (basic validation for now)
     if (!data.customerName || !data.phone || !data.shippingAddress) {
       return { success: false, error: 'Missing required fields' };
     }
 
     const session = await getSession();
+
+    // Resolve canonical prices/quantities BEFORE starting the transaction —
+    // if a line item doesn't resolve (deleted product, tampered ID), fail
+    // fast without ever opening a transaction or reserving stock.
+    let resolvedItems;
+    try {
+      resolvedItems = await resolveOrderItems(data.items);
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Unable to validate cart items' };
+    }
 
     // Start transaction
     const dbSession = await mongoose.startSession();
@@ -29,20 +136,25 @@ export async function placeOrder(data: any) {
       const counter = await Counter.findOneAndUpdate(
         { id: 'orderId' },
         { $inc: { seq: 1 } },
-        { new: true, upsert: true, session: dbSession }
+        { returnDocument: 'after', upsert: true, session: dbSession }
       );
       const orderNumber = `ORD-${new Date().getFullYear()}-${counter.seq.toString().padStart(4, '0')}`;
-      
-      const serverSubtotal = data.items.reduce((acc: number, item: any) => {
-        if (item.calculatePriceOnVariantValue && item.variantValue) {
-          return acc + (item.price * item.quantity * item.variantValue);
-        }
-        return acc + (item.price * item.quantity);
-      }, 0);
+
+      const serverSubtotal = resolvedItems.reduce((acc, item) => acc + item.lineTotal, 0);
       const totals = await calculateOrderTotals(serverSubtotal, data.shippingAddress.state || "", data.purchaseType || "PERSONAL");
 
       const orderPayload = {
         ...data,
+        items: resolvedItems.map((item) => ({
+          productId: item.productId,
+          variantId: item.variantId,
+          sku: item.sku,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          variantValue: item.variantValue,
+          calculatePriceOnVariantValue: item.calculatePriceOnVariantValue,
+        })),
         subtotal: totals.subtotal,
         shippingFee: totals.shippingFee,
         tax: totals.tax,
@@ -56,14 +168,13 @@ export async function placeOrder(data: any) {
       const newOrder = await Order.create([orderPayload], { session: dbSession });
 
       // 3. Update Product Inventory
-      for (const item of data.items) {
-        if (!item.productId || !item.variantId) continue;
+      for (const item of resolvedItems) {
         await reserveInventory(item.productId, item.variantId, item.quantity, dbSession);
       }
 
       // 4. Update or Create Customer Profile Metrics
       let customer = await Customer.findOne({ 'contact.phone': data.phone }).session(dbSession);
-      
+
       if (!customer) {
         // If guest checkout and customer doesn't exist, create one
         customer = await Customer.create([{
@@ -71,13 +182,13 @@ export async function placeOrder(data: any) {
           contact: { email: data.email, phone: data.phone },
           profile: { firstName: data.customerName.split(' ')[0], lastName: data.customerName.split(' ').slice(1).join(' ') || '' },
           addresses: [data.shippingAddress],
-          metrics: { totalOrders: 1, totalSpend: data.total }
+          metrics: { totalOrders: 1, totalSpend: totals.total }
         }], { session: dbSession });
         customer = customer[0]; // because create returns an array when passed an array
       } else {
         // Update existing customer metrics
         customer.metrics.totalOrders = (customer.metrics.totalOrders || 0) + 1;
-        customer.metrics.totalSpend = (customer.metrics.totalSpend || 0) + data.total;
+        customer.metrics.totalSpend = (customer.metrics.totalSpend || 0) + totals.total;
         
         // Ensure address is saved if new
         // Basic check: just add if address array is empty
@@ -128,7 +239,11 @@ export async function createRazorpayOrder(amount: number) {
 }
 
 export async function verifyRazorpaySignature(razorpay_order_id: string, razorpay_payment_id: string, razorpay_signature: string) {
-  const secret = process.env.RAZORPAY_KEY_SECRET || '';
+  const secret = process.env.RAZORPAY_KEY_SECRET;
+  if (!secret) {
+    console.error('RAZORPAY_KEY_SECRET is not configured');
+    return false;
+  }
   const body = razorpay_order_id + "|" + razorpay_payment_id;
 
   const expectedSignature = crypto
@@ -136,7 +251,11 @@ export async function verifyRazorpaySignature(razorpay_order_id: string, razorpa
     .update(body.toString())
     .digest("hex");
 
-  return expectedSignature === razorpay_signature;
+  // Constant-time compare: a plain === leaks timing information about how
+  // many leading bytes matched, which matters on a payment-integrity check.
+  const expected = Buffer.from(expectedSignature);
+  const actual = Buffer.from(razorpay_signature || '');
+  return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
 }
 
 export async function calculateOrderTotals(subtotal: number, state: string, purchaseType: string) {

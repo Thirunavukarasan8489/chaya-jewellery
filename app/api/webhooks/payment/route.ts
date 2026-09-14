@@ -4,6 +4,11 @@ import { Order } from '@/lib/models/order';
 import { PaymentService } from '@/lib/services/payment';
 import mongoose from 'mongoose';
 
+// DEAD CODE — generic webhook handler that nothing calls or links to. The
+// real, wired-up payment webhook is `app/api/webhooks/razorpay/route.ts`
+// (HMAC-verified against RAZORPAY_WEBHOOK_SECRET, updates paymentStatus via
+// finalizeInventory). PAYMENT_WEBHOOK_SECRET exists only to feed this route;
+// don't treat it as part of the live Razorpay flow. Candidate for deletion.
 export async function POST(request: Request) {
   try {
     const payload = await request.json();

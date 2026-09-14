@@ -45,7 +45,7 @@ export async function updateSettings(data: any) {
     if (!settings) {
       settings = await Settings.create(data);
     } else {
-      settings = await Settings.findOneAndUpdate({}, data, { new: true }).lean();
+      settings = await Settings.findOneAndUpdate({}, data, { returnDocument: 'after' }).lean();
     }
     
     // Revalidate paths that might rely on global settings

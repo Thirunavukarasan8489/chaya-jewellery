@@ -15,6 +15,7 @@ import { Breadcrumbs } from "@/components/public/ui/page-header";
 import { ProductPurchaseOptions } from "@/components/public/product/product-purchase-options";
 
 import { Accordion } from "@/components/public/ui/accordion";
+import { sanitizeRichText } from "@/lib/sanitize";
 import { getCategoryBySlug } from "@/lib/services/category-service";
 import { Rating } from "@/components/public/ui/rating";
 import { SectionHeading } from "@/components/public/ui/section-heading";
@@ -120,7 +121,10 @@ export default async function ProductDetailPage(
               </h2>
               <div
                 className="rich-text text-[0.9375rem] leading-relaxed text-plum-800 max-w-none"
-                dangerouslySetInnerHTML={{ __html: product.description }}
+                // Sanitized again at render time (not just on write in
+                // product.actions.ts) so products stored before that fix
+                // shipped are covered too — see lib/sanitize.ts.
+                dangerouslySetInnerHTML={{ __html: sanitizeRichText(product.description) }}
               />
             </div>
           )}

@@ -17,8 +17,10 @@ npx tsc --noEmit  # type-check only, no build output
 Data scripts (require `MONGODB_URI` in `.env.local`, loaded via `@next/env`):
 
 ```bash
-npm run seed                      # scripts/seed.js — creates SUPER_ADMIN users
-                                   #   admin@chayajewellery.com / project@chayajewellery.com, pw "admin123"
+npm run seed                       # scripts/seed.js — creates SUPER_ADMIN users
+                                    #   admin@chayajewellery.com / project@chayajewellery.com, pw "admin123"
+npm run seed:catalog               # scripts/seed-catalog.js — demo categories/products/hero banners/
+                                    #   testimonials/FAQs; every insert is lookup-guarded, safe to re-run
 npm run migrate:variants           # scripts/migrate-variants.js
 npm run migrate:category-flags     # scripts/migrate-category-variant-flags.js
 ```
@@ -144,3 +146,16 @@ Separate from orders: `ENQUIRY_ONLY`/enquiry-enabled products feed `lib/models/l
 `lib/actions/lead.actions.ts` / `admin-leads.ts`, with its own status pipeline in
 `lib/config/statusMaps.ts` (`leadStatusConfig`: `NEW → CONTACTED → FOLLOW_UP → QUALIFIED → CONVERTED`,
 plus `CLOSED`/`SPAM`). This is the CRM side of the `LEAD_MANAGER` role.
+
+### Cart: `localStorage` is the source of truth, not the DB
+
+`components/public/cart/cart-provider.tsx` keeps cart lines in `localStorage`
+(`chayajewellery.cart.v1`) — that's what the UI reads/writes on every add/remove/quantity change.
+On changes it also fires `syncCart` (`lib/actions/cart.actions.ts`), which mirrors the lines into a
+`TemporaryCart` Mongo document (`lib/models/cart.ts`, keyed by a client-generated `sessionId`, 24h TTL
+index) — but that Mongo copy is used for exactly one thing: `validateCart` re-checks stock/status
+against it right before checkout. `placeOrder` (`lib/actions/checkout.actions.ts`) does **not** read
+`TemporaryCart` — it takes the `items` array the client submits directly (straight off `localStorage`
+state) and recomputes `subtotal`/`shippingFee`/`tax`/`total` server-side from those items. So if you
+change cart line shape, update `CartLine` (`lib/types.ts`), the `syncCart` mapper, and the `items` shape
+`placeOrder` expects — they're three independent call sites, not one.

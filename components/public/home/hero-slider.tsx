@@ -43,7 +43,7 @@ function HeroSlide({ slide, index }: { slide: Slide; index: number }) {
   const wholeSlideHref = !hasOverlay ? slide.ctaHref : undefined;
 
   return (
-    <div className="relative min-h-[360px] w-full overflow-hidden sm:min-h-[440px] lg:min-h-[520px]">
+    <div className="relative min-h-75 w-full overflow-hidden bg-plum-950 sm:min-h-[440px] lg:min-h-[520px]">
       {slide.image ? (
         <Image
           src={slide.image}
@@ -51,7 +51,16 @@ function HeroSlide({ slide, index }: { slide: Slide; index: number }) {
           fill
           priority={index === 0}
           sizes="100vw"
-          className="object-cover"
+          // object-contain on mobile: the slide box (390x360-ish, ~1.1:1) is
+          // much taller/narrower than a typical wide banner creative (this
+          // one is 1600x800, 2:1), so object-cover was scaling the image up
+          // to fill the box height and cropping ~46% of its width — cutting
+          // off exactly the corner ribbon/offer text a designer-provided
+          // banner tends to put near the edges. object-cover from lg: up,
+          // where the box is wide enough that cover only trims a little dead
+          // vertical margin instead of live content. bg-plum-950 above fills
+          // the letterbox bars contain leaves on mobile.
+          className="object-contain lg:object-cover"
         />
       ) : (
         <GemImage

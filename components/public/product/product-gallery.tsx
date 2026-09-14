@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { CldImage } from "@/components/shared/CldImage";
 import { GemImage } from "@/components/public/ui/gem-image";
 import { cn } from "@/lib/utils";
 
@@ -70,12 +71,17 @@ export function ProductGallery({
             className="w-full shrink-0 snap-center px-4 sm:px-0"
           >
             {hasImages ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              // PERFORMANCE: was a raw <img> shipping full-resolution
+              // Cloudinary originals on the highest-intent page in the
+              // storefront — CldImage gets Cloudinary's f_auto/q_auto
+              // delivery transforms, matching product-card.tsx's thumbnails.
+              <CldImage
                 src={images[i].url}
                 alt={images[i].altText || `${name} — view ${i + 1} of ${slides.length}`}
-                loading={i === 0 ? "eager" : "lazy"}
-                fetchPriority={i === 0 ? "high" : "auto"}
+                width={800}
+                height={800}
+                priority={i === 0}
+                loading={i === 0 ? undefined : "lazy"}
                 className="aspect-square w-full sm:rounded-2xl object-cover"
               />
             ) : (
@@ -123,10 +129,12 @@ export function ProductGallery({
                   )}
                 >
                   {hasImages ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <CldImage
                       src={images[i].url}
                       alt={images[i].altText || `Thumbnail ${i + 1}`}
+                      width={120}
+                      height={120}
+                      loading="lazy"
                       className="aspect-square w-full object-cover"
                     />
                   ) : (

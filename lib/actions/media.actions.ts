@@ -198,6 +198,13 @@ async function deleteFromCloudinary(
  * Used for cleaning orphaned media.
  */
 export async function deleteMediaByUrl(url: string) {
+  // SECURITY: every other exported action in this file (uploadMedia) checks
+  // role before doing anything — this one didn't, and relied entirely on
+  // route-level middleware to keep it out of reach. Only ever called
+  // server-side from product.actions.ts today, but a server action is a
+  // real network endpoint regardless of who currently imports it.
+  await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER']);
+
   if (!url || url.includes('placehold.co')) {
     return {
       success: true,

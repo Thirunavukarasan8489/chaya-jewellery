@@ -3,7 +3,8 @@
 import dbConnect from '@/lib/db';
 import { HeroSection } from '@/lib/models/hero-section';
 import { getSession } from '@/lib/auth';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, unstable_cache } from 'next/cache';
+import { HeroSectionSchema } from '@/lib/validations/hero-section.schema';
 
 // Helper to check auth
 async function checkAuth(allowedRoles: string[]) {
@@ -17,11 +18,25 @@ async function checkAuth(allowedRoles: string[]) {
   return session;
 }
 
-export async function getHeroSections() {
-  try {
+// PERFORMANCE: every other homepage data fetch (products, categories,
+// testimonials, FAQs) is wrapped in unstable_cache — this was the one
+// left hitting MongoDB fresh on every single homepage request. Matches the
+// same revalidate/tag convention already used in product-service.ts and
+// content-service.ts.
+const getCachedHeroSections = unstable_cache(
+  async () => {
     await dbConnect();
     const sections = await HeroSection.find().sort({ displayOrder: 1 }).lean();
-    return { success: true, data: JSON.parse(JSON.stringify(sections)) };
+    return JSON.parse(JSON.stringify(sections));
+  },
+  ['public-hero-sections-v1'],
+  { revalidate: 60, tags: ['content'] },
+);
+
+export async function getHeroSections() {
+  try {
+    const data = await getCachedHeroSections();
+    return { success: true, data };
   } catch (error: any) {
     return { success: false, error: error.message };
   }
@@ -41,10 +56,19 @@ export async function getHeroSectionById(id: string) {
 export async function createHeroSection(data: any) {
   try {
     await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER']);
+
+    // SECURITY: unlike every sibling CMS/product/order action, this used to
+    // take `data: any` straight into Mongoose with no schema check.
+    const parsed = HeroSectionSchema.safeParse(data);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message || 'Invalid input' };
+    }
+    data = parsed.data;
+
     await dbConnect();
-    
+
     // Auto-increment displayOrder if not provided or prevent duplicate
-    if (data.displayOrder === undefined || data.displayOrder === null || data.displayOrder === '') {
+    if (data.displayOrder === undefined || data.displayOrder === null) {
       const lastSection = await HeroSection.findOne().sort({ displayOrder: -1 });
       data.displayOrder = lastSection ? lastSection.displayOrder + 1 : 0;
     } else {
@@ -67,8 +91,18 @@ export async function createHeroSection(data: any) {
 export async function updateHeroSection(id: string, data: any) {
   try {
     await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER']);
+
+    // Partial: updateHeroSection is also used for single-field toggles
+    // (see toggleHeroSectionActive below), so only the fields actually
+    // present need to be valid.
+    const parsed = HeroSectionSchema.partial().safeParse(data);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message || 'Invalid input' };
+    }
+    data = parsed.data;
+
     await dbConnect();
-    
+
     if (data.displayOrder !== undefined && data.displayOrder !== null && data.displayOrder !== '') {
       const existing = await HeroSection.findOne({ displayOrder: data.displayOrder, _id: { $ne: id } });
       if (existing) {
@@ -76,7 +110,7 @@ export async function updateHeroSection(id: string, data: any) {
       }
     }
 
-    const section = await HeroSection.findByIdAndUpdate(id, data, { new: true }).lean();
+    const section = await HeroSection.findByIdAndUpdate(id, data, { returnDocument: 'after' }).lean();
     
     revalidatePath('/');
     revalidatePath('/admin/website/hero-section');
