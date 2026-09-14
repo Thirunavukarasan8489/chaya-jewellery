@@ -47,7 +47,7 @@ export function Testimonials({ items }: { items?: any[] }) {
         <ul
           ref={trackRef}
           onScroll={handleScroll}
-          className="no-scrollbar mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 sm:gap-4 sm:px-6 lg:mx-auto lg:grid lg:max-w-7xl lg:grid-cols-3 lg:gap-5 lg:overflow-visible lg:px-8"
+          className="no-scrollbar mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-hidden px-4 pb-3 sm:gap-4 sm:px-6 lg:mx-auto lg:grid lg:max-w-7xl lg:grid-cols-3 lg:gap-5 lg:overflow-visible lg:px-8"
         >
           {testimonials.map((t: any, i: number) => (
             <li

@@ -253,6 +253,39 @@ homepage before and after to confirm the old small-image-card markup
 (`size-72`) is gone and the existing real "slider 1" banner (badge+title+
 subtitle+both buttons all filled in) still renders correctly full-bleed.
 
+## 2026-09-13 fix: stray vertical scrollbar on horizontal scroll-snap carousels
+
+User added a second hero banner (triggering the hero's multi-slide carousel
+path) and got a visible vertical scrollbar cutting through the banner.
+Root cause is a genuine, easy-to-miss CSS spec rule, not a sizing mistake:
+per the CSS Overflow spec, if `overflow-x` is set to anything other than
+`visible` (e.g. Tailwind's `overflow-x-auto`) and `overflow-y` is left
+unset, `overflow-y` **computes to `auto` too** — not `visible`. So any
+horizontal scroll-snap track (`flex ... overflow-x-auto`) silently becomes
+verticality-scrollable as well, and the moment any two slides/cards in
+that track differ in height by even a sub-pixel (two different uploaded
+images, one slide with a text overlay and one without, font rendering
+rounding, etc.), a real vertical scrollbar appears on the track itself.
+
+Fixed by adding `overflow-y-hidden` explicitly alongside every
+`overflow-x-auto` horizontal scroll-snap track in the public site:
+`hero-slider.tsx`, `promo-banners.tsx`, `product-rail.tsx` (mobile rail),
+`testimonials.tsx` (mobile rail — desktop already resets to
+`lg:overflow-visible` for its grid layout, untouched), `product-gallery.tsx`.
+**If you add a new horizontal `snap-x` + `overflow-x-auto` rail anywhere,
+pair it with `overflow-y-hidden` from the start** — this is the correct
+default for that pattern, not a one-off patch. (Left the admin
+`overflow-x-auto` table wrappers and `page-header.tsx`'s breadcrumb rail
+alone — single-row content, not the multi-item-height-mismatch shape that
+triggers this.)
+
+Also, from the previous session's single-banner fix: the hero's
+per-slide text/button overlay is `position: absolute inset-0` over the
+image (not in normal flow with its own `min-height`) specifically so a
+long title/subtitle can never stretch the slide — and therefore the whole
+page — taller than intended. Keep that invariant if you touch
+`HeroSlide` again.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

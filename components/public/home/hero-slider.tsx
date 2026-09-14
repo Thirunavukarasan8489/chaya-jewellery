@@ -223,7 +223,13 @@ export function HeroSlider({ banners }: { categories?: any[]; banners?: any[] })
       >
         <ul
           ref={trackRef}
-          className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto scroll-smooth"
+          // overflow-y-hidden is load-bearing, not decorative: per the CSS
+          // overflow spec, setting overflow-x to anything but `visible`
+          // silently computes overflow-y to `auto` too if left unset — so
+          // without this, any sub-pixel height mismatch between slides
+          // (different uploaded images, one slide with a text overlay and
+          // one without) shows up as a real vertical scrollbar on the track.
+          className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden scroll-smooth"
         >
           {activeSlides.map((slide, i) => (
             <li key={i} data-index={i} className="w-full shrink-0 snap-center">

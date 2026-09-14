@@ -50,7 +50,7 @@ export function ProductRail({
       <ul
         ref={trackRef}
         onScroll={handleScroll}
-        className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto pt-1 pb-3 lg:hidden"
+        className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-hidden pt-1 pb-3 lg:hidden"
       >
         {displayProducts.map((product, i) => (
           <li

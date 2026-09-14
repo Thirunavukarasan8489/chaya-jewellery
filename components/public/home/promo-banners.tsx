@@ -115,7 +115,7 @@ export function PromoBanners() {
       >
         <ul
           ref={trackRef}
-          className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto scroll-smooth"
+          className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden scroll-smooth"
         >
           {banners.map((banner, i) => (
             <li
