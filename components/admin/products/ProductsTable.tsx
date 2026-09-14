@@ -9,16 +9,17 @@ import { deleteProduct } from '@/lib/actions/product.actions';
 import DeleteConfirmButton from '@/components/admin/ui/DeleteConfirmButton';
 
 import { CldImage } from '@/components/shared/CldImage';
+import { variantTypeLabel } from '@/lib/utils';
 
 type ProductRow = {
   _id: string;
   name: string;
   slug: string;
-  category?: { name: string } | null;
+  category?: { name: string; variantType?: string } | null;
   stockStatus?: string;
   status?: string;
   primaryImage?: { url: string; altText?: string };
-  variants?: { price?: number; stock?: number }[];
+  variants?: { price?: number; stock?: number; sku?: string }[];
 };
 
 export default function ProductsTable({ products }: { products: ProductRow[] }) {
@@ -26,26 +27,29 @@ export default function ProductsTable({ products }: { products: ProductRow[] }) 
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [stockStatusFilter, setStockStatusFilter] = useState('');
+  const [variantTypeFilter, setVariantTypeFilter] = useState('');
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       if (categoryFilter && p.category?.name !== categoryFilter) return false;
       if (statusFilter && p.status !== statusFilter) return false;
       if (stockStatusFilter && p.stockStatus !== stockStatusFilter) return false;
+      if (variantTypeFilter && (p.category?.variantType ?? 'NONE') !== variantTypeFilter) return false;
       return true;
     });
-  }, [products, categoryFilter, statusFilter, stockStatusFilter]);
+  }, [products, categoryFilter, statusFilter, stockStatusFilter, variantTypeFilter]);
 
   const uniqueCategories = Array.from(new Set(products.map(p => p.category?.name).filter(Boolean)));
+  const uniqueVariantTypes = Array.from(new Set(products.map(p => p.category?.variantType).filter(Boolean)));
 
   const renderFilter = () => (
     <div className="relative">
-      <button 
+      <button
         onClick={() => setFilterOpen(!filterOpen)}
-        className={`p-2 border rounded-lg transition-colors flex items-center gap-2 ${filterOpen || categoryFilter || statusFilter || stockStatusFilter ? 'bg-gold-50 border-gold-300 text-gold-700' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+        className={`p-2 border rounded-lg transition-colors flex items-center gap-2 ${filterOpen || categoryFilter || statusFilter || stockStatusFilter || variantTypeFilter ? 'bg-gold-50 border-gold-300 text-gold-700' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}
       >
         <Filter size={18} />
-        {(categoryFilter || statusFilter || stockStatusFilter) && (
+        {(categoryFilter || statusFilter || stockStatusFilter || variantTypeFilter) && (
           <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
         )}
       </button>
@@ -58,6 +62,7 @@ export default function ProductsTable({ products }: { products: ProductRow[] }) 
               setCategoryFilter('');
               setStatusFilter('');
               setStockStatusFilter('');
+              setVariantTypeFilter('');
             }} className="text-xs text-red-500 hover:underline">
               Clear All
             </button>
@@ -101,6 +106,20 @@ export default function ProductsTable({ products }: { products: ProductRow[] }) 
               <option value="IN_STOCK">In Stock</option>
               <option value="LOW_STOCK">Low Stock</option>
               <option value="OUT_OF_STOCK">Out of Stock</option>
+            </select>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-gray-500">Variant Type</label>
+            <select
+              value={variantTypeFilter}
+              onChange={e => setVariantTypeFilter(e.target.value)}
+              className="w-full text-sm border-gray-200 rounded-md"
+            >
+              <option value="">All Variant Types</option>
+              {uniqueVariantTypes.map(t => (
+                <option key={t} value={t}>{variantTypeLabel(t)}</option>
+              ))}
             </select>
           </div>
         </div>
@@ -174,6 +193,12 @@ export default function ProductsTable({ products }: { products: ProductRow[] }) 
       },
     },
     {
+      header: 'Variants',
+      cell: (item: ProductRow) => (
+        <span className="text-gold-700 dark:text-gold-300">{item.variants?.length ?? 0}</span>
+      ),
+    },
+    {
       header: 'Status',
       cell: (item: ProductRow) => {
         const stockStatus = item.stockStatus ?? 'IN_STOCK';
@@ -212,5 +237,17 @@ export default function ProductsTable({ products }: { products: ProductRow[] }) 
     },
   ];
 
-  return <DataTable title="All Products" columns={columns} data={filteredProducts} renderFilter={renderFilter} />;
+  return (
+    <DataTable
+      title="All Products"
+      columns={columns}
+      data={filteredProducts}
+      renderFilter={renderFilter}
+      getSearchText={(item) =>
+        [item.name, item.slug, item.category?.name, ...(item.variants ?? []).map((v) => v.sku)]
+          .filter(Boolean)
+          .join(' ')
+      }
+    />
+  );
 }

@@ -137,6 +137,32 @@ export async function finalizeInventory(productId: string, variantId: string, qu
 }
 
 /**
+ * Applies a manual (admin) stock adjustment by a signed delta, e.g. from the
+ * Inventory screen's "Adjust Stock" action. Unlike restockInventory/
+ * finalizeInventory, the delta here can be positive or negative.
+ * MUST be called within a MongoDB transaction session.
+ */
+export async function adjustInventory(productId: string, variantId: string, delta: number, session: mongoose.ClientSession) {
+  const product = await Product.findById(productId).session(session);
+  if (!product) {
+    throw new Error(`Product with ID ${productId} not found`);
+  }
+
+  const variant = await resolveVariant(productId, variantId, session);
+  if (!variant) {
+    throw new Error(`Variant ${variantId} not found for product ${product.name}`);
+  }
+
+  const previousStock = Number(variant.stock) || 0;
+  const newStock = Math.max(0, previousStock + delta);
+  variant.stock = newStock;
+  await variant.save({ session });
+
+  await recalcProductStockStatus(productId, session);
+  return { variantId: variant._id.toString(), previousStock, newStock };
+}
+
+/**
  * Restocks finalized inventory (e.g., cancelled paid order or returned item).
  * Increments stock.
  * MUST be called within a MongoDB transaction session.

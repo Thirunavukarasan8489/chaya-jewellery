@@ -55,10 +55,38 @@ export async function generateUniqueProductSlug(name: string, excludeId?: string
 }
 
 /**
- * Formats variant name/sku/slug and returns aggregate stock stats, matching
- * the naming rules used at creation time:
- * - category.calculatePriceOnVariantValue=true  -> "<Product Name> <Variant Type> <Variant Value>" (e.g. "Natural Blue Sapphire Gemstone Carat 2.5")
- * - category.calculatePriceOnVariantValue=false -> "<Product Name> <entered variant name>", falling back to "<Product Name> Option N"
+ * Builds a variant's display name, shared between variant creation
+ * (formatVariants, below) and standalone variant edits (updateVariant), so
+ * both stay on the same naming rule:
+ * - category.calculatePriceOnVariantValue=true  -> "<Variant Value> <Variant Type> <Product Name>" (e.g. "2.5 Carat Natural Blue Sapphire Gemstone")
+ * - category.calculatePriceOnVariantValue=false -> "<entered variant name> <Product Name>"
+ * - Falls back to "<Product Name> Option <n>" when there's no positive value/entered name to
+ *   lead with — this also sidesteps a storefront quirk where cleanVariantName() strips a
+ *   leading "0 <unit>" (e.g. "0 Carat"), which only matters for this value-first order.
+ */
+function buildVariantName(opts: {
+  priceOnValue: boolean;
+  variantType?: string;
+  variantValue?: number;
+  enteredName?: string | null;
+  productName: string;
+  optionIndex: number;
+}) {
+  const { priceOnValue, variantType, variantValue, enteredName, productName, optionIndex } = opts;
+  if (priceOnValue) {
+    const value = Number(variantValue) || 0;
+    if (value > 0) {
+      return `${value} ${variantTypeLabel(variantType)} ${productName}`.trim();
+    }
+    return `${productName} Option ${optionIndex}`;
+  }
+  const name = enteredName && String(enteredName).trim() ? String(enteredName).trim() : null;
+  return name ? `${name} ${productName}` : `${productName} Option ${optionIndex}`;
+}
+
+/**
+ * Formats variant name/sku/slug and returns aggregate stock stats. Naming
+ * itself is delegated to buildVariantName() above.
  * SKU always uses the category's variantType, since it identifies what kind of variant this product line uses regardless of pricing mode.
  */
 function formatVariants(variants: any[], productName: string, category: any, baseSkuPrefix: string, productSlug: string) {
@@ -68,12 +96,14 @@ function formatVariants(variants: any[], productName: string, category: any, bas
   const skuVariantType = category?.variantType || 'NONE';
 
   const formatted = variants.map((v: any, idx: number) => {
-    if (priceOnValue) {
-      v.name = `${productName} ${variantTypeLabel(category?.variantType)} ${v.variantValue ?? ''}`.trim();
-    } else {
-      const enteredName = v.size && String(v.size).trim() ? String(v.size).trim() : null;
-      v.name = enteredName ? `${productName} ${enteredName}` : `${productName} Option ${idx + 1}`;
-    }
+    v.name = buildVariantName({
+      priceOnValue,
+      variantType: category?.variantType,
+      variantValue: v.variantValue,
+      enteredName: v.size,
+      productName,
+      optionIndex: idx + 1,
+    });
 
     if (!v.sku) {
       const indexStr = String(idx + 1).padStart(3, '0');
@@ -119,7 +149,7 @@ export async function getProducts(page = 1, limit = 50) {
     await dbConnect();
     const skip = (page - 1) * limit;
     const products = await Product.find()
-      .populate('category', 'name')
+      .populate('category', 'name variantType')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -419,9 +449,46 @@ export async function updateVariant(productId: string, variantId: string, data: 
     await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER']);
     await dbConnect();
 
+    const existing = await ProductVariant.findOne({ _id: variantId, productId }).lean();
+    if (!existing) throw new Error('Variant not found');
+
+    const updateData = { ...data };
+
+    // Editing variantValue never regenerated `name` before, so it went stale
+    // the moment an admin changed a CARAT/SIZE/WEIGHT value after creation.
+    // Recompute it here with the same rule createProduct uses (buildVariantName),
+    // but only when the category actually derives the name from the value —
+    // otherwise `name` is admin-editable free text and must not be overwritten.
+    if (
+      updateData.variantValue !== undefined &&
+      Number(updateData.variantValue) !== Number(existing.variantValue)
+    ) {
+      const [product, category] = await Promise.all([
+        Product.findById(productId).select('name').lean(),
+        Category.findById(existing.categoryId).select('variantType calculatePriceOnVariantValue').lean(),
+      ]);
+
+      if (product && category?.calculatePriceOnVariantValue) {
+        const siblings = await ProductVariant.find({ productId })
+          .sort({ createdAt: 1 })
+          .select('_id')
+          .lean();
+        const position = siblings.findIndex((s) => s._id.toString() === variantId);
+
+        updateData.name = buildVariantName({
+          priceOnValue: true,
+          variantType: category.variantType,
+          variantValue: updateData.variantValue,
+          enteredName: existing.size,
+          productName: product.name,
+          optionIndex: (position >= 0 ? position : siblings.length) + 1,
+        });
+      }
+    }
+
     const variant = await ProductVariant.findOneAndUpdate(
       { _id: variantId, productId },
-      { $set: data },
+      { $set: updateData },
       { returnDocument: 'after' }
     );
     if (!variant) throw new Error('Variant not found');
@@ -436,6 +503,54 @@ export async function updateVariant(productId: string, variantId: string, data: 
     revalidatePath('/admin/products');
     revalidatePath('/admin/productvarients');
     return { success: true, data: JSON.parse(JSON.stringify(variant)) };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteVariant(variantId: string) {
+  try {
+    await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER']);
+    await dbConnect();
+
+    const variant = await ProductVariant.findById(variantId).lean();
+    if (!variant) throw new Error('Variant not found');
+
+    // Order line items carry their own variantId, independent of productId.
+    const orderCount = await Order.countDocuments({ 'items.variantId': variantId });
+    if (orderCount > 0) {
+      throw new Error(`Cannot delete: variant is referenced in ${orderCount} order(s).`);
+    }
+
+    // Every Product must keep at least one ProductVariant — resolveVariant()
+    // (lib/inventory.ts) falls back to "the product's only variant", and
+    // single-SKU add-to-cart/checkout depends on that invariant.
+    const siblingCount = await ProductVariant.countDocuments({ productId: variant.productId });
+    if (siblingCount <= 1) {
+      throw new Error('Cannot delete: this is the only variant of its product. Delete the product instead, or add another variant first.');
+    }
+
+    await ProductVariant.findByIdAndDelete(variantId);
+
+    // Clean up images asynchronously
+    const urlsToDelete = new Set<string>();
+    if (variant.primaryImage?.url) urlsToDelete.add(variant.primaryImage.url);
+    if (variant.gallery) variant.gallery.forEach((g: any) => { if (g.url) urlsToDelete.add(g.url); });
+
+    // Fire and forget
+    Promise.allSettled(Array.from(urlsToDelete).map(url => deleteMediaByUrl(url)));
+
+    await logAuditAction({
+      action: 'PRODUCT_VARIANT_DELETED',
+      entity: 'Product',
+      entityId: variant.productId.toString(),
+      metadata: { variantId }
+    });
+
+    revalidatePath('/admin/products');
+    revalidatePath('/admin/productvarients');
+    revalidatePath('/admin/inventory');
+    return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
   }
