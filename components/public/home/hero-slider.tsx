@@ -43,7 +43,7 @@ function HeroSlide({ slide, index }: { slide: Slide; index: number }) {
   const wholeSlideHref = !hasOverlay ? slide.ctaHref : undefined;
 
   return (
-    <div className="relative min-h-75 w-full overflow-hidden bg-plum-950 sm:min-h-[440px] lg:min-h-[520px]">
+    <div className="relative min-h-44 w-full overflow-hidden bg-plum-950 sm:min-h-[440px] lg:min-h-[520px]">
       {slide.image ? (
         <Image
           src={slide.image}
