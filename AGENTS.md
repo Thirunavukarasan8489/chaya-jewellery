@@ -286,6 +286,45 @@ long title/subtitle can never stretch the slide — and therefore the whole
 page — taller than intended. Keep that invariant if you touch
 `HeroSlide` again.
 
+## 2026-09-14 fix: Vercel build failing with npm ERESOLVE (nodemailer/next-auth peer conflict)
+
+Vercel's `npm install` step was failing outright:
+`next-auth@4.24.15` declares a `peerOptional` dependency on
+`nodemailer@^7.0.7`, but `package.json` had drifted to
+`nodemailer@^10.0.10` (dependencies list showed other unrelated
+version bumps too — `next` → `^16.3.5`, `next-cloudinary`,
+`sanitize-html`, etc. — those look like real, intentional feature work
+done outside this session and were left untouched; only nodemailer
+caused the ERESOLVE). npm's default strict peer-dependency algorithm
+refuses to auto-resolve that conflict on a clean install (no local
+`node_modules` to fall back on, unlike a local `npm install` which can
+succeed quietly against an already-resolved tree) — so it always failed
+in CI/Vercel even though it may not have failed locally.
+
+**Fix:** pinned `nodemailer` back to `^7.0.13` (its original version in
+this project, before whatever bumped it — `npm update`/`audit fix`,
+most likely) rather than reaching for `legacy-peer-deps`/`--force`.
+Checked first that this is actually safe: `lib/authOptions.ts` has no
+`EmailProvider` configured, so next-auth never touches nodemailer at
+runtime at all — it's a fully unused optional peer. The app's own
+`lib/services/email.ts` only calls nodemailer's `createTransport()` /
+`.sendMail()`, both stable core APIs unchanged across v7–v10, so the
+downgrade has zero functional impact on transactional email.
+
+Re-ran `npm install` locally (not `--package-lock-only` — a real
+install, since this is a major-version change) to regenerate
+`package-lock.json` with `nodemailer@7.0.13` resolved, confirmed no
+ERESOLVE, then ran `npm run build` end-to-end (clean compile, all ~60
+routes prerendered/typed) to confirm this is the actual fix for what
+Vercel runs, not just a local shortcut.
+
+**If a dependency bump ever needs to stay** (e.g. nodemailer v10 has a
+security fix you need): don't reach for `legacy-peer-deps` as a
+first move — check whether the peer relationship is actually load-bearing
+(`grep` for the conflicting package's usage in the dependent, e.g.
+`EmailProvider`/`nodemailer` in `authOptions.ts` here) before deciding
+whether a version mismatch is safe to keep.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
