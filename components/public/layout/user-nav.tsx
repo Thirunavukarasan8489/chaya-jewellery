@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { User } from "lucide-react";
+import { User, LayoutDashboard, Package, MapPin, UserCog, LogOut } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 
 export function UserNav() {
@@ -70,16 +70,34 @@ export function UserNav() {
             <Link
               href="/account/dashboard"
               onClick={() => setIsOpen(false)}
-              className="block px-4 py-2 text-sm text-plum-700 hover:bg-plum-50 hover:text-plum-900 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-sm text-plum-700 hover:bg-plum-50 hover:text-plum-900 transition-colors"
             >
+              <LayoutDashboard size={16} strokeWidth={2} />
               Dashboard
             </Link>
             <Link
               href="/account/orders"
               onClick={() => setIsOpen(false)}
-              className="block px-4 py-2 text-sm text-plum-700 hover:bg-plum-50 hover:text-plum-900 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-sm text-plum-700 hover:bg-plum-50 hover:text-plum-900 transition-colors"
             >
+              <Package size={16} strokeWidth={2} />
               Orders
+            </Link>
+            <Link
+              href="/account/addresses"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-2 px-4 py-2 text-sm text-plum-700 hover:bg-plum-50 hover:text-plum-900 transition-colors"
+            >
+              <MapPin size={16} strokeWidth={2} />
+              Addresses
+            </Link>
+            <Link
+              href="/account/profile"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-2 px-4 py-2 text-sm text-plum-700 hover:bg-plum-50 hover:text-plum-900 transition-colors"
+            >
+              <UserCog size={16} strokeWidth={2} />
+              Profile Settings
             </Link>
           </div>
           <div className="border-t border-plum-50 py-1">
@@ -88,8 +106,9 @@ export function UserNav() {
                 setIsOpen(false);
                 signOut({ callbackUrl: "/" });
               }}
-              className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+              className="flex w-full items-center gap-2 text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
             >
+              <LogOut size={16} strokeWidth={2} />
               Sign Out
             </button>
           </div>

@@ -17,13 +17,23 @@ async function checkAuth(allowedRoles: string[]) {
   return session;
 }
 
-export async function 
+export async function
 getCategories() {
   try {
     await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER', 'LEAD_MANAGER']); // Allow lead manager to view categories too
     await dbConnect();
     const categories = await Category.find().sort({ createdAt: -1 }).lean();
-    return { success: true, data: JSON.parse(JSON.stringify(categories)) };
+
+    const counts = await Product.aggregate([
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+    ]);
+    const countByCategoryId = new Map(counts.map((c) => [String(c._id), c.count]));
+    const withCounts = categories.map((c: any) => ({
+      ...c,
+      productCount: countByCategoryId.get(String(c._id)) ?? 0,
+    }));
+
+    return { success: true, data: JSON.parse(JSON.stringify(withCounts)) };
   } catch (error: any) {
     return { success: false, error: error.message };
   }

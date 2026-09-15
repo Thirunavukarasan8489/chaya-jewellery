@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, Download, FileText, FileSpreadsheet, ChevronLeft, ChevronRight, ChevronDown, Filter } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -21,19 +21,45 @@ interface DataTableProps<T> {
   title?: string;
   selectable?: boolean;
   renderFilter?: () => React.ReactNode;
+  /**
+   * Optional per-row search string. By default, search does a shallow
+   * `Object.values()` scan, which only ever matches primitive top-level
+   * fields — nested objects/arrays (e.g. a populated `category`, a
+   * `variants` array) stringify to "[object Object]" and never match.
+   * Pass this to make search reach into nested fields.
+   */
+  getSearchText?: (row: T) => string;
 }
 
-export default function DataTable<T>({ columns, data, title = "Data", selectable = false, renderFilter }: DataTableProps<T>) {
+export default function DataTable<T>({ columns, data, title = "Data", selectable = false, renderFilter, getSearchText }: DataTableProps<T>) {
+  // searchInput is the controlled input value (updates every keystroke);
+  // searchTerm is what actually drives filtering, debounced so large tables
+  // don't re-filter/re-render on every keystroke ("quick filter").
+  const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [exportOpen, setExportOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Filter data based on search term (simple generic string matching across row values)
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setSearchTerm(searchInput);
+      setCurrentPage(1);
+    }, 200);
+    return () => clearTimeout(timeout);
+  }, [searchInput]);
+
+  // Filter data based on search term (generic string matching across row
+  // values, or the caller-supplied getSearchText when nested fields need to
+  // be reachable too — see the prop doc above).
   const filteredData = data.filter(row => {
     if (!searchTerm) return true;
-    return Object.values(row as any).some(val => 
-      String(val).toLowerCase().includes(searchTerm.toLowerCase())
+    const term = searchTerm.toLowerCase();
+    if (getSearchText) {
+      return getSearchText(row).toLowerCase().includes(term);
+    }
+    return Object.values(row as any).some(val =>
+      String(val).toLowerCase().includes(term)
     );
   });
 
@@ -69,11 +95,8 @@ export default function DataTable<T>({ columns, data, title = "Data", selectable
             <input
               type="text"
               placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               className="pl-9 pr-4 py-2 border border-gray-200 dark:border-plum-700 rounded-lg text-sm bg-gray-50 dark:bg-plum-950 text-plum-900 dark:text-ivory-100 focus:outline-none focus:ring-2 focus:ring-plum-600/30 w-full sm:w-64 transition-all hover:bg-gray-100 dark:hover:bg-plum-900"
             />
           </div>
