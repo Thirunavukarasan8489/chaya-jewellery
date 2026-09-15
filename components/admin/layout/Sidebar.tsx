@@ -156,8 +156,8 @@ export default function Sidebar({
             <Image
               src="/logo.png"
               alt="Chaya Jewellery Logo"
-              width={80}
-              height={80}
+              width={50}
+              height={50}
               className="object-contain w-auto h-auto"
               priority
             />

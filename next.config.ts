@@ -22,7 +22,11 @@ const csp = [
   // stricter but is a larger, separate change to how pages are rendered.
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://checkout.razorpay.com https://www.googletagmanager.com`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https://res.cloudinary.com https://images.unsplash.com https://*.razorpay.com",
+  // blob: is required for client-side file previews (URL.createObjectURL)
+  // in the admin media-upload forms (hero banners, product images, etc.) —
+  // the browser blocks rendering a blob: <img> without it, showing a
+  // broken-image icon even though the file itself uploads fine.
+  "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://*.razorpay.com",
   "font-src 'self' data:",
   "connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://checkout.razorpay.com https://www.google-analytics.com https://analytics.google.com",
   "frame-src 'self' https://checkout.razorpay.com https://api.razorpay.com",

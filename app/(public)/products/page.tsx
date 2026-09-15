@@ -14,7 +14,7 @@ import { applyFilters, toQuery } from "@/lib/filters";
 import { flattenVariants } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "All Gemstones",
+  title: "All Products",
   description:
     "Browse every certified natural gemstone in the Chaya Jewellery catalogue — ruby, blue sapphire, yellow sapphire, emerald, pearl, coral, bracelets and rudraksha.",
 };
@@ -31,8 +31,8 @@ export default async function ProductsPage(props: PageProps<"/products">) {
     <>
       <PageHeader
         eyebrow="Catalogue"
-        title="All gemstones"
-        body="Every stone below is natural and independently certified. Treatments are disclosed on each product page."
+        title="All Products"
+        body="Every product below is natural and independently certified. Treatments are disclosed on each product page."
         breadcrumbs={[{ label: "All Products" }]}
       />
 

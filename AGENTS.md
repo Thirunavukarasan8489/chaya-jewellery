@@ -325,6 +325,57 @@ first move — check whether the peer relationship is actually load-bearing
 `EmailProvider`/`nodemailer` in `authOptions.ts` here) before deciding
 whether a version mismatch is safe to keep.
 
+## 2026-09-15 fixes: admin media preview broken by CSP; hero image replace/delete now cleans up Cloudinary
+
+Between sessions, something (most likely a `/security-audit` pass — see
+the `security-audit`/`performance-audit` skills now available in this
+project) added real security headers via `next.config.ts` (`headers()`),
+including a `Content-Security-Policy` — a good, previously-missing
+hardening. But its `img-src` directive
+(`'self' data: https://res.cloudinary.com https://images.unsplash.com
+https://*.razorpay.com`) didn't include `blob:`, which is exactly the
+scheme `URL.createObjectURL(file)` produces for local file previews.
+Every admin media-upload form that shows a live preview before saving
+(hero banners, presumably product images/other forms using the same
+pattern) was silently broken — the file itself uploaded fine on submit,
+but the preview `<img>` rendered a broken-image icon because the browser
+blocked the `blob:` source per CSP, not because of any bug in the
+preview code itself. **Fix:** added `blob:` to `img-src`. This is a
+standard, safe CSP allowance — `blob:` URLs here are always client-
+generated from a `File` the user just picked in their own browser, never
+an externally-injected network resource, so it doesn't weaken what the
+CSP is actually defending against.
+
+Separately, `HeroSectionForm.tsx`'s "Remove" button and the edit-then-
+replace-image flow only ever cleared the `image` field in Mongo —
+nothing deleted the old file from Cloudinary, so every replaced or
+removed hero image became a permanently orphaned (billed) asset.
+**Fix, in `lib/actions/cms.actions.ts`:**
+- `updateHeroSection` now reads the section's *current* `image` before
+  applying the update, and — only after the DB write succeeds, and only
+  if the image actually changed — deletes the old Cloudinary asset via
+  `deleteMediaByUrl()` (already existed in `media.actions.ts`, previously
+  only wired up from `product.actions.ts`).
+- `deleteHeroSection` now does the same when a whole hero section is
+  deleted from the list page.
+- Deliberately **not** wired into the form's "Remove" button itself
+  (client-side) — that only clears local component state, so a user who
+  clicks Remove, then cancels/navigates away without saving, never
+  touches Cloudinary at all. Deletion is deferred to the server action,
+  after the new state is actually persisted; if you touch this flow
+  again, keep that ordering — deleting the old image *before* confirming
+  the new one is saved would leave a live banner pointing at nothing if
+  anything failed in between.
+- `deleteMediaByUrl` only ever deletes assets whose URL folder segment
+  matches `CLOUDINARY_FOLDER` (`'chayajewellery'`) — an external or
+  manually-pasted image URL silently no-ops instead of attempting a
+  delete, so this is safe to call speculatively on every replace/delete.
+
+**Verification:** `tsc --noEmit`, `eslint`, and `npm run build` all
+clean; confirmed via `curl -I` against the running dev server that the
+`Content-Security-Policy` response header now includes `blob:` in
+`img-src`.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

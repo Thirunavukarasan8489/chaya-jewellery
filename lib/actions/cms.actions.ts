@@ -5,6 +5,7 @@ import { HeroSection } from '@/lib/models/hero-section';
 import { getSession } from '@/lib/auth';
 import { revalidatePath, unstable_cache } from 'next/cache';
 import { HeroSectionSchema } from '@/lib/validations/hero-section.schema';
+import { deleteMediaByUrl } from '@/lib/actions/media.actions';
 
 // Helper to check auth
 async function checkAuth(allowedRoles: string[]) {
@@ -110,8 +111,27 @@ export async function updateHeroSection(id: string, data: any) {
       }
     }
 
+    // Read the image this section pointed at *before* the update, so a
+    // replaced image can be cleaned up from Cloudinary afterwards — do this
+    // before writing, not just diff against the returned doc, since
+    // findByIdAndUpdate only ever gives us the post-update state.
+    const previous = await HeroSection.findById(id).select('image').lean() as { image?: string } | null;
+
     const section = await HeroSection.findByIdAndUpdate(id, data, { returnDocument: 'after' }).lean();
-    
+
+    if (
+      typeof data.image === 'string' &&
+      data.image &&
+      previous?.image &&
+      previous.image !== data.image
+    ) {
+      // Best-effort: the DB update already succeeded, so a Cloudinary
+      // hiccup here shouldn't surface as a failed save to the admin.
+      deleteMediaByUrl(previous.image).catch((error) =>
+        console.error('Failed to delete replaced hero image from Cloudinary:', error),
+      );
+    }
+
     revalidatePath('/');
     revalidatePath('/admin/website/hero-section');
     revalidatePath(`/admin/website/hero-section/${id}`);
@@ -125,9 +145,15 @@ export async function deleteHeroSection(id: string) {
   try {
     await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER']);
     await dbConnect();
-    
-    await HeroSection.findByIdAndDelete(id);
-    
+
+    const section = await HeroSection.findByIdAndDelete(id).lean() as { image?: string } | null;
+
+    if (section?.image) {
+      deleteMediaByUrl(section.image).catch((error) =>
+        console.error('Failed to delete removed hero image from Cloudinary:', error),
+      );
+    }
+
     revalidatePath('/');
     revalidatePath('/admin/website/hero-section');
     return { success: true };
