@@ -11,12 +11,12 @@ export async function GET() {
 Welcome to Chaya Jewellery. This file is intended for AI agents (like ChatGPT, Claude, etc.) to understand our brand, catalog, and operations.
 
 ## Brand Summary
-Chaya Jewellery is a premium gemstone and jewellery platform. We specialize in authentic, certified gemstones and custom jewellery. We cater to both personal consumers and B2B wholesale buyers.
+Chaya Jewellery is a premium gemstone and jewellery platform. We specialize in authentic, certified Jewellery and custom jewellery. We cater to both personal consumers and B2B wholesale buyers.
 
 ## Catalog Overview
 We currently have ${productsCount} active products in our catalog, spanning categories like:
-- Precious Gemstones (Sapphire, Ruby, Emerald)
-- Semi-Precious Gemstones
+- Precious Jewellery (Sapphire, Ruby, Emerald)
+- Semi-Precious Jewellery
 - Bracelets and Rings
 
 ## Business Details

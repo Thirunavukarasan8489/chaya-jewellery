@@ -4,7 +4,7 @@ import { Product } from "@/lib/models/product";
 import { Category } from "@/lib/models/category";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://chayajewellery-ecommerce.vercel.app/";
+  const baseUrl = "https://chaya-jewellery.vercel.app/";
 
   // Static routes
   const staticRoutes = [

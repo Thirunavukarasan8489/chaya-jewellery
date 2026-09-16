@@ -21,7 +21,7 @@ export default function NotFound() {
 
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Link href="/products" className={buttonStyles({ size: "lg" })}>
-            Browse gemstones
+            Browse Products
           </Link>
           <Link
             href="/"

@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/public/ui/page-header";
 
 export const metadata: Metadata = {
   title: "Your Cart",
-  description: "Review the gemstones in your Chaya Jewellery cart before checkout.",
+  description: "Review the Jewellery in your Chaya Jewellery cart before checkout.",
 };
 
 export default async function CartPage() {

@@ -262,7 +262,7 @@ export async function calculateOrderTotals(subtotal: number, state: string, purc
   // Free shipping over ₹25,000, otherwise ₹500
   const shippingFee = subtotal > 25000 ? 0 : 500;
   
-  // Tax calculation for Gemstones (usually 3% in India)
+  // Tax calculation for Jewellery (usually 3% in India)
   // We define merchant state as Maharashtra for this example.
   const MERCHANT_STATE = "MAHARASHTRA";
   const userState = state.toUpperCase().trim();

@@ -13,7 +13,7 @@ const stats = [{ value: "50+", label: "Years of Trust" },{ value: "100%", label:
 export const metadata: Metadata = {
   title: "About Us",
   description:
-    "Chaya Jewellery has been sourcing and certifying natural gemstones since 2007. Direct relationships at origin, independent laboratory reports, full treatment disclosure.",
+    "Chaya Jewellery has been sourcing and certifying natural Jewellery since 2007. Direct relationships at origin, independent laboratory reports, full treatment disclosure.",
 };
 
 const values = [

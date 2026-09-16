@@ -108,11 +108,10 @@ description and are now superseded).
   cluster/database is a separate, deliberate infra migration — don't do
   it as a drive-by branding edit.
 - Marketing/SEO copy is still gemstone-specific in many places: the site
-  `<meta>` description/keywords in `app/layout.tsx` ("certified
-  gemstones", "ruby", "blue sapphire neelam", …), the About page origin
+  `<meta>` description/keywords in `app/layout.tsx` (Certified Jewellery", "Bracelet", "Earrings", "Necklace", "Rings", …), the About page origin
   story, WhatsApp message copy ("free gemmologist consultation"), and
   several homepage sections. The user said the business itself is
-  pivoting from gemstones to general jewellery — deciding what replaces
+  pivoting from Jewellery to general jewellery — deciding what replaces
   "ruby / sapphire / emerald" as the product taxonomy is a product
   decision, not a mechanical rename, so it needs their input rather than
   a guess. **Flag this as an open follow-up, don't silently rewrite it.**
@@ -468,7 +467,7 @@ bar above the column grid, backed by a genuinely new, minimal feature —
 signup isn't an error) + `components/public/layout/newsletter-form.tsx`.
 No admin UI to view subscribers yet — a real follow-up if this needs
 managing later, not built here. Also reworded the footer's remaining
-"independently certified gemstones" / "Chat with a gemmologist" copy to
+"independently certified Jewellery" / "Chat with a gemmologist" copy to
 jewellery language, and added the brand tagline "More Than Jewellery, A
 Part of Your Story" from the mockup. Did **not** add social icons
 (Instagram/Facebook/YouTube/Pinterest, shown in the mockup) — there are
@@ -617,6 +616,71 @@ instead, via the docs bundled in `node_modules/next/dist/docs`. If you
 touch this again, `node -e` scripts calling these functions directly will
 throw ("`updateTag` can only be called from within a Server Action") —
 that's expected, not a bug in the function.
+
+## 2026-09-17 customer login (`/login`) redesigned to match `/admin/login`
+
+User asked for the admin login page's design applied to the customer
+login page. `app/(public)/login/page.tsx` was a single centered card
+(`bg-plum-50`, gold button); rebuilt to mirror `app/(admin)/admin/login`'s
+structure: a desktop-only left brand image panel (`lg:w-[44%]`) next to
+the form, mobile-only branding above the form on small screens, an
+icon-prefixed input style (`Mail`/`Lock` glyphs, inline show/hide-password
+toggle), and a "Keep me signed in" checkbox for visual parity — same as
+the admin page, this checkbox isn't wired to any actual longer-session
+logic (`grep rememberMe lib/authOptions.ts` — nothing), it's cosmetic on
+both pages, not something this session added or fixed.
+
+**Deliberately used the site's own tokens/components instead of copying
+the admin page's raw values** — this was "apply this design," not
+"duplicate this markup byte-for-byte":
+- Real `<Logo />` component for the mobile branding block, not the admin
+  page's generic gem-icon placeholder.
+- `buttonStyles({ size: "lg", full: true })` (gold, shine-sweep, the same
+  primary button every other customer page uses) instead of the admin
+  page's dark-plum submit button — a customer-facing page should keep
+  the storefront's own established button language, not the admin
+  panel's separate one.
+- Semantic `danger-*`/`ivory-*` tokens for the error banner and input
+  borders, instead of the admin page's raw untokenized `rose-*`/`gray-*`
+  Tailwind defaults (a pre-existing inconsistency on the admin page
+  itself, not replicated here).
+- Brand image: reused `/images/admin-login.png` initially (generic Chaya
+  marketing imagery, no admin-specific text) — **the user then swapped
+  it to their own `/images/login-page.png` while this session was still
+  running**; left that edit in place, don't revert it.
+
+**Bug fixed in passing:** the old login page's `onSubmit` ignored any
+`?callbackUrl=` query param and always redirected to
+`/account/dashboard` after signing in — so a customer bounced here by
+`proxy.ts` from a protected `/account/*` deep link would land on the
+dashboard instead of back where they were headed. Now reads
+`useSearchParams().get('callbackUrl')` and only follows it if it's a
+same-site relative path (starts with `/`), else falls back to the
+dashboard. Per the codebase's existing convention for client pages
+using `useSearchParams()` (see `app/(public)/search/page.tsx`), the
+component reading it is wrapped in `<Suspense>` — a bare top-level
+`useSearchParams()` call in a page component is a Next.js build-time
+foot-gun otherwise.
+
+**Found, not fixed (pre-existing, out of scope):** the "Forgot
+password?" link on both the old and new customer login page points to
+`/forgot-password`, which doesn't exist as a route yet (only
+`/admin/forgot-password` does) — confirmed by listing
+`app/(public)/*` directories. Building the customer-facing forgot-
+password flow (token email, reset page) is a separate feature, not a
+redesign task; flagging it here rather than silently building it or
+silently leaving the link looking functional when it 404s.
+
+**Environment note for next time:** running `npm run build` while
+`npm run dev` is also running against the same `.next` directory
+corrupts Turbopack's cache and produces confusing, code-unrelated
+failures (`Persisting failed during shutdown: Unable to write SST
+file...`, then on retry a `ChunkLoadError`/`MODULE_NOT_FOUND` for an
+unrelated route). Neither was a real bug — stopping the dev server,
+`rm -rf .next`, and rebuilding produced a clean build immediately. If a
+build fails with a filesystem/chunk error that doesn't point at your
+actual change, check for a concurrent `dev` process on port 3000 before
+assuming the code is broken.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

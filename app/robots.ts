@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/admin/", "/api/"],
     },
-    sitemap: "https://chayajewellery-ecommerce.vercel.app//sitemap.xml",
+    sitemap: "https://chaya-jewellery.vercel.app//sitemap.xml",
   };
 }

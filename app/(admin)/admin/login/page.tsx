@@ -80,7 +80,7 @@ export default function AdminLogin() {
       <div className="hidden lg:flex lg:w-[44%] xl:w-2/5 relative overflow-hidden bg-plum-950 text-ivory-100 flex-col justify-between p-0 shrink-0">
       <div className="absolute inset-0">
         <Image
-          src="/images/admin-login.png"
+          src="/images/login-page.png"
           alt="Chaya Jewellery"
           width={941}
           height={1672}

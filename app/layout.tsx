@@ -36,42 +36,41 @@ const notoDevanagari = Noto_Sans_Devanagari({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://chayajewellery-ecommerce.vercel.app/"),
+  metadataBase: new URL("https://chaya-jewellery.vercel.app/"),
   title: {
-    default: "Chaya Jewellery — Certified Natural Gemstones",
+    default: "Chaya Jewellery — Certified Jewellery",
     template: "%s · Chaya Jewellery",
   },
   description:
-    "Natural, independently certified gemstones sourced at origin. Ruby, blue sapphire, yellow sapphire, emerald, pearl and coral with GIA, IGI and GRS reports. Free gemmologist consultation.",
+    "Natural, independently certified Jewellery sourced at origin. Ruby, blue sapphire, yellow sapphire, emerald, pearl and coral with GIA, IGI and GRS reports. Free gemmologist consultation.",
   keywords: [
-    "certified gemstones",
-    "natural ruby",
-    "blue sapphire neelam",
-    "yellow sapphire pukhraj",
-    "emerald panna",
-    "buy gemstones online india",
+    "Certified Jewellery",
+    "Bracelet",
+    "Earrings",
+    "Necklace",
+    "Rings",
   ],
   openGraph: {
     type: "website",
     siteName: "Chaya Jewellery",
     locale: "en_IN",
-    title: "Chaya Jewellery — Certified Natural Gemstones",
+    title: "Chaya Jewellery — Certified Natural Jewellery",
     description:
-      "Natural, independently certified gemstones sourced at origin. Treatments always disclosed.",
+      "Natural, independently certified jewellery sourced at origin. Treatments always disclosed.",
     images: [
       {
         url: "/og-image.jpg", // Fallback generic image
         width: 1200,
         height: 630,
-        alt: "Chaya Jewellery - Premium Certified Gemstones",
+        alt: "Chaya Jewellery - Premium Certified Jewellery",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Chaya Jewellery — Certified Natural Gemstones",
+    title: "Chaya Jewellery — Certified Natural Jewellery",
     description:
-      "Natural, independently certified gemstones sourced at origin. Treatments always disclosed.",
+      "Natural, independently certified Jewellery sourced at origin. Treatments always disclosed.",
     images: ["/og-image.jpg"],
   },
 };

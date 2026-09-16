@@ -39,7 +39,7 @@ export function CartView({ settings }: { settings: any }) {
         </p>
         <div className="mt-7 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
           <Link href="/products" className={buttonStyles({ size: "lg" })}>
-            Browse gemstones
+            Browse Products
           </Link>
           <Link
             href="/contact"

@@ -44,7 +44,7 @@ export function SearchInput() {
         onChange={(e) => setValue(e.target.value)}
         autoComplete="off"
         placeholder="Ruby, neelam, 5 carat, Ceylon…"
-        aria-label="Search gemstones"
+        aria-label="Search Jewellery"
         className="h-14 w-full rounded-none border border-plum-900/15 bg-white pr-24 pl-12 text-plum-900 shadow-sm transition-colors placeholder:text-plum-400 focus:border-gold-500 [&::-webkit-search-cancel-button]:hidden"
       />
       {value && (
