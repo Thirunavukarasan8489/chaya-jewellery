@@ -5,6 +5,7 @@ import { FeaturedCategories } from "@/components/public/home/featured-categories
 import { HeroSlider } from "@/components/public/home/hero-slider";
 import { Testimonials } from "@/components/public/home/testimonials";
 import { TrustStrip } from "@/components/public/home/trust-strip";
+import { CallToActionBanner } from "@/components/public/home/call-to-action-banner";
 import { ProductRail } from "@/components/public/product/product-rail";
 import { Reveal } from "@/components/public/ui/reveal";
 import { SectionHeading } from "@/components/public/ui/section-heading";
@@ -15,17 +16,22 @@ import { getHeroSections } from "@/lib/actions/cms.actions";
 import { flattenVariants } from "@/lib/utils";
 
 export default async function HomePage() {
-  const [bestsellers, categories, sectionsRes, testimonials] = await Promise.all([
-    getBestsellers(),
-    getCategories(),
-    getHeroSections(),
-    getTestimonials(),
-  ]);
+  const [bestsellers, categories, sectionsRes, testimonials] =
+    await Promise.all([
+      getBestsellers(),
+      getCategories(),
+      getHeroSections(),
+      getTestimonials(),
+    ]);
 
-  const banners = sectionsRes.success && Array.isArray(sectionsRes.data) ? sectionsRes.data.filter((s: any) => s.isActive) : undefined;
+  const banners =
+    sectionsRes.success && Array.isArray(sectionsRes.data)
+      ? sectionsRes.data.filter((s: any) => s.isActive)
+      : undefined;
 
   const averageRating = testimonials.length
-    ? testimonials.reduce((sum: number, t: any) => sum + (t.rating || 0), 0) / testimonials.length
+    ? testimonials.reduce((sum: number, t: any) => sum + (t.rating || 0), 0) /
+      testimonials.length
     : undefined;
 
   return (
@@ -52,6 +58,9 @@ export default async function HomePage() {
           </div>
         </section>
       </Reveal>
+
+      {/* 5. */}
+      <CallToActionBanner />
 
       {/* 5. Crafted for Generations — editorial */}
       <CraftedForGenerations />

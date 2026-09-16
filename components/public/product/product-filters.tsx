@@ -71,7 +71,7 @@ function Facets({
   return (
     <>
       {!lockCategory && (
-        <Facet title="Stone">
+        <Facet title="Category">
           {categories?.map((cat: any) => (
             <Chip
               key={cat.slug}
@@ -299,7 +299,7 @@ function Facet({
 }) {
   return (
     <div>
-      <h3 className="mb-2.5 text-[0.6875rem] font-semibold tracking-[0.14em] text-ink-muted uppercase">
+      <h3 className="mb-2.5 text-[0.6875rem] font-semibold tracking-[0.14em] text-ink uppercase">
         {title}
       </h3>
       <div className="flex flex-wrap gap-2">{children}</div>

@@ -30,6 +30,7 @@ import {
   Settings as SettingsIcon,
 } from "lucide-react";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 type Role = "SUPER_ADMIN" | "CONTENT_MANAGER" | "LEAD_MANAGER";
 
@@ -95,14 +96,22 @@ const sidebarGroups = [
   {
     title: "WEBSITE",
     items: [
-      { name: "Hero Section", href: "/admin/website/hero-section", icon: Megaphone },
+      {
+        name: "Hero Section",
+        href: "/admin/website/hero-section",
+        icon: Megaphone,
+      },
     ],
   },
 
   {
     title: "SYSTEM & SETTINGS",
     items: [
-      { name: "Company Settings", href: "/admin/settings/company", icon: SettingsIcon },
+      {
+        name: "Company Settings",
+        href: "/admin/settings/company",
+        icon: SettingsIcon,
+      },
       { name: "Audit Logs", href: "/admin/system/audit", icon: ShieldAlert },
       {
         name: "Users & Permissions",
@@ -116,9 +125,11 @@ const sidebarGroups = [
 export default function Sidebar({
   isOpen,
   setIsOpen,
+  onDark = false,
 }: {
   isOpen?: boolean;
   setIsOpen?: (isOpen: boolean) => void;
+  onDark?: boolean;
 }) {
   const pathname = usePathname();
   const { data: session } = useSession();
@@ -151,23 +162,41 @@ export default function Sidebar({
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-64 shrink-0 bg-plum-950 text-ivory-100 flex flex-col h-full overflow-y-auto transition-transform duration-300 ease-in-out md:static md:translate-x-0 border-r border-plum-900 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
-        <div className="py-2 border-b border-plum-900 bg-gold-50 flex items-center justify-center">
-          <span className="relative grid shrink-0 place-items-center">
+        <div className="py-2 border-b border-plum-900 bg-ivory-50 flex items-center justify-center">
+          <span className="relative flex gap-2 shrink-0 place-items-center">
             <Image
               src="/logo.png"
               alt="Chaya Jewellery Logo"
-              width={50}
-              height={50}
-              className="object-contain w-auto h-auto"
+              width={1254}
+              height={1254}
+              className="object-contain w-12 h-12"
               priority
             />
+            <span className="flex flex-col leading-none">
+              <span
+                className={cn(
+                  "font-display text-base font-semibold tracking-tight sm:text-lg uppercase",
+                  onDark ? "text-ivory-100" : "text-plum-900",
+                )}
+              >
+                Chaya Jewellery
+              </span>
+              <span
+                className={cn(
+                  "mt-0.5 text-[0.5rem] font-semibold tracking-[0.2em] uppercase sm:text-[0.5625rem] sm:tracking-[0.22em]",
+                  onDark ? "text-gold-400" : "text-gold-700",
+                )}
+              >
+                Certified Jewellery
+              </span>
+            </span>
           </span>
         </div>
 
         <nav className="flex-1 p-4 space-y-6">
           {sidebarGroups.map((group) => {
             const visibleItems = group.items.filter((item) =>
-              hasAccess(item.href, userRole)
+              hasAccess(item.href, userRole),
             );
 
             if (visibleItems.length === 0) return null;

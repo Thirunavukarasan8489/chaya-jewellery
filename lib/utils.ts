@@ -129,9 +129,9 @@ export function whatsappLink(businessData: any, message: string) {
 
 export const NAV_DATA = {
   primaryNav: [
-    { label: "All Products", href: "/products" },
-    { label: "About", href: "/about" },
-    { label: "Contact", href: "/contact" },
+    { label: "ALL PRODUCTS", href: "/products" },
+    { label: "ABOUT", href: "/about" },
+    { label: "CONTACT", href: "/contact" },
   ],
   secondaryNav: [
     { label: "FAQs", href: "/faqs" },

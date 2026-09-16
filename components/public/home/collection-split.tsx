@@ -1,11 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight } from "lucide-react";
-import { buttonStyles } from "@/components/public/ui/button";
-import { GemImage } from "@/components/public/ui/gem-image";
 import { Reveal } from "@/components/public/ui/reveal";
 import { getProductsByCategory } from "@/lib/services/product-service";
-import { gemColorFor } from "@/lib/utils";
 
 /** Asymmetric two-panel promo — a large "the collection" feature plus a
  * smaller single-category spotlight, matching the brand mockup's split
@@ -15,8 +11,6 @@ export async function CollectionSplit() {
     getProductsByCategory("necklaces"),
     getProductsByCategory("rings"),
   ]);
-  const feature = necklaces[0];
-  const spotlight = rings[0];
 
   return (
     <section className="shell gutter py-4">
