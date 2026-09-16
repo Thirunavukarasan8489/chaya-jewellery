@@ -32,7 +32,7 @@ const PANELS = [
 /** Two-panel bridal + gifting promo, matching the brand mockup. */
 export function BridalGiftsSplit() {
   return (
-    <section className="shell gutter py-4">
+    <section className="shell gutter sm:py-20 lg:py-24">
       <div className="grid gap-4 sm:grid-cols-2">
         {PANELS.map((panel, i) => (
           <Reveal key={panel.eyebrow} delay={i * 90}>

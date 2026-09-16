@@ -108,7 +108,7 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center rounded-2xl border border-dashed border-ivory-300 bg-white/60 px-6 py-14 text-center">
-      <span className="grid size-12 place-items-center rounded-full bg-ivory-200 text-plum-500">
+      <span className="grid size-12 place-items-center rounded-none bg-ivory-200 text-plum-500">
         <SearchX size={22} />
       </span>
       <h2 className="mt-4 font-display text-xl font-semibold text-plum-900">

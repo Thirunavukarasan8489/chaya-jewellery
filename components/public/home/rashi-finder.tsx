@@ -67,7 +67,7 @@ export function RashiFinder({ rashiList, categories }: { rashiList: any[], categ
         {/* Result card */}
         <div className="mx-auto mt-8 max-w-xl overflow-hidden rounded-2xl border border-gold-500/25 bg-white">
           <div className="flex items-center gap-4 bg-plum-950 p-5 text-ivory-100">
-            <span className="grid size-14 shrink-0 place-items-center rounded-full bg-gold-500/15 text-3xl">
+            <span className="grid size-14 shrink-0 place-items-center rounded-none bg-gold-500/15 text-3xl">
               {rashi.symbol}
             </span>
             <div className="min-w-0">

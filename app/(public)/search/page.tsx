@@ -41,7 +41,7 @@ export default async function SearchPage(props: PageProps<"/search">) {
 
       <div className="shell gutter py-8 sm:py-10">
         <div className="mx-auto max-w-2xl">
-          <Suspense fallback={<div className="skeleton h-14 rounded-full" />}>
+          <Suspense fallback={<div className="skeleton h-14 rounded-none" />}>
             <SearchInput />
           </Suspense>
 
@@ -51,7 +51,7 @@ export default async function SearchPage(props: PageProps<"/search">) {
                 <li key={s}>
                   <Link
                     href={`/search?q=${encodeURIComponent(s)}`}
-                    className="inline-flex h-9 items-center rounded-full border border-plum-900/15 bg-white px-3.5 text-[0.8125rem] font-medium text-plum-800 hover:border-gold-400"
+                    className="inline-flex h-9 items-center rounded-none border border-plum-900/15 bg-white px-3.5 text-[0.8125rem] font-medium text-plum-800 hover:border-gold-400"
                   >
                     {s}
                   </Link>
@@ -95,11 +95,11 @@ export default async function SearchPage(props: PageProps<"/search">) {
                     <li key={cat.slug}>
                       <Link
                         href={`/collections/${cat.slug}`}
-                        className="inline-flex h-10 items-center gap-2 rounded-full border border-plum-900/15 bg-white px-3.5 text-[0.8125rem] font-medium text-plum-800 hover:border-gold-400"
+                        className="inline-flex h-10 items-center gap-2 rounded-none border border-plum-900/15 bg-white px-3.5 text-[0.8125rem] font-medium text-plum-800 hover:border-gold-400"
                       >
                         <span
                           aria-hidden
-                          className="size-2.5 rotate-45 rounded-[2px]"
+                          className="size-2.5 rotate-45 rounded-none"
                           style={{ background: cat.gemColor }}
                         />
                         {categoryTerms(cat.name).primary}

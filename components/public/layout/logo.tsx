@@ -18,7 +18,7 @@ export function Logo({
       {/* <span className="relative grid size-9 shrink-0 place-items-center">
         <span
           aria-hidden
-          className="absolute inset-0 rotate-45 rounded-[0.5rem] bg-gradient-to-br from-gold-300 via-gold-500 to-gold-700 shadow-gold transition-transform duration-500 ease-[var(--ease-out-soft)] group-hover:rotate-[135deg]"
+          className="absolute inset-0 rotate-45 rounded-none bg-gradient-to-br from-gold-300 via-gold-500 to-gold-700 shadow-gold transition-transform duration-500 ease-[var(--ease-out-soft)] group-hover:rotate-[135deg]"
         />
         </span>
       </span> */}

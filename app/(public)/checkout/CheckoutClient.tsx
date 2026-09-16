@@ -290,7 +290,7 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
                   <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                 ) : (
                   <span
-                    className={`w-5 h-5 rounded-full flex items-center justify-center text-xs border-2 ${
+                    className={`w-5 h-5 rounded-none flex items-center justify-center text-xs border-2 ${
                       step === s.id
                         ? "border-gold-500 bg-gold-500 text-white"
                         : "border-plum-300 text-plum-400"
@@ -313,7 +313,7 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
               {step > 1 ? (
                 <CheckCircle2 className="w-5 h-5 text-emerald-600" />
               ) : (
-                <span className="w-5 h-5 rounded-full bg-gold-500 text-white flex items-center justify-center text-xs">1</span>
+                <span className="w-5 h-5 rounded-none bg-gold-500 text-white flex items-center justify-center text-xs">1</span>
               )}
               Contact Information
             </h2>
@@ -458,7 +458,7 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
               {step > 2 ? (
                 <CheckCircle2 className="w-5 h-5 text-emerald-600" />
               ) : (
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs border-2 ${step === 2 ? "bg-gold-500 border-gold-500 text-white" : "border-plum-300 text-plum-400"}`}>2</span>
+                <span className={`w-5 h-5 rounded-none flex items-center justify-center text-xs border-2 ${step === 2 ? "bg-gold-500 border-gold-500 text-white" : "border-plum-300 text-plum-400"}`}>2</span>
               )}
               Shipping Address
             </h2>
@@ -518,7 +518,7 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
         <section className="bg-white p-6 rounded-2xl border border-plum-100 shadow-sm">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold text-plum-900 flex items-center gap-2">
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs border-2 ${step === 3 ? "bg-gold-500 border-gold-500 text-white" : "border-plum-300 text-plum-400"}`}>3</span>
+              <span className={`w-5 h-5 rounded-none flex items-center justify-center text-xs border-2 ${step === 3 ? "bg-gold-500 border-gold-500 text-white" : "border-plum-300 text-plum-400"}`}>3</span>
               Payment Method
             </h2>
           </div>
@@ -537,14 +537,14 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
                   }`}
                 >
                   <span
-                    className={`inline-flex w-4 h-4 rounded-full border-2 items-center justify-center flex-shrink-0 transition-colors ${
+                    className={`inline-flex w-4 h-4 rounded-none border-2 items-center justify-center flex-shrink-0 transition-colors ${
                       formData.paymentMethod === m.value
                         ? "border-gold-500 bg-gold-500"
                         : "border-plum-300 bg-white"
                     }`}
                   >
                     {formData.paymentMethod === m.value && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-white block" />
+                      <span className="w-1.5 h-1.5 rounded-none bg-white block" />
                     )}
                   </span>
                   <input

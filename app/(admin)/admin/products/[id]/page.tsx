@@ -238,7 +238,7 @@ async function ProductViewLoader({ id }: { id: string }) {
                   {product.whatsappEnabled ? (
                     <CheckCircle2 size={16} className="text-green-600 dark:text-green-500 shrink-0 mt-0.5" />
                   ) : (
-                    <div className="w-4 h-4 rounded-full border-2 border-gold-300 dark:border-gold-600 shrink-0 mt-0.5" />
+                    <div className="w-4 h-4 rounded-none border-2 border-gold-300 dark:border-gold-600 shrink-0 mt-0.5" />
                   )}
                   <div>
                     <p className={`text-sm font-semibold ${product.whatsappEnabled ? 'text-green-800 dark:text-green-400' : 'text-gold-600 dark:text-gold-400'}`}>

@@ -45,7 +45,7 @@ export function SearchInput() {
         autoComplete="off"
         placeholder="Ruby, neelam, 5 carat, Ceylon…"
         aria-label="Search gemstones"
-        className="h-14 w-full rounded-full border border-plum-900/15 bg-white pr-24 pl-12 text-plum-900 shadow-sm transition-colors placeholder:text-plum-400 focus:border-gold-500 [&::-webkit-search-cancel-button]:hidden"
+        className="h-14 w-full rounded-none border border-plum-900/15 bg-white pr-24 pl-12 text-plum-900 shadow-sm transition-colors placeholder:text-plum-400 focus:border-gold-500 [&::-webkit-search-cancel-button]:hidden"
       />
       {value && (
         <button
@@ -55,14 +55,14 @@ export function SearchInput() {
             submit("");
           }}
           aria-label="Clear search"
-          className="absolute top-1/2 right-19 grid size-8 -translate-y-1/2 place-items-center rounded-full text-plum-400 hover:bg-ivory-200 hover:text-plum-700"
+          className="absolute top-1/2 right-19 grid size-8 -translate-y-1/2 place-items-center rounded-none text-plum-400 hover:bg-ivory-200 hover:text-plum-700"
         >
           <X size={16} />
         </button>
       )}
       <button
         type="submit"
-        className="absolute top-1/2 right-2 h-10 -translate-y-1/2 rounded-full bg-plum-900 px-4 text-sm font-semibold text-ivory-100 transition-colors hover:bg-gold-500 hover:text-plum-950"
+        className="absolute top-1/2 right-2 h-10 -translate-y-1/2 rounded-none bg-plum-900 px-4 text-sm font-semibold text-ivory-100 transition-colors hover:bg-gold-500 hover:text-plum-950"
       >
         Search
       </button>

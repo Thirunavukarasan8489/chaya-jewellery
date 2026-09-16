@@ -13,7 +13,7 @@ export function TrustStrip({ averageRating }: { averageRating?: number }) {
   ];
 
   return (
-    <section className="border-b border-ivory-300 bg-white">
+    <section className="border-y border-ivory-300 bg-white shadow-md">
       <ul className="shell gutter grid grid-cols-2 gap-x-4 gap-y-6 py-8 lg:grid-cols-4 lg:py-10">
         {trustHighlights.map((item) => {
           const Icon = item.icon;

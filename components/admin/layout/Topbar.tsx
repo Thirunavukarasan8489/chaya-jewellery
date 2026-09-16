@@ -53,24 +53,24 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
         {/* Theme Toggle */}
         <button 
           onClick={toggleDark}
-          className="p-2 text-plum-600 dark:text-plum-300 hover:bg-plum-100 dark:hover:bg-plum-800 rounded-full transition-colors"
+          className="p-2 text-plum-600 dark:text-plum-300 hover:bg-plum-100 dark:hover:bg-plum-800 rounded-none transition-colors"
         >
           {isDark ? <Sun size={20} /> : <Moon size={20} />}
         </button>
 
         {/* Notifications */}
-        <button className="relative p-2 text-plum-600 dark:text-plum-300 hover:bg-plum-100 dark:hover:bg-plum-800 rounded-full transition-colors">
+        <button className="relative p-2 text-plum-600 dark:text-plum-300 hover:bg-plum-100 dark:hover:bg-plum-800 rounded-none transition-colors">
           <Bell size={20} />
-          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 border-2 border-white dark:border-plum-900 rounded-full"></span>
+          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 border-2 border-white dark:border-plum-900 rounded-none"></span>
         </button>
 
         {/* Profile */}
         <div className="relative" ref={profileRef}>
           <button 
             onClick={() => setIsProfileOpen(!isProfileOpen)}
-            className="flex items-center gap-2 p-1 hover:bg-plum-100 dark:hover:bg-plum-800 rounded-full pr-3 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-plum-700"
+            className="flex items-center gap-2 p-1 hover:bg-plum-100 dark:hover:bg-plum-800 rounded-none pr-3 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-plum-700"
           >
-            <div className="w-8 h-8 bg-plum-100 dark:bg-plum-800 rounded-full flex items-center justify-center text-plum-700 dark:text-plum-200 border border-plum-200 dark:border-plum-700">
+            <div className="w-8 h-8 bg-plum-100 dark:bg-plum-800 rounded-none flex items-center justify-center text-plum-700 dark:text-plum-200 border border-plum-200 dark:border-plum-700">
               <UserIcon size={16} />
             </div>
             <div className="hidden md:block text-left">

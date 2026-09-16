@@ -23,7 +23,7 @@ export default async function TestimonialsPage() {
         body="Published unedited, including the ones that are not five stars."
         breadcrumbs={[{ label: "Testimonials" }]}
       >
-        <div className="mt-6 inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/8 px-4 py-2.5">
+        <div className="mt-6 inline-flex items-center gap-3 rounded-none border border-white/15 bg-white/8 px-4 py-2.5">
           <span className="font-display text-2xl font-semibold text-gold-300 tabular-nums">
             {average.toFixed(1)}
           </span>

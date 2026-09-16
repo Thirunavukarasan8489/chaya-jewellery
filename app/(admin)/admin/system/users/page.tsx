@@ -57,7 +57,7 @@ export default async function AdminUsersPage() {
                     {user.email}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4">
-                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                    <span className={`inline-flex rounded-none px-2.5 py-0.5 text-xs font-medium ${
                       user.role === 'SUPER_ADMIN' ? 'bg-purple-100 text-purple-800' :
                       user.role === 'CONTENT_MANAGER' ? 'bg-blue-100 text-blue-800' :
                       'bg-green-100 text-green-800'
@@ -66,7 +66,7 @@ export default async function AdminUsersPage() {
                     </span>
                   </td>
                   <td className="whitespace-nowrap px-6 py-4">
-                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                     <span className={`inline-flex rounded-none px-2.5 py-0.5 text-xs font-medium ${
                       user.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
                     }`}>
                       {user.status}

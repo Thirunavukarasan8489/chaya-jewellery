@@ -38,7 +38,7 @@ export function EnquiryForm({
   if (status === "sent") {
     return (
       <div className="rounded-2xl border border-emerald-600/25 bg-emerald-50 p-6 text-center">
-        <span className="mx-auto grid size-11 place-items-center rounded-full bg-emerald-600 text-white">
+        <span className="mx-auto grid size-11 place-items-center rounded-none bg-emerald-600 text-white">
           <Check size={22} strokeWidth={3} />
         </span>
         <h3 className="mt-4 font-display text-xl font-semibold text-emerald-900">

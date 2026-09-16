@@ -19,7 +19,7 @@ export function ConsultationCta({ business = NAV_DATA.business }: { business?: a
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-gold-500 via-gold-400 to-gold-600 p-6 sm:p-10 lg:p-14">
         <span
           aria-hidden
-          className="pointer-events-none absolute -top-24 -left-16 size-72 rounded-full bg-white/25 blur-3xl"
+          className="pointer-events-none absolute -top-24 -left-16 size-72 rounded-none bg-white/25 blur-3xl"
         />
 
         <div className="relative lg:flex lg:items-center lg:justify-between lg:gap-12">

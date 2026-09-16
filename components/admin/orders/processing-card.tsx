@@ -59,7 +59,7 @@ export function ProcessingCard({ orderId, currentStatus }: ProcessingCardProps) 
           
           return (
             <div key={step.status} className="flex flex-col items-center relative z-10 flex-shrink-0 mx-2">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+              <div className={`w-10 h-10 rounded-none flex items-center justify-center transition-colors ${
                 isCompleted ? 'bg-green-100 text-green-700 border-2 border-green-500' : 
                 isCurrent ? 'bg-blue-100 text-blue-700 border-2 border-blue-500 shadow-[0_0_0_4px_rgba(59,130,246,0.1)]' : 
                 'bg-gray-100 text-gray-400 border border-gray-300'

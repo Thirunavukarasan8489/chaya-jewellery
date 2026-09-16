@@ -59,7 +59,7 @@ export default function ForgotPassword() {
         <div className="bg-white dark:bg-plum-900 rounded-2xl shadow-lg border border-gray-200 dark:border-plum-800 p-6 sm:p-8">
           {isSubmitted ? (
             <div className="text-center space-y-4">
-              <div className="mx-auto w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-4">
+              <div className="mx-auto w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-none flex items-center justify-center mb-4">
                 <CheckCircle2 className="text-emerald-600 dark:text-emerald-400" size={24} />
               </div>
               <h2 className="text-xl font-semibold text-plum-900 dark:text-ivory-100">Check your email</h2>

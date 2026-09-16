@@ -83,7 +83,7 @@ export function ProductRail({
               aria-label={`Go to product ${index + 1}`}
               aria-current={active === index}
               className={cn(
-                "h-2 rounded-full transition-all duration-300",
+                "h-2 rounded-none transition-all duration-300",
                 active === index
                   ? "w-6 bg-gold-500"
                   : "w-2 bg-ivory-300 hover:bg-gold-300"

@@ -107,7 +107,7 @@ export function ProductCard({
             <Link
               href={`/products/${product.slug}#enquire`}
               aria-label={`Enquire about ${product.name}`}
-              className="relative z-10 grid size-11 shrink-0 place-items-center rounded-full bg-emerald-700 text-white shadow-md transition-[background-color,transform] duration-200 hover:bg-emerald-600 active:scale-95"
+              className="relative z-10 grid size-11 shrink-0 place-items-center rounded-none bg-emerald-700 text-white shadow-md transition-[background-color,transform] duration-200 hover:bg-emerald-600 active:scale-95"
             >
               <MessageSquareText size={17} strokeWidth={2.25} />
             </Link>

@@ -19,7 +19,7 @@ export async function Hero({ categories }: { categories: any[] }) {
 
       <div className="shell gutter relative py-14 sm:py-20 lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-14 lg:py-24">
         <div className="animate-rise">
-          <p className="inline-flex items-center gap-2 rounded-full border border-gold-500/30 bg-gold-500/10 px-3.5 py-1.5 text-[0.6875rem] font-semibold tracking-[0.14em] uppercase">
+          <p className="inline-flex items-center gap-2 rounded-none border border-gold-500/30 bg-gold-500/10 px-3.5 py-1.5 text-[0.6875rem] font-semibold tracking-[0.14em] uppercase">
             <BadgeCheck size={14} className="text-gold-400" />
             <span className="text-foil">
               GIA · IGI · GRS · SSEF

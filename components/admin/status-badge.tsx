@@ -49,7 +49,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   }
 
   return (
-    <span className={cn('px-2.5 py-1 text-xs font-medium border rounded-full whitespace-nowrap', colorClasses, className)}>
+    <span className={cn('px-2.5 py-1 text-xs font-medium border rounded-none whitespace-nowrap', colorClasses, className)}>
       {status.replace(/_/g, ' ')}
     </span>
   );

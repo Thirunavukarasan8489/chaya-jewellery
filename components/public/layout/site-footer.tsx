@@ -24,7 +24,7 @@ export async function SiteFooter() {
   const { business, primaryNav, secondaryNav } = NAV_DATA;
   const legal = policies.map((policy) => ({ label: policy.title, href: `/policies/${policy.slug}` }));
   return (
-    <footer className="mt-20 bg-plum-950 text-plum-200">
+    <footer className="bg-plum-950 text-plum-200">
       {/* Newsletter bar */}
       <div className="border-b border-plum-800">
         <div className="shell gutter flex flex-col items-center gap-5 py-9 text-center sm:flex-row sm:justify-between sm:text-left lg:py-11">
@@ -56,7 +56,7 @@ export async function SiteFooter() {
               className={buttonStyles({
                 variant: "whatsapp",
                 size: "sm",
-                className: "mt-6",
+                className: "mt-6 rounded-full",
               })}
             >
               <WhatsappIcon />
@@ -117,8 +117,7 @@ export async function SiteFooter() {
 
         <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-plum-400">
-            © {new Date().getFullYear()} Chaya Jewellery. All rights reserved. GSTIN
-            33ABCDE1234F1Z5
+            © {new Date().getFullYear()} Chaya Jewellery. All rights reserved.
           </p>
           <ul className="flex flex-wrap gap-x-5 gap-y-2">
             {legal.map((item: any) => (

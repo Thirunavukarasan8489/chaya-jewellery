@@ -50,7 +50,7 @@ export default function ProductsTable({ products }: { products: ProductRow[] }) 
       >
         <Filter size={18} />
         {(categoryFilter || statusFilter || stockStatusFilter || variantTypeFilter) && (
-          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span className="w-2 h-2 rounded-none bg-emerald-500"></span>
         )}
       </button>
 

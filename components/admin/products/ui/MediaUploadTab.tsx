@@ -56,7 +56,7 @@ export function MediaUploadTab({
               <button
                 type="button"
                 onClick={handleRemoveCover}
-                className="absolute top-2 right-2 p-1.5 bg-rose-600 text-white rounded-full shadow hover:bg-rose-700 transition-colors"
+                className="absolute top-2 right-2 p-1.5 bg-rose-600 text-white rounded-none shadow hover:bg-rose-700 transition-colors"
                 title="Remove Cover Image"
               >
                 <X size={16} />
@@ -79,7 +79,7 @@ export function MediaUploadTab({
               onChange={handleCoverUpload}
               className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
             />
-            <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-plum-900/40 text-plum-500 dark:text-plum-300 mx-auto flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 rounded-none bg-gray-100 dark:bg-plum-900/40 text-plum-500 dark:text-plum-300 mx-auto flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
               <UploadCloud size={24} />
             </div>
             <p className="text-sm font-medium text-plum-800 dark:text-plum-200">
@@ -113,7 +113,7 @@ export function MediaUploadTab({
                 <button
                   type="button"
                   onClick={() => removeGalleryImage(idx)}
-                  className="absolute top-1.5 right-1.5 p-1 bg-rose-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                  className="absolute top-1.5 right-1.5 p-1 bg-rose-600 text-white rounded-none opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
                   title="Remove image"
                 >
                   <Trash2 size={14} />
@@ -137,7 +137,7 @@ export function MediaUploadTab({
               onChange={handleGalleryUpload}
               className="hidden"
             />
-            <div className="w-9 h-9 bg-white dark:bg-plum-800 rounded-full flex items-center justify-center shadow-sm text-plum-500 dark:text-plum-300 mb-1 group-hover:scale-110 transition-transform">
+            <div className="w-9 h-9 bg-white dark:bg-plum-800 rounded-none flex items-center justify-center shadow-sm text-plum-500 dark:text-plum-300 mb-1 group-hover:scale-110 transition-transform">
               <Plus size={18} />
             </div>
             <span className="text-xs font-medium text-plum-600 dark:text-plum-300">

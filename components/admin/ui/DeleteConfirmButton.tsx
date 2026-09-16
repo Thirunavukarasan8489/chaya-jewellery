@@ -49,7 +49,7 @@ export default function DeleteConfirmButton({ entityId, entityName, deleteAction
           <div className="bg-white dark:bg-gold-900 rounded-xl shadow-lg max-w-md w-full overflow-hidden border border-gold-200 dark:border-gold-800 animate-in fade-in zoom-in duration-200">
             <div className="p-6">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-none bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
                   <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-500" />
                 </div>
                 <div>

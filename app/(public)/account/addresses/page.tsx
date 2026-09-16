@@ -58,7 +58,7 @@ export default async function AddressesPage() {
                   </div>
                   
                   {index === 0 && (
-                    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20 mb-3">
+                    <span className="inline-flex items-center rounded-none bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20 mb-3">
                       Default Shipping
                     </span>
                   )}

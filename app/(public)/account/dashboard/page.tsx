@@ -29,7 +29,7 @@ export default async function AccountDashboardPage() {
     <div className="space-y-8">
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-plum-900 to-plum-800 rounded-3xl p-8 sm:p-10 text-white relative overflow-hidden shadow-lg shadow-plum-900/20">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-gold-400/20 blur-3xl mix-blend-screen"></div>
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-none bg-gold-400/20 blur-3xl mix-blend-screen"></div>
         <div className="relative z-10">
           <h1 className="text-3xl font-display font-bold">
             Welcome back, {session?.user?.name?.split(' ')[0] || 'Customer'}!
@@ -49,7 +49,7 @@ export default async function AccountDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Quick Stats */}
         <div className="bg-white rounded-2xl p-6 border border-plum-100 shadow-sm flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center shrink-0">
+          <div className="w-14 h-14 rounded-none bg-emerald-50 text-emerald-500 flex items-center justify-center shrink-0">
             <Package size={24} />
           </div>
           <div>
@@ -59,7 +59,7 @@ export default async function AccountDashboardPage() {
         </div>
 
         <div className="bg-white rounded-2xl p-6 border border-plum-100 shadow-sm flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-gold-50 text-gold-500 flex items-center justify-center shrink-0">
+          <div className="w-14 h-14 rounded-none bg-gold-50 text-gold-500 flex items-center justify-center shrink-0">
             <TrendingUp size={24} />
           </div>
           <div>

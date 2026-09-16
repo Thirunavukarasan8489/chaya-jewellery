@@ -71,7 +71,7 @@ export default function LeadTimeline({ leadId, notes = [] }: { leadId: string, n
           <ul className="space-y-6 relative before:absolute before:inset-y-0 before:left-3.5 before:w-px before:bg-gold-200 dark:before:bg-gold-800">
             {notes.slice().reverse().map((note, index) => (
               <li key={note._id || index} className="relative pl-10">
-                <span className="absolute left-1 top-1 size-5 rounded-full bg-gold-100 dark:bg-gold-800 border border-gold-300 dark:border-gold-600 flex items-center justify-center ring-4 ring-white dark:ring-gold-900">
+                <span className="absolute left-1 top-1 size-5 rounded-none bg-gold-100 dark:bg-gold-800 border border-gold-300 dark:border-gold-600 flex items-center justify-center ring-4 ring-white dark:ring-gold-900">
                   <User size={10} className="text-gold-500" />
                 </span>
                 <div className="flex flex-col">

@@ -27,7 +27,7 @@ export async function SiteHeader() {
           <div className="flex shrink-0 items-center gap-1">
             <a
               href={business.phoneHref}
-              className="hidden items-center gap-2 rounded-full px-3.5 py-2 text-sm font-medium text-plum-800 transition-colors hover:bg-plum-900/6 xl:inline-flex"
+              className="hidden items-center gap-2 rounded-none px-3.5 py-2 text-sm font-medium text-plum-800 transition-colors hover:bg-plum-900/6 xl:inline-flex"
             >
               <Phone size={16} strokeWidth={2.25} />
               {business.phone}
@@ -36,7 +36,7 @@ export async function SiteHeader() {
             <Link
               href="/search"
               aria-label="Search products"
-              className="grid size-10 place-items-center rounded-full text-plum-800 transition-colors hover:bg-plum-900/6"
+              className="grid size-10 place-items-center rounded-none text-plum-800 transition-colors hover:bg-plum-900/6"
             >
               <Search size={20} strokeWidth={2} />
             </Link>

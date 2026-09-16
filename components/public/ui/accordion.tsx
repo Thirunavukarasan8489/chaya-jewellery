@@ -45,7 +45,7 @@ export function Accordion({
               <h3 className="flex-1 text-[0.9375rem] leading-snug font-semibold text-plum-900 sm:text-base">
                 {questionText}
               </h3>
-              <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-ivory-200 text-plum-700 transition-transform duration-300 ease-[var(--ease-out-soft)] group-open:rotate-45 group-open:bg-gold-500 group-open:text-plum-950">
+              <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-none bg-ivory-200 text-plum-700 transition-transform duration-300 ease-[var(--ease-out-soft)] group-open:rotate-45 group-open:bg-gold-500 group-open:text-plum-950">
                 <Plus size={16} strokeWidth={2.5} />
               </span>
             </summary>

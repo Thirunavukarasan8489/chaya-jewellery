@@ -374,12 +374,12 @@ export default function ProductForm({ initialData, categories = [] }: { initialD
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`shrink-0 flex items-center gap-1.5 pl-2 pr-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${isActive
+                  className={`shrink-0 flex items-center gap-1.5 pl-2 pr-3 py-1.5 rounded-none text-xs font-medium whitespace-nowrap border transition-colors ${isActive
                     ? 'bg-plum-900 dark:bg-ivory-100 text-white dark:text-plum-900 border-plum-900 dark:border-ivory-100'
                     : 'bg-white dark:bg-plum-900 text-plum-600 dark:text-plum-300 border-gray-200 dark:border-plum-700'
                     }`}
                 >
-                  <span className={`flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold shrink-0 ${isActive
+                  <span className={`flex items-center justify-center w-4 h-4 rounded-none text-[10px] font-bold shrink-0 ${isActive
                     ? 'bg-white/25 text-white dark:bg-plum-900/15 dark:text-plum-900'
                     : hasError
                     ? 'bg-rose-500 text-white'

@@ -52,7 +52,7 @@ export function CertificationTrustSection() {
                 const Icon = p.icon;
                 return (
                   <li key={p.title} className="flex gap-4">
-                    <span className="grid size-10 shrink-0 place-items-center rounded-full bg-plum-900 text-gold-400 ring-1 ring-gold-500/30">
+                    <span className="grid size-10 shrink-0 place-items-center rounded-none bg-plum-900 text-gold-400 ring-1 ring-gold-500/30">
                       <Icon size={17} strokeWidth={2} />
                     </span>
                     <div className="min-w-0">
@@ -95,7 +95,7 @@ export function CertificationTrustSection() {
           <Reveal delay={120}>
             <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-3xl bg-plum-950 p-8 text-center shadow-xl sm:p-10">
               <OrnamentalDivider onDark className="mb-6" />
-              <span className="inline-flex items-center gap-2 rounded-full border border-gold-500/30 bg-gold-500/10 px-3.5 py-1.5 text-[0.6875rem] font-semibold tracking-[0.14em] text-gold-300 uppercase">
+              <span className="inline-flex items-center gap-2 rounded-none border border-gold-500/30 bg-gold-500/10 px-3.5 py-1.5 text-[0.6875rem] font-semibold tracking-[0.14em] text-gold-300 uppercase">
                 <BadgeCheck size={14} />
                 Every piece, verified
               </span>

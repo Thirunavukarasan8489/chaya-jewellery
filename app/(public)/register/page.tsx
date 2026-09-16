@@ -96,7 +96,7 @@ export default function RegisterPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white px-8 py-10 shadow-xl shadow-plum-200/40 rounded-3xl border border-plum-100/50 relative overflow-hidden group">
           {/* Subtle gradient effect in background */}
-          <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-emerald-100/50 blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-1000"></div>
+          <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-none bg-emerald-100/50 blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-1000"></div>
 
           <form className="space-y-6 relative z-10" onSubmit={handleSubmit(onSubmit)}>
             {registerError && (

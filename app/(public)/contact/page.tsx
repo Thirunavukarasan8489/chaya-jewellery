@@ -126,7 +126,7 @@ function ContactRow({
 }) {
   const content = (
     <>
-      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-gold-50 text-gold-700 ring-1 ring-gold-500/20">
+      <span className="grid size-10 shrink-0 place-items-center rounded-none bg-gold-50 text-gold-700 ring-1 ring-gold-500/20">
         {icon}
       </span>
       <span className="min-w-0">

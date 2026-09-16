@@ -109,7 +109,7 @@ export function ProductGallery({
                 aria-label={`View image ${i + 1}`}
                 aria-current={active === i}
                 className={cn(
-                  "h-1.5 rounded-full transition-all duration-300",
+                  "h-1.5 rounded-none transition-all duration-300",
                   active === i ? "w-6 bg-gold-500" : "w-1.5 bg-plum-300",
                 )}
               />

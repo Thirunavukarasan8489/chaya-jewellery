@@ -43,7 +43,7 @@ export default function StatusBadge({ label, status, variant, className }: Statu
   }
 
   return (
-    <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] uppercase tracking-wider font-semibold", variantStyles[activeVariant], className)}>
+    <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-none text-[11px] uppercase tracking-wider font-semibold", variantStyles[activeVariant], className)}>
       {displayLabel.replace(/_/g, ' ')}
     </span>
   );

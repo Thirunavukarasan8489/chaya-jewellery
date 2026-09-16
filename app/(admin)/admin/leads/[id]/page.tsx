@@ -20,7 +20,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
       <div className="flex items-center gap-4">
         <Link 
           href="/admin/leads" 
-          className="p-2 rounded-full hover:bg-gold-200 dark:hover:bg-gold-800 text-gold-500 transition-colors"
+          className="p-2 rounded-none hover:bg-gold-200 dark:hover:bg-gold-800 text-gold-500 transition-colors"
         >
           <ArrowLeft size={20} />
         </Link>

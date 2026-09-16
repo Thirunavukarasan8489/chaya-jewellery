@@ -62,7 +62,7 @@ export function CartToast() {
             type="button"
             onClick={dismissLastAdded}
             aria-label="Dismiss"
-            className="grid size-7 place-items-center rounded-full text-plum-400 hover:bg-ivory-200 hover:text-plum-700"
+            className="grid size-7 place-items-center rounded-none text-plum-400 hover:bg-ivory-200 hover:text-plum-700"
           >
             <X size={15} />
           </button>

@@ -53,7 +53,7 @@ export function HowItWorks() {
               <Reveal key={s.step} delay={i * 90}>
                 <li className="flex flex-col items-center text-center">
                   {/* Number Badge */}
-                  <div className="relative flex size-14 shrink-0 items-center justify-center rounded-full border-2 border-gold-400 bg-white font-display text-lg font-bold text-gold-700 shadow-md transition-transform duration-300 hover:scale-110">
+                  <div className="relative flex size-14 shrink-0 items-center justify-center rounded-none border-2 border-gold-400 bg-white font-display text-lg font-bold text-gold-700 shadow-md transition-transform duration-300 hover:scale-110">
                     {s.step}
                   </div>
 

@@ -80,7 +80,7 @@ function Facets({
             >
               <span
                 aria-hidden
-                className="size-2.5 rotate-45 rounded-[2px]"
+                className="size-2.5 rotate-45 rounded-none"
                 style={{ background: cat.gemColor }}
               />
               {categoryTerms(cat.name).primary}
@@ -160,7 +160,7 @@ export function FilterBar({
             <SlidersHorizontal size={15} />
             Filters
             {count > 0 && (
-              <span className="grid size-5 place-items-center rounded-full bg-gold-500 text-[0.625rem] font-bold text-plum-950">
+              <span className="grid size-5 place-items-center rounded-none bg-gold-500 text-[0.625rem] font-bold text-plum-950">
                 {count}
               </span>
             )}
@@ -178,7 +178,7 @@ export function FilterBar({
             <select
               value={query.sort ?? "featured"}
               onChange={(e) => setParam("sort", e.target.value)}
-              className="h-11 appearance-none rounded-full border border-plum-900/15 bg-white py-0 pr-9 pl-4 text-sm font-medium text-plum-900"
+              className="h-11 appearance-none rounded-none border border-plum-900/15 bg-white py-0 pr-9 pl-4 text-sm font-medium text-plum-900"
             >
               {sortOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -214,14 +214,14 @@ export function FilterBar({
             <div className="relative flex shrink-0 items-center justify-between border-b border-ivory-300 px-4 pt-4 pb-3">
               <span
                 aria-hidden
-                className="absolute inset-x-0 top-1.5 mx-auto h-1 w-10 rounded-full bg-plum-300"
+                className="absolute inset-x-0 top-1.5 mx-auto h-1 w-10 rounded-none bg-plum-300"
               />
               <h2 className="text-base font-semibold text-plum-900">Filters</h2>
               <button
                 type="button"
                 onClick={() => setSheetOpen(false)}
                 aria-label="Close filters"
-                className="grid size-9 place-items-center rounded-full text-plum-700 hover:bg-plum-900/6"
+                className="grid size-9 place-items-center rounded-none text-plum-700 hover:bg-plum-900/6"
               >
                 <X size={19} />
               </button>
@@ -322,7 +322,7 @@ function Chip({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3.5 text-[0.8125rem] font-medium transition-colors",
+        "inline-flex min-h-10 items-center gap-1.5 rounded-none border px-3.5 text-[0.8125rem] font-medium transition-colors",
         active
           ? "border-gold-500 bg-gold-500 text-plum-950"
           : "border-plum-900/15 bg-white text-plum-800 hover:border-plum-900/35",

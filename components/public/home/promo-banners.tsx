@@ -132,7 +132,7 @@ export function PromoBanners() {
               >
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute -top-16 -right-12 size-56 rounded-full opacity-40 blur-2xl"
+                  className="pointer-events-none absolute -top-16 -right-12 size-56 rounded-none opacity-40 blur-2xl"
                   style={{ background: banner.from }}
                 />
 
@@ -168,7 +168,7 @@ export function PromoBanners() {
           type="button"
           onClick={() => goTo((active - 1 + banners.length) % banners.length)}
           aria-label="Previous banner"
-          className="absolute top-1/2 left-3 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full bg-plum-950/40 text-ivory-100 opacity-0 backdrop-blur-sm transition-opacity duration-200 group-hover:opacity-100 sm:flex hover:bg-plum-950/60"
+          className="absolute top-1/2 left-3 hidden size-10 -translate-y-1/2 items-center justify-center rounded-none bg-plum-950/40 text-ivory-100 opacity-0 backdrop-blur-sm transition-opacity duration-200 group-hover:opacity-100 sm:flex hover:bg-plum-950/60"
         >
           <ArrowLeft size={18} />
         </button>
@@ -176,7 +176,7 @@ export function PromoBanners() {
           type="button"
           onClick={() => goTo((active + 1) % banners.length)}
           aria-label="Next banner"
-          className="absolute top-1/2 right-3 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full bg-plum-950/40 text-ivory-100 opacity-0 backdrop-blur-sm transition-opacity duration-200 group-hover:opacity-100 sm:flex hover:bg-plum-950/60"
+          className="absolute top-1/2 right-3 hidden size-10 -translate-y-1/2 items-center justify-center rounded-none bg-plum-950/40 text-ivory-100 opacity-0 backdrop-blur-sm transition-opacity duration-200 group-hover:opacity-100 sm:flex hover:bg-plum-950/60"
         >
           <ArrowRight size={18} />
         </button>
@@ -190,7 +190,7 @@ export function PromoBanners() {
               aria-label={`Go to slide ${i + 1}`}
               aria-current={active === i}
               className={cn(
-                "h-1.5 rounded-full transition-all duration-300",
+                "h-1.5 rounded-none transition-all duration-300",
                 active === i ? "w-6 bg-gold-400" : "w-1.5 bg-white/50",
               )}
             />

@@ -489,6 +489,51 @@ from the page body, and the new color tokens reach real markup
 (`bg-plum-900`/`bg-plum-950`/`text-gold-700` counts checked, not just
 compiled).
 
+## 2026-09-17 flat design: every corner radius is now 0
+
+User wants a flat (square-cornered) look sitewide instead of rounded
+cards/buttons/inputs. Done as a token-level flip, not a per-component
+sweep, since `--radius-xs/sm/md/lg/xl/2xl` were already a real design
+token scale in `app/globals.css` (see "Brand color system" above — same
+one-file-edit principle already established for color):
+
+- `app/globals.css` `@theme`: `--radius`, `--radius-xs` through
+  `--radius-2xl`, and `--radius-3xl` are all now `0px`. Tokens are kept
+  (not deleted) so `rounded-md` etc. still compile everywhere they're
+  used — they just resolve to zero. `--radius` and `--radius-3xl` are
+  Tailwind's own built-in scale steps that this project had never
+  customized before (only xs–2xl had project-specific values); both are
+  overridden now too so the bare `rounded` and `rounded-3xl` utilities
+  go flat as well, not just the six that were already tokenized.
+  Confirmed in the actual compiled CSS output (not just source), all
+  seven resolve to `0px`.
+- The scrollbar-thumb `border-radius: 10px` in the same file's
+  `::-webkit-scrollbar-thumb` rule was hardcoded outside the token scale
+  — set to `0` directly.
+- `rounded-full` (pills, circular avatars/category icons, round buttons)
+  is a **fixed Tailwind keyword outside the `--radius-*` scale entirely**
+  (always `9999px`, not driven by any theme variable) — zeroing the
+  tokens above does not touch it. Swept literally: every `rounded-full`
+  in `app/` and `components/` (119 occurrences across 66 files) replaced
+  with `rounded-none`. Three arbitrary-value radii (`rounded-[2px]`,
+  `rounded-[0.5rem]`, `rounded-[0.3rem]`) were replaced the same way —
+  arbitrary values also bypass the theme scale.
+- **If you add new UI**, don't reach for `rounded-full` or an arbitrary
+  `rounded-[...]` value expecting the flat theme to catch it — it won't.
+  Use the tokenized classes (`rounded-md`, etc.) so a future radius
+  change (partial revert, a different corner treatment) stays a
+  one-file edit; if a genuinely circular shape is unavoidable, that's
+  the one case `rounded-full` is still the right tool, but it will
+  render as a filled square/pill corner today, not a circle, and
+  needs deliberately re-adding `rounded-full` back for that call site.
+
+**Verification:** `tsc --noEmit` and `eslint` clean across the whole
+`app`/`components`/`lib` tree; full `npm run build` clean; fetched the
+live dev server's homepage and its compiled CSS chunk directly and
+confirmed all seven `--radius-*` custom properties equal `0px` in the
+actual served stylesheet, and that no `rounded-full` string remains in
+the rendered homepage HTML.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

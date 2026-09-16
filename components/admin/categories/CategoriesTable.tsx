@@ -43,7 +43,7 @@ export default function CategoriesTable({ categories }: { categories: CategoryRo
       >
         <Filter size={18} />
         {(statusFilter || variantTypeFilter) && (
-          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span className="w-2 h-2 rounded-none bg-emerald-500"></span>
         )}
       </button>
 

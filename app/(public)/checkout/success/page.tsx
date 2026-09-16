@@ -8,7 +8,7 @@ export default function CheckoutSuccessPage({
 }) {
   return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center">
-      <div className="bg-emerald-50 w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-sm ring-1 ring-emerald-100">
+      <div className="bg-emerald-50 w-24 h-24 rounded-none flex items-center justify-center mb-6 shadow-sm ring-1 ring-emerald-100">
         <CheckCircle2 className="w-12 h-12 text-emerald-500" />
       </div>
       <h1 className="text-3xl font-display font-bold text-plum-950 mb-4">

@@ -21,7 +21,7 @@ export function PrimaryNav() {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "rounded-full px-3.5 py-2 text-sm font-medium transition-colors",
+                  "rounded-none px-3.5 py-2 text-sm font-medium transition-colors",
                   active
                     ? "bg-plum-900/8 text-plum-950"
                     : "text-plum-800 hover:bg-plum-900/6 hover:text-plum-950",

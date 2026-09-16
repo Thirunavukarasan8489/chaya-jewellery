@@ -111,13 +111,24 @@
   --font-sans: var(--font-hind), ui-sans-serif, system-ui, sans-serif;
   --font-devanagari: var(--font-noto-devanagari), var(--font-hind), sans-serif;
 
-  /* ---- Radius ----------------------------------------------------------- */
-  --radius-xs: 0.375rem;
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.25rem;
-  --radius-2xl: 1.75rem;
+  /* ---- Radius — flat design: every corner-radius token is 0 --------------
+     Kept as real tokens (not deleted) so `rounded-md` etc. still compile
+     and stay swappable from this one place, but the whole site is now
+     square-cornered. `--radius` and `--radius-3xl` are Tailwind's own
+     built-in scale steps (this project never had custom xs/2xl-only
+     coverage) — overridden here too so the bare `rounded` and `rounded-3xl`
+     utilities go flat as well. `rounded-full` (pills/circles/avatars) is a
+     fixed Tailwind keyword outside this scale entirely, not reachable by
+     these tokens — it's swept to `rounded-none` at every call site instead,
+     see the 2026-09-17 flat-design entry in AGENTS.md. */
+  --radius: 0px;
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
 
   /* ---- Elevation — warm purple-tinted shadows, never grey ---------------- */
   --shadow-xs: 0 1px 2px 0 rgb(22 0 29 / 0.06);
@@ -277,7 +288,7 @@
   }
   ::-webkit-scrollbar-thumb {
     background-color: var(--color-gold-300);
-    border-radius: 10px;
+    border-radius: 0;
   }
   ::-webkit-scrollbar-thumb:hover {
     background-color: var(--color-gold-500);

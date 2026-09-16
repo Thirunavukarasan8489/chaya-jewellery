@@ -24,7 +24,7 @@ export function UserNav() {
   if (status === "loading") {
     // Show a placeholder while loading
     return (
-      <div className="grid size-10 place-items-center rounded-full text-plum-300">
+      <div className="grid size-10 place-items-center rounded-none text-plum-300">
         <User size={20} strokeWidth={2} />
       </div>
     );
@@ -38,7 +38,7 @@ export function UserNav() {
       <Link
         href="/login"
         aria-label="Sign In"
-        className="grid size-10 place-items-center rounded-full text-plum-800 transition-colors hover:bg-plum-900/6"
+        className="grid size-10 place-items-center rounded-none text-plum-800 transition-colors hover:bg-plum-900/6"
       >
         <User size={20} strokeWidth={2} />
       </Link>
@@ -52,7 +52,7 @@ export function UserNav() {
         onClick={() => setIsOpen(!isOpen)}
         aria-label="User Account Menu"
         aria-expanded={isOpen}
-        className={`grid size-10 place-items-center rounded-full transition-colors ${
+        className={`grid size-10 place-items-center rounded-none transition-colors ${
           isOpen ? "bg-plum-900/10 text-plum-950" : "text-plum-800 hover:bg-plum-900/6"
         }`}
       >

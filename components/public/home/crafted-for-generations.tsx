@@ -10,7 +10,7 @@ import Image from "next/image";
  * Generations" section, sitting between Bestsellers and the trust strip. */
 export function CraftedForGenerations() {
   return (
-    <section className="bg-ivory-100 py-14 sm:py-20 lg:py-24">
+    <section className="bg-gold-50 py-14 sm:py-20 lg:py-24">
       <div className="shell gutter grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
         <Reveal>
           <p className="text-xs font-semibold tracking-[0.2em] text-gold-700 uppercase">

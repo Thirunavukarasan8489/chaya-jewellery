@@ -27,7 +27,7 @@ export function CartView({ settings }: { settings: any }) {
   if (lines.length === 0) {
     return (
       <div className="flex flex-col items-center rounded-2xl border border-dashed border-ivory-300 bg-white/60 px-6 py-16 text-center">
-        <span className="grid size-14 place-items-center rounded-full bg-ivory-200 text-plum-500">
+        <span className="grid size-14 place-items-center rounded-none bg-ivory-200 text-plum-500">
           <ShoppingBag size={26} strokeWidth={1.75} />
         </span>
         <h2 className="mt-5 font-display text-2xl font-semibold text-plum-900">
@@ -84,7 +84,7 @@ export function CartView({ settings }: { settings: any }) {
                   type="button"
                   onClick={() => remove(line.productId)}
                   aria-label={`Remove ${line.name} from cart`}
-                  className="grid size-9 shrink-0 place-items-center rounded-full text-plum-400 transition-colors hover:bg-danger-50 hover:text-danger-600"
+                  className="grid size-9 shrink-0 place-items-center rounded-none text-plum-400 transition-colors hover:bg-danger-50 hover:text-danger-600"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -95,7 +95,7 @@ export function CartView({ settings }: { settings: any }) {
               </p>
 
               <div className="mt-auto flex items-center justify-between gap-3 pt-3">
-                <div className="flex items-center rounded-full border border-plum-900/15">
+                <div className="flex items-center rounded-none border border-plum-900/15">
                   <button
                     type="button"
                     onClick={() =>
@@ -103,7 +103,7 @@ export function CartView({ settings }: { settings: any }) {
                     }
                     disabled={line.quantity <= 1}
                     aria-label="Decrease quantity"
-                    className="grid size-10 place-items-center rounded-full text-plum-700 hover:bg-ivory-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                    className="grid size-10 place-items-center rounded-none text-plum-700 hover:bg-ivory-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                   >
                     <Minus size={15} strokeWidth={2.5} />
                   </button>
@@ -116,7 +116,7 @@ export function CartView({ settings }: { settings: any }) {
                       setQuantity(line.productId, line.quantity + 1)
                     }
                     aria-label="Increase quantity"
-                    className="grid size-10 place-items-center rounded-full text-plum-700 hover:bg-ivory-200"
+                    className="grid size-10 place-items-center rounded-none text-plum-700 hover:bg-ivory-200"
                   >
                     <Plus size={15} strokeWidth={2.5} />
                   </button>

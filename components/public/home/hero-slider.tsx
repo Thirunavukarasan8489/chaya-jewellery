@@ -36,14 +36,16 @@ type Slide = {
 function HeroSlide({ slide, index }: { slide: Slide; index: number }) {
   const hasCaption = Boolean(slide.badge || slide.title || slide.subtitle);
   const hasPrimaryCta = Boolean(slide.ctaText && slide.ctaHref);
-  const hasSecondaryCta = Boolean(slide.secondaryCtaText && slide.secondaryCtaHref);
+  const hasSecondaryCta = Boolean(
+    slide.secondaryCtaText && slide.secondaryCtaHref,
+  );
   const hasOverlay = hasCaption || hasPrimaryCta || hasSecondaryCta;
   // A pure image banner (no caption, no buttons) links out entirely on
   // click instead of needing a button drawn on top of it.
   const wholeSlideHref = !hasOverlay ? slide.ctaHref : undefined;
 
   return (
-    <div className="relative min-h-44 w-full overflow-hidden bg-plum-950 sm:min-h-[440px] lg:min-h-[520px]">
+    <div className="relative min-h-36 w-full overflow-hidden sm:min-h-[440px] lg:min-h-[520px]">
       {slide.image ? (
         <Image
           src={slide.image}
@@ -81,7 +83,7 @@ function HeroSlide({ slide, index }: { slide: Slide; index: number }) {
         <div className="shell gutter absolute inset-0 z-10 flex flex-col justify-end pb-9 sm:pb-12 lg:pb-16">
           <div className="animate-rise max-w-2xl">
             {slide.badge && (
-              <p className="inline-flex items-center gap-2 rounded-full border border-gold-500/30 bg-gold-500/10 px-3.5 py-1.5 text-[0.6875rem] font-semibold tracking-[0.14em] text-gold-300 uppercase">
+              <p className="inline-flex items-center gap-2 rounded-none border border-gold-500/30 bg-gold-500/10 px-3.5 py-1.5 text-[0.6875rem] font-semibold tracking-[0.14em] text-gold-300 uppercase">
                 <BadgeCheck size={14} className="text-gold-400" />
                 <span>{slide.badge}</span>
               </p>
@@ -143,7 +145,12 @@ function HeroSlide({ slide, index }: { slide: Slide; index: number }) {
   );
 }
 
-export function HeroSlider({ banners }: { categories?: any[]; banners?: any[] }) {
+export function HeroSlider({
+  banners,
+}: {
+  categories?: any[];
+  banners?: any[];
+}) {
   const activeSlides: Slide[] = banners
     ? banners.map((b, i) => ({
         badge: b.badge,
@@ -207,14 +214,14 @@ export function HeroSlider({ banners }: { categories?: any[]; banners?: any[] })
   // scrollbar or invite a swipe gesture that goes nowhere.
   if (!isCarousel) {
     return (
-      <section className="relative w-full max-w-full overflow-hidden bg-plum-950 text-ivory-100">
+      <section className="relative w-full max-w-full overflow-hidden text-ivory-100">
         <HeroSlide slide={activeSlides[0]} index={0} />
       </section>
     );
   }
 
   return (
-    <section className="relative w-full max-w-full overflow-hidden bg-plum-950 text-ivory-100">
+    <section className="relative w-full max-w-full overflow-hidden text-ivory-100">
       <div
         className="group relative w-full overflow-hidden"
         onMouseEnter={() => {
@@ -254,7 +261,7 @@ export function HeroSlider({ banners }: { categories?: any[]; banners?: any[] })
             goTo((active - 1 + activeSlides.length) % activeSlides.length)
           }
           aria-label="Previous slide"
-          className="absolute top-1/2 left-4 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full bg-plum-950/60 text-ivory-100 backdrop-blur-md transition-all duration-200 hover:bg-plum-950/80 sm:flex"
+          className="absolute top-1/2 left-4 hidden size-11 -translate-y-1/2 items-center justify-center rounded-none bg-plum-950/60 text-ivory-100 backdrop-blur-md transition-all duration-200 hover:bg-plum-950/80 sm:flex"
         >
           <ArrowLeft size={20} />
         </button>
@@ -263,7 +270,7 @@ export function HeroSlider({ banners }: { categories?: any[]; banners?: any[] })
           type="button"
           onClick={() => goTo((active + 1) % activeSlides.length)}
           aria-label="Next slide"
-          className="absolute top-1/2 right-4 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full bg-plum-950/60 text-ivory-100 backdrop-blur-md transition-all duration-200 hover:bg-plum-950/80 sm:flex"
+          className="absolute top-1/2 right-4 hidden size-11 -translate-y-1/2 items-center justify-center rounded-none bg-plum-950/60 text-ivory-100 backdrop-blur-md transition-all duration-200 hover:bg-plum-950/80 sm:flex"
         >
           <ArrowRight size={20} />
         </button>
@@ -278,7 +285,7 @@ export function HeroSlider({ banners }: { categories?: any[]; banners?: any[] })
               aria-label={`Go to slide ${i + 1}`}
               aria-current={active === i}
               className={cn(
-                "h-2 rounded-full transition-all duration-300",
+                "h-2 rounded-none transition-all duration-300",
                 active === i
                   ? "w-8 bg-gold-400"
                   : "w-2 bg-white/40 hover:bg-white/60",

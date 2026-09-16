@@ -106,7 +106,7 @@ export function MobileDrawer({ categories }: { categories: any[] }) {
         onClick={() => setOpen(true)}
         aria-label="Open menu"
         aria-expanded={open}
-        className="grid size-10 shrink-0 place-items-center rounded-full text-plum-800 transition-colors hover:bg-plum-900/6 lg:hidden"
+        className="grid size-10 shrink-0 place-items-center rounded-none text-plum-800 transition-colors hover:bg-plum-900/6 lg:hidden"
       >
         <Menu size={22} strokeWidth={2} />
       </button>
@@ -136,7 +136,7 @@ export function MobileDrawer({ categories }: { categories: any[] }) {
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Close menu"
-                className="grid size-10 place-items-center rounded-full text-plum-700 hover:bg-plum-900/6"
+                className="grid size-10 place-items-center rounded-none text-plum-700 hover:bg-plum-900/6"
               >
                 <X size={20} />
               </button>
@@ -161,7 +161,7 @@ export function MobileDrawer({ categories }: { categories: any[] }) {
                       >
                         <span
                           aria-hidden
-                          className="size-6 shrink-0 rotate-45 rounded-[0.3rem]"
+                          className="size-6 shrink-0 rotate-45 rounded-none"
                           style={{
                             background: `linear-gradient(135deg, ${color}, color-mix(in oklab, ${color} 45%, #16001d))`,
                           }}

@@ -77,8 +77,8 @@ export default function AdminLogin() {
             backgroundSize: '15px 15px',
           }}
         />
-        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-gold-500/10 blur-3xl" />
-        <div className="absolute -bottom-32 -left-16 w-96 h-96 rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-none bg-gold-500/10 blur-3xl" />
+        <div className="absolute -bottom-32 -left-16 w-96 h-96 rounded-none bg-emerald-500/10 blur-3xl" />
 
         <div className="relative">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gold-500/15 border border-gold-400/30 mb-8">

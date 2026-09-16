@@ -25,7 +25,7 @@ export default async function OrderDetailPage(props: { params: Promise<{ id: str
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/admin/orders" className="p-2 bg-slate-100 dark:bg-plum-800 hover:bg-slate-200 dark:hover:bg-plum-700 rounded-full transition-colors text-slate-600 dark:text-slate-300">
+          <Link href="/admin/orders" className="p-2 bg-slate-100 dark:bg-plum-800 hover:bg-slate-200 dark:hover:bg-plum-700 rounded-none transition-colors text-slate-600 dark:text-slate-300">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>

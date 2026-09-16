@@ -58,7 +58,7 @@ export default function ProductVariantsTable({ variants }: { variants: VariantRo
       >
         <Filter size={18} />
         {(stockStatusFilter || parentProductFilter) && (
-          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span className="w-2 h-2 rounded-none bg-emerald-500"></span>
         )}
       </button>
 

@@ -183,7 +183,7 @@ export default function CustomerTabsClient({
                         <td className="px-4 py-3">{p.paymentMethod}</td>
                         <td className="px-4 py-3">₹{(p.amount || 0).toLocaleString()}</td>
                         <td className="px-4 py-3">
-                          <span className={`px-2 py-1 text-xs rounded-full ${p.status === 'SUCCESS' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                          <span className={`px-2 py-1 text-xs rounded-none ${p.status === 'SUCCESS' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
                             {p.status}
                           </span>
                         </td>
@@ -246,7 +246,7 @@ export default function CustomerTabsClient({
             <div className="relative border-l border-gray-200 dark:border-plum-700 ml-3 space-y-6">
               {/* Account Created */}
               <div className="pl-6 relative">
-                <div className="absolute w-3 h-3 bg-gold-500 rounded-full -left-[6.5px] top-1.5 ring-4 ring-white dark:ring-plum-900" />
+                <div className="absolute w-3 h-3 bg-gold-500 rounded-none -left-[6.5px] top-1.5 ring-4 ring-white dark:ring-plum-900" />
                 <p className="text-sm font-medium text-plum-900 dark:text-white">Customer Account Created</p>
                 <p className="text-xs text-plum-500 dark:text-plum-400">{new Date(customer.createdAt).toLocaleDateString()}</p>
               </div>
@@ -254,7 +254,7 @@ export default function CustomerTabsClient({
               {/* Orders Timeline */}
               {orders && orders.map(order => (
                 <div key={order._id} className="pl-6 relative">
-                  <div className="absolute w-3 h-3 bg-emerald-500 rounded-full -left-[6.5px] top-1.5 ring-4 ring-white dark:ring-plum-900" />
+                  <div className="absolute w-3 h-3 bg-emerald-500 rounded-none -left-[6.5px] top-1.5 ring-4 ring-white dark:ring-plum-900" />
                   <p className="text-sm font-medium text-plum-900 dark:text-white">Placed Order {order.orderNumber}</p>
                   <p className="text-xs text-plum-500 dark:text-plum-400">{new Date(order.createdAt).toLocaleDateString()} — ₹{(order.total || 0).toLocaleString()}</p>
                 </div>
