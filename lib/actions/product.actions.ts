@@ -14,6 +14,7 @@ import { revalidatePath } from 'next/cache';
 import mongoose from 'mongoose';
 import { variantTypeLabel } from '@/lib/utils';
 import { sanitizeRichText } from '@/lib/sanitize';
+import { recalcProductStockStatus } from '@/lib/inventory';
 
 async function checkAuth(allowedRoles: string[]) {
   const session = await getSession();
@@ -438,6 +439,81 @@ export async function getVariant(productId: string, variantId: string) {
     const variant = await ProductVariant.findOne({ _id: variantId, productId }).lean();
     if (!variant) throw new Error('Variant not found');
 
+    return { success: true, data: JSON.parse(JSON.stringify(variant)) };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+/** Adds a new variant to an existing product from the standalone Product Variants screens. */
+export async function createVariant(productId: string, data: any) {
+  try {
+    await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER']);
+    await dbConnect();
+
+    const product = await Product.findById(productId).lean();
+    if (!product) throw new Error('Product not found');
+
+    const category = await Category.findById(product.category).lean();
+    const existingCount = await ProductVariant.countDocuments({ productId });
+
+    const catShort = generateShortname(category?.name || 'Uncategorized');
+    const prodShort = generateShortname(product.name);
+    const baseSkuPrefix = `A1-${catShort}-${prodShort}`;
+    const skuVariantType = category?.variantType || 'NONE';
+    const indexStr = String(existingCount + 1).padStart(3, '0');
+
+    const name = buildVariantName({
+      priceOnValue: !!category?.calculatePriceOnVariantValue,
+      variantType: category?.variantType,
+      variantValue: data.variantValue,
+      enteredName: data.size,
+      productName: product.name,
+      optionIndex: existingCount + 1,
+    });
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    let variant: any;
+    try {
+      const created = await ProductVariant.create(
+        [{
+          ...data,
+          productId,
+          categoryId: category?._id,
+          name,
+          sku: data.sku || `${baseSkuPrefix}-${skuVariantType}-${indexStr}`,
+        }],
+        { session }
+      );
+      variant = created[0];
+
+      if (existingCount >= 1 && !product.hasVariants) {
+        // Second+ variant: this product is no longer single-SKU, so the
+        // storefront's variant selector needs to turn on.
+        await Product.findByIdAndUpdate(productId, { hasVariants: true }, { session });
+      }
+
+      await recalcProductStockStatus(productId, session);
+
+      await session.commitTransaction();
+      session.endSession();
+    } catch (txError) {
+      await session.abortTransaction();
+      session.endSession();
+      throw txError;
+    }
+
+    await logAuditAction({
+      action: 'PRODUCT_VARIANT_CREATED',
+      entity: 'Product',
+      entityId: productId,
+      metadata: { variantId: variant._id.toString() }
+    });
+
+    revalidatePath('/admin/products');
+    revalidatePath('/admin/productvarients');
+    revalidatePath('/admin/inventory');
     return { success: true, data: JSON.parse(JSON.stringify(variant)) };
   } catch (error: any) {
     return { success: false, error: error.message };

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useId } from 'react';
+import React, { useId, useSyncExternalStore } from 'react';
 import Select, { Props as SelectProps, GroupBase } from 'react-select';
 
 export interface AdminSelectOption {
@@ -31,6 +31,55 @@ export function AdminSelect<
   ...props
 }: AdminSelectCustomProps<Option, IsMulti, Group>) {
   const id = useId();
+  // react-select renders its Emotion-generated style tags differently
+  // between server and client (a known incompatibility with React 19's
+  // streaming hydration), which trips a hydration mismatch on first paint.
+  // Deferring the real widget to a post-hydration render sidesteps it — the
+  // placeholder below matches its size/chrome so there's no layout shift.
+  // useSyncExternalStore (not an effect) is the React-recommended way to
+  // read "are we hydrated yet" without a set-state-in-effect render cascade.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+
+  if (!mounted) {
+    const placeholderLabel = props.isMulti
+      ? (props.value as AdminSelectOption[] | null | undefined)
+          ?.map((v) => v.label)
+          .join(', ')
+      : (props.value as AdminSelectOption | null | undefined)?.label;
+
+    return (
+      <div className="w-full space-y-1.5">
+        {label && (
+          <label className="block text-sm font-medium text-plum-900 dark:text-ivory-100">
+            {label}
+          </label>
+        )}
+        <div
+          className={`flex items-center min-h-[42px] px-3 py-1 bg-white dark:bg-plum-950 border rounded-lg text-sm ${
+            error
+              ? 'border-rose-500 ring-1 ring-rose-500'
+              : 'border-gray-300 dark:border-plum-700'
+          } ${className || ''}`}
+        >
+          <span
+            className={
+              placeholderLabel
+                ? 'text-plum-900 dark:text-ivory-100'
+                : 'text-plum-400'
+            }
+          >
+            {placeholderLabel || props.placeholder || ''}
+          </span>
+        </div>
+        {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+        {helperText && !error && <p className="text-xs text-gold-400 mt-1">{helperText}</p>}
+      </div>
+    );
+  }
 
   return (
     <div className="w-full space-y-1.5">

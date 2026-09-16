@@ -1,44 +1,66 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useFormContext, useFieldArray, useWatch } from 'react-hook-form';
-import { Layers, X, Plus, Trash2 } from 'lucide-react';
-import { AdminInput } from '@/components/admin/ui/AdminInput';
-import { AdminButton } from '@/components/admin/ui/AdminButton';
-import { variantTypeLabel } from '@/lib/utils';
-import { ProductFormValues } from '../ProductForm';
+import React, { useState, useEffect } from "react";
+import { useFormContext, useFieldArray, useWatch } from "react-hook-form";
+import { Layers, X, Plus, Trash2, AlertTriangle } from "lucide-react";
+import { AdminInput } from "@/components/admin/ui/AdminInput";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
+import { variantTypeLabel } from "@/lib/utils";
+import { ProductFormValues } from "../ProductForm";
 
 interface PricingVariantsTabProps {
   isActive: boolean;
-  categories?: { label: string; value: string; variantType?: string; calculatePriceOnVariantValue?: boolean }[];
+  categories?: {
+    label: string;
+    value: string;
+    variantType?: string;
+    calculatePriceOnVariantValue?: boolean;
+  }[];
   productId?: string;
 }
 
-export function PricingVariantsTab({ isActive, categories = [], productId }: PricingVariantsTabProps) {
-  const { register, control, setValue, formState: { errors } } = useFormContext<ProductFormValues>();
-
-  const { fields: variantFields, append: appendVariant, remove: removeVariant } = useFieldArray({
+export function PricingVariantsTab({
+  isActive,
+  categories = [],
+  productId,
+}: PricingVariantsTabProps) {
+  const {
+    register,
     control,
-    name: 'variants'
+    setValue,
+    formState: { errors },
+  } = useFormContext<ProductFormValues>();
+
+  const {
+    fields: variantFields,
+    append: appendVariant,
+    remove: removeVariant,
+  } = useFieldArray({
+    control,
+    name: "variants",
   });
 
-  const categoryId = useWatch({ control, name: 'categoryId' });
-  const selectedCategory = categories.find(c => c.value === categoryId);
+  const categoryId = useWatch({ control, name: "categoryId" });
+  const selectedCategory = categories.find((c) => c.value === categoryId);
   const variantType = variantTypeLabel(selectedCategory?.variantType);
   const priceOnValue = !!selectedCategory?.calculatePriceOnVariantValue;
 
   // Existing variants for an already-created product are read from the
   // standalone ProductVariant collection and managed on their own screens —
   // this tab only defines the initial set of variants at creation time.
-  const existingVariants: any[] = useWatch({ control, name: 'variants' }) || [];
+  const existingVariants: any[] = useWatch({ control, name: "variants" }) || [];
 
-  const [numVariantsToGenerate, setNumVariantsToGenerate] = useState(1);
-  const [bulkBasePrice, setBulkBasePrice] = useState('');
-  const [bulkComparePrice, setBulkComparePrice] = useState('');
-  const [bulkStock, setBulkStock] = useState('');
+  const [numVariantsToGenerate, setNumVariantsToGenerate] = useState("1");
+  const [bulkBasePrice, setBulkBasePrice] = useState("");
+  const [bulkComparePrice, setBulkComparePrice] = useState("");
+  const [bulkStock, setBulkStock] = useState("");
+  const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
 
   const handleGenerateVariants = () => {
-    const newVariants = Array.from({ length: numVariantsToGenerate }).map(() => ({
+    const count = Number(numVariantsToGenerate);
+    if (!count || count <= 0) return;
+
+    const newVariants = Array.from({ length: count }).map(() => ({
       price: 0,
       stock: 1,
       lowStockThreshold: 5,
@@ -46,43 +68,25 @@ export function PricingVariantsTab({ isActive, categories = [], productId }: Pri
     appendVariant(newVariants);
   };
 
-  const handleApplyBasePrice = () => {
-    if (!bulkBasePrice) return;
-    const price = Number(bulkBasePrice);
-    if (isNaN(price)) return;
+  const handleApplyBulkField = (
+    field: "price" | "comparePrice" | "stock",
+    rawValue: string,
+  ) => {
+    if (!rawValue) return;
+    const value = Number(rawValue);
+    if (isNaN(value)) return;
 
     variantFields.forEach((_, index) => {
-      setValue(`variants.${index}.price`, price, { shouldValidate: true, shouldDirty: true });
+      setValue(`variants.${index}.${field}`, value, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
     });
   };
 
-  const handleApplyComparePrice = () => {
-    if (!bulkComparePrice) return;
-    const price = Number(bulkComparePrice);
-    if (isNaN(price)) return;
-
-    variantFields.forEach((_, index) => {
-      setValue(`variants.${index}.comparePrice`, price, { shouldValidate: true, shouldDirty: true });
-    });
-  };
-
-  const handleApplyStock = () => {
-    if (!bulkStock) return;
-    const stock = Number(bulkStock);
-    if (isNaN(stock)) return;
-
-    variantFields.forEach((_, index) => {
-      setValue(`variants.${index}.stock`, stock, { shouldValidate: true, shouldDirty: true });
-    });
-  };
-
-  const handleClearAllVariants = () => {
-    if (confirm('Are you sure you want to clear all variants?')) {
-      // Remove from the end to the beginning to avoid index shifting issues
-      for (let i = variantFields.length - 1; i >= 0; i--) {
-        removeVariant(i);
-      }
-    }
+  const confirmClearAllVariants = () => {
+    removeVariant();
+    setIsClearConfirmOpen(false);
   };
 
   // Only one of Variant Value / Variant Name is editable at a time, based on
@@ -93,7 +97,7 @@ export function PricingVariantsTab({ isActive, categories = [], productId }: Pri
     if (!productId && variantFields.length > 0) {
       variantFields.forEach((_, index) => {
         if (priceOnValue) {
-          setValue(`variants.${index}.size`, '');
+          setValue(`variants.${index}.size`, "");
         } else {
           setValue(`variants.${index}.variantValue`, undefined);
         }
@@ -106,27 +110,40 @@ export function PricingVariantsTab({ isActive, categories = [], productId }: Pri
     // Editing an existing product: variants live in the standalone
     // ProductVariant collection and are managed on their own screens.
     return (
-      <div className={isActive ? 'space-y-5' : 'hidden'}>
+      <div className={isActive ? "space-y-5" : "hidden"}>
         <div className="flex items-center justify-between border-b border-gray-200 dark:border-plum-800 pb-3">
           <h2 className="text-lg font-semibold text-plum-900 dark:text-ivory-100 flex items-center gap-2">
             <Layers className="w-5 h-5 text-gold-500" />
             Pricing & Variants
           </h2>
-          <a
-            href="/admin/productvarients"
-            className="px-4 py-2 bg-plum-900 text-white rounded-lg text-sm hover:bg-plum-800 transition-colors"
-          >
-            Manage Variants
-          </a>
+          <div className="flex items-center gap-2">
+            <a
+              href={`/admin/productvarients/create?productId=${productId}`}
+              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-700 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Variant
+            </a>
+            <a
+              href="/admin/productvarients"
+              className="px-4 py-2 bg-plum-900 text-white rounded-lg text-sm hover:bg-plum-800 transition-colors"
+            >
+              Manage Variants
+            </a>
+          </div>
         </div>
 
         <p className="text-sm text-plum-500 dark:text-plum-400">
-          Pricing, stock, images, discount rules and SEO for each variant are edited on the standalone Product Variants screens — changes here on the main product form don&apos;t affect them.
+          Pricing, stock, images, discount rules and SEO for each variant are
+          edited on the standalone Product Variants screens — changes here on
+          the main product form don&apos;t affect them.
         </p>
 
         <div className="border border-gray-200 dark:border-plum-700 rounded-xl overflow-hidden">
           {existingVariants.length === 0 ? (
-            <div className="p-6 text-center text-sm text-plum-500">No variants yet for this product.</div>
+            <div className="p-6 text-center text-sm text-plum-500">
+              No variants yet for this product.
+            </div>
           ) : (
             <table className="w-full text-sm text-left">
               <thead className="bg-gray-50 dark:bg-plum-900 text-plum-500 dark:text-plum-400 text-xs">
@@ -141,13 +158,24 @@ export function PricingVariantsTab({ isActive, categories = [], productId }: Pri
               <tbody className="divide-y divide-gray-100 dark:divide-plum-800">
                 {existingVariants.map((v: any, idx: number) => (
                   <tr key={v._id || idx}>
-                    <td className="px-4 py-3 font-medium text-plum-900 dark:text-ivory-100">{v.name}</td>
-                    <td className="px-4 py-3 text-plum-500 font-mono text-xs">{v.sku || 'N/A'}</td>
-                    <td className="px-4 py-3 text-plum-800 dark:text-plum-200">₹{(v.price || 0).toLocaleString('en-IN')}</td>
-                    <td className="px-4 py-3 text-plum-800 dark:text-plum-200">{v.stock ?? 0}</td>
+                    <td className="px-4 py-3 font-medium text-plum-900 dark:text-ivory-100">
+                      {v.name}
+                    </td>
+                    <td className="px-4 py-3 text-plum-500 font-mono text-xs">
+                      {v.sku || "N/A"}
+                    </td>
+                    <td className="px-4 py-3 text-plum-800 dark:text-plum-200">
+                      ₹{(v.price || 0).toLocaleString("en-IN")}
+                    </td>
+                    <td className="px-4 py-3 text-plum-800 dark:text-plum-200">
+                      {v.stock ?? 0}
+                    </td>
                     <td className="px-4 py-3 text-right">
                       {v._id && (
-                        <a href={`/admin/productvarients/${v._id}/edit`} className="text-emerald-600 hover:underline text-xs font-medium">
+                        <a
+                          href={`/admin/productvarients/${v._id}/edit`}
+                          className="text-emerald-600 hover:underline text-xs font-medium"
+                        >
                           Edit
                         </a>
                       )}
@@ -163,7 +191,7 @@ export function PricingVariantsTab({ isActive, categories = [], productId }: Pri
   }
 
   return (
-    <div className={isActive ? 'space-y-5' : 'hidden'}>
+    <div className={isActive ? "space-y-5" : "hidden"}>
       <div className="flex items-center justify-between border-b border-gray-200 dark:border-plum-800 pb-3">
         <h2 className="text-lg font-semibold text-plum-900 dark:text-ivory-100 flex items-center gap-2">
           <Layers className="w-5 h-5 text-gold-500" />
@@ -172,67 +200,110 @@ export function PricingVariantsTab({ isActive, categories = [], productId }: Pri
       </div>
 
       <div className="p-5 bg-gray-50 dark:bg-plum-900/40 rounded-2xl border border-gray-200 dark:border-plum-800 space-y-4">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-plum-500 dark:text-plum-400">Bulk Actions & Generation</h3>
+        <h3 className="text-sm font-bold uppercase tracking-wider text-plum-500 dark:text-plum-400">
+          Bulk Actions & Generation
+        </h3>
         <div className="flex flex-wrap items-end gap-4">
           <div className="w-48">
-            <label className="block text-xs font-medium text-plum-700 dark:text-plum-300 mb-1">Variants to Generate</label>
+            <label className="block text-xs font-medium text-plum-700 dark:text-plum-300 mb-1">
+              Variants to Generate
+            </label>
             <div className="flex gap-2">
               <input
                 type="text"
-                onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => { if (!/[0-9]/.test(e.key)) e.preventDefault(); }}
+                onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                  if (!/[0-9]/.test(e.key)) e.preventDefault();
+                }}
                 value={numVariantsToGenerate}
-                onChange={e => setNumVariantsToGenerate(Number(e.target.value))}
+                onChange={(e) =>
+                  setNumVariantsToGenerate(
+                    e.target.value.replace(/[^0-9]/g, ""),
+                  )
+                }
                 className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-plum-700 rounded-md bg-white dark:bg-plum-950 text-plum-900 dark:text-ivory-100 focus:outline-none focus:ring-2 focus:ring-plum-600/30 focus:border-plum-600"
               />
-              <AdminButton type="button" onClick={handleGenerateVariants} className="whitespace-nowrap">
+              <AdminButton
+                type="button"
+                onClick={handleGenerateVariants}
+                className="whitespace-nowrap"
+              >
                 Generate
               </AdminButton>
             </div>
           </div>
 
           <div className="w-48">
-            <label className="block text-xs font-medium text-plum-700 dark:text-plum-300 mb-1">Base Price (₹)</label>
+            <label className="block text-xs font-medium text-plum-700 dark:text-plum-300 mb-1">
+              Base Price (₹)
+            </label>
             <div className="flex gap-2">
               <input
                 type="text"
-                onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => { if (!/[0-9.]/.test(e.key)) e.preventDefault(); }}
+                onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                  if (!/[0-9.]/.test(e.key)) e.preventDefault();
+                }}
                 value={bulkBasePrice}
-                onChange={e => setBulkBasePrice(e.target.value)}
+                onChange={(e) => setBulkBasePrice(e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-plum-700 rounded-md bg-white dark:bg-plum-950 text-plum-900 dark:text-ivory-100 focus:outline-none focus:ring-2 focus:ring-plum-600/30 focus:border-plum-600"
               />
-              <AdminButton type="button" onClick={handleApplyBasePrice} variant="outline" className="whitespace-nowrap">
+              <AdminButton
+                type="button"
+                onClick={() => handleApplyBulkField("price", bulkBasePrice)}
+                variant="outline"
+                className="whitespace-nowrap"
+              >
                 Apply
               </AdminButton>
             </div>
           </div>
 
           <div className="w-48">
-            <label className="block text-xs font-medium text-plum-700 dark:text-plum-300 mb-1">Compare Price (₹)</label>
+            <label className="block text-xs font-medium text-plum-700 dark:text-plum-300 mb-1">
+              Compare Price (₹)
+            </label>
             <div className="flex gap-2">
               <input
                 type="text"
-                onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => { if (!/[0-9.]/.test(e.key)) e.preventDefault(); }}
+                onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                  if (!/[0-9.]/.test(e.key)) e.preventDefault();
+                }}
                 value={bulkComparePrice}
-                onChange={e => setBulkComparePrice(e.target.value)}
+                onChange={(e) => setBulkComparePrice(e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-plum-700 rounded-md bg-white dark:bg-plum-950 text-plum-900 dark:text-ivory-100 focus:outline-none focus:ring-2 focus:ring-plum-600/30 focus:border-plum-600"
               />
-              <AdminButton type="button" onClick={handleApplyComparePrice} variant="outline" className="whitespace-nowrap">
+              <AdminButton
+                type="button"
+                onClick={() =>
+                  handleApplyBulkField("comparePrice", bulkComparePrice)
+                }
+                variant="outline"
+                className="whitespace-nowrap"
+              >
                 Apply
               </AdminButton>
             </div>
           </div>
 
           <div className="w-48">
-            <label className="block text-xs font-medium text-plum-700 dark:text-plum-300 mb-1">Current Stock</label>
+            <label className="block text-xs font-medium text-plum-700 dark:text-plum-300 mb-1">
+              Current Stock
+            </label>
             <div className="flex gap-2">
               <input
                 type="text"
-                onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => { if (!/[0-9]/.test(e.key)) e.preventDefault(); }}
+                onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                  if (!/[0-9]/.test(e.key)) e.preventDefault();
+                }}
                 value={bulkStock}
-                onChange={e => setBulkStock(e.target.value)}
+                onChange={(e) => setBulkStock(e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-plum-700 rounded-md bg-white dark:bg-plum-950 text-plum-900 dark:text-ivory-100 focus:outline-none focus:ring-2 focus:ring-plum-600/30 focus:border-plum-600"
               />
-              <AdminButton type="button" onClick={handleApplyStock} variant="outline" className="whitespace-nowrap">
+              <AdminButton
+                type="button"
+                onClick={() => handleApplyBulkField("stock", bulkStock)}
+                variant="outline"
+                className="whitespace-nowrap"
+              >
                 Apply
               </AdminButton>
             </div>
@@ -240,7 +311,7 @@ export function PricingVariantsTab({ isActive, categories = [], productId }: Pri
 
           <AdminButton
             type="button"
-            onClick={handleClearAllVariants}
+            onClick={() => setIsClearConfirmOpen(true)}
             variant="outline"
             className="flex items-center gap-1.5 whitespace-nowrap border-rose-200 text-rose-600 hover:text-rose-700 hover:bg-rose-50 hover:border-rose-300 dark:hover:bg-rose-900/30 transition-colors ml-auto"
           >
@@ -259,33 +330,51 @@ export function PricingVariantsTab({ isActive, categories = [], productId }: Pri
             <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
               <AdminInput
                 label={variantType}
-                placeholder={priceOnValue ? `e.g. 1.5` : 'Set when Calculate Price on Variant Value is on'}
+                placeholder={
+                  priceOnValue
+                    ? `e.g. 1.5`
+                    : "Set when Calculate Price on Variant Value is on"
+                }
                 type="text"
                 disabled={!priceOnValue}
-                className={!priceOnValue ? 'opacity-50 cursor-not-allowed' : ''}
-                onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => { if (!/[0-9.]/.test(e.key)) e.preventDefault(); }}
+                className={!priceOnValue ? "opacity-50 cursor-not-allowed" : ""}
+                onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                  if (!/[0-9.]/.test(e.key)) e.preventDefault();
+                }}
                 {...register(`variants.${index}.variantValue`)}
                 error={errors.variants?.[index]?.variantValue?.message}
               />
               <AdminInput
                 label="Variant Name"
-                placeholder={priceOnValue ? 'Auto-generated from category variant value' : 'e.g. Oval Cut, 6x4mm'}
+                placeholder={
+                  priceOnValue
+                    ? "Auto-generated from category variant value"
+                    : "e.g. Oval Cut, 6x4mm"
+                }
                 disabled={priceOnValue}
-                className={priceOnValue ? 'opacity-50 cursor-not-allowed' : ''}
+                className={priceOnValue ? "opacity-50 cursor-not-allowed" : ""}
                 {...register(`variants.${index}.size`)}
                 error={errors.variants?.[index]?.size?.message}
               />
               <AdminInput
                 type="text"
-                onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => { if (!/[0-9.]/.test(e.key)) e.preventDefault(); }}
-                label={selectedCategory?.calculatePriceOnVariantValue ? "Selling Price Per Unit (₹) *" : "Selling Price (₹) *"}
+                onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                  if (!/[0-9.]/.test(e.key)) e.preventDefault();
+                }}
+                label={
+                  selectedCategory?.calculatePriceOnVariantValue
+                    ? "Selling Price Per Unit (₹) *"
+                    : "Selling Price (₹) *"
+                }
                 placeholder=""
                 {...register(`variants.${index}.price`)}
                 error={errors.variants?.[index]?.price?.message}
               />
               <AdminInput
                 type="text"
-                onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => { if (!/[0-9.]/.test(e.key)) e.preventDefault(); }}
+                onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                  if (!/[0-9.]/.test(e.key)) e.preventDefault();
+                }}
                 label="Compare Price"
                 placeholder=""
                 {...register(`variants.${index}.comparePrice`)}
@@ -293,7 +382,9 @@ export function PricingVariantsTab({ isActive, categories = [], productId }: Pri
               />
               <AdminInput
                 type="text"
-                onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => { if (!/[0-9]/.test(e.key)) e.preventDefault(); }}
+                onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                  if (!/[0-9]/.test(e.key)) e.preventDefault();
+                }}
                 label="Current Stock"
                 placeholder=""
                 {...register(`variants.${index}.stock`)}
@@ -316,13 +407,54 @@ export function PricingVariantsTab({ isActive, categories = [], productId }: Pri
         <AdminButton
           type="button"
           variant="outline"
-          onClick={() => appendVariant({ price: 0, stock: 1, lowStockThreshold: 5 })}
+          onClick={() =>
+            appendVariant({ price: 0, stock: 1, lowStockThreshold: 5 })
+          }
           className="w-full border-dashed border-2 py-3 text-plum-600 dark:text-plum-300"
         >
           <Plus size={16} className="mr-1.5" />
           Add Another Option / Size
         </AdminButton>
       </div>
+
+      {isClearConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-plum-950/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-plum-900 rounded-xl shadow-lg max-w-md w-full overflow-hidden border border-gray-200 dark:border-plum-800">
+            <div className="p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-500" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-plum-900 dark:text-white">
+                    Clear All Variants
+                  </h3>
+                  <p className="text-sm text-plum-500 dark:text-plum-400">
+                    Are you sure you want to clear all variants?
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsClearConfirmOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-plum-600 dark:text-plum-400 hover:text-plum-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-plum-800 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmClearAllVariants}
+                  className="px-4 py-2 text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
