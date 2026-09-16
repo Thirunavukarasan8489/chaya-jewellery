@@ -26,7 +26,8 @@ export function MediaUploadTab({
   handleGalleryUpload,
   removeGalleryImage
 }: MediaUploadTabProps) {
-  const { register, setValue } = useFormContext<ProductFormValues>();
+  const { register, setValue, formState: { errors } } = useFormContext<ProductFormValues>();
+  const galleryError = !Array.isArray(errors.gallery) ? (errors.gallery as any)?.message : undefined;
 
   const handleRemoveCover = () => {
     if (coverFile && !coverFile.isExisting) {
@@ -95,9 +96,12 @@ export function MediaUploadTab({
         <div className="flex items-center justify-between">
           <div>
             <label className="block text-sm font-semibold text-plum-800 dark:text-plum-200">
-              Feature Images (Gallery Views, Angles, Certificates)
+              Feature Images (Gallery Views, Angles, Certificates) *
             </label>
-            <p className="text-xs text-plum-500">Upload multiple angle photos and certificates</p>
+            <p className="text-xs text-plum-500">Upload multiple angle photos and certificates &mdash; at least one is required</p>
+            {galleryError && (
+              <p className="text-xs text-rose-600 dark:text-rose-400 mt-1">{galleryError}</p>
+            )}
           </div>
         </div>
 

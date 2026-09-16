@@ -18,6 +18,7 @@ type CategoryRow = {
   image?: string;
   variantType?: string;
   productCount?: number;
+  calculatePriceOnVariantValue?: boolean;
 };
 
 const VARIANT_TYPES = ['CARAT', 'SIZE', 'WEIGHT', 'NONE'];
@@ -131,6 +132,15 @@ export default function CategoriesTable({ categories }: { categories: CategoryRo
       header: 'Total Products',
       cell: (item: CategoryRow) => (
         <span className="text-gold-700 dark:text-gold-300">{item.productCount ?? 0}</span>
+      ),
+    },
+    {
+      header: 'Price by Variant Value',
+      cell: (item: CategoryRow) => (
+        <StatusBadge
+          label={item.calculatePriceOnVariantValue ? 'Yes' : 'No'}
+          variant={item.calculatePriceOnVariantValue ? 'success' : 'neutral'}
+        />
       ),
     },
     {

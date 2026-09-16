@@ -3,7 +3,7 @@ import { Product } from '@/lib/models/product';
 import { ProductVariant } from '@/lib/models/product-variant';
 import { Category } from '@/lib/models/category';
 import type { Product as PublicProduct } from '@/lib/types';
-import { gemColorFor } from '@/lib/utils';
+import { gemColorFor, variantTypeLabel } from '@/lib/utils';
 import { sanitizeRichText } from '@/lib/sanitize';
 import { unstable_cache } from 'next/cache';
 
@@ -53,6 +53,8 @@ function mapToPublicProduct(doc: any): PublicProduct {
     primaryImage: doc.primaryImage?.url?.trim() ? { url: doc.primaryImage.url, altText: doc.primaryImage.altText } : undefined,
     images: doc.gallery?.filter((g: any) => g.url?.trim()).map((g: any) => ({ url: g.url, altText: g.altText })) || [],
     hasVariants: doc.hasVariants || false,
+    calculatePriceOnVariantValue: !!doc.category?.calculatePriceOnVariantValue,
+    variantType: variantTypeLabel(doc.category?.variantType),
     variants: doc.variants?.map((v: any) => ({
       id: v._id?.toString(),
       name: v.name,

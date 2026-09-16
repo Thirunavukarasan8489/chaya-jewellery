@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,10 +23,12 @@ const registerSchema = z.object({
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
-export default function RegisterPage() {
+function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [registerError, setRegisterError] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
 
   const {
     register,
@@ -67,11 +69,14 @@ export default function RegisterPage() {
           toast.error("Auto-login failed. Please sign in manually.");
           router.push("/login");
         } else {
-          router.push("/account/dashboard");
+          // Honour ?callbackUrl= the same way /login does (e.g. a guest
+          // bounced here from /checkout who registered instead of signing
+          // in) — only ever follow a same-site relative path.
+          router.push(callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/cart");
           router.refresh();
         }
       }
-    } catch (error) {
+    } catch {
       setRegisterError("An unexpected error occurred. Please try again.");
     }
   };
@@ -85,7 +90,11 @@ export default function RegisterPage() {
         <p className="mt-2 text-center text-sm text-plum-600">
           Already have an account?{" "}
           <Link
-            href="/login"
+            href={
+              callbackUrl && callbackUrl.startsWith("/")
+                ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
+                : "/login"
+            }
             className="font-medium text-gold-600 transition-colors hover:text-gold-500"
           >
             Sign in
@@ -240,5 +249,19 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[calc(100vh-100px)] items-center justify-center bg-plum-50">
+          <div className="skeleton h-96 w-full max-w-md rounded-2xl" />
+        </div>
+      }
+    >
+      <RegisterForm />
+    </Suspense>
   );
 }

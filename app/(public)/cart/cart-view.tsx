@@ -13,7 +13,6 @@ import Image from "next/image";
 
 export function CartView({ settings }: { settings: any }) {
   const { lines, hydrated, subtotal, setQuantity, remove } = useCart();
-  
   if (!hydrated) {
     return (
       <div className="space-y-3" aria-busy>
@@ -60,82 +59,104 @@ export function CartView({ settings }: { settings: any }) {
   return (
     <div className="lg:grid lg:grid-cols-[1fr_22rem] lg:items-start lg:gap-10">
       <ul className="space-y-3">
-        {lines.map((line) => (
-          <li
-            key={line.productId}
-            className="flex gap-3 rounded-2xl border border-ivory-300 bg-white p-3 sm:gap-4 sm:p-4"
-          >
-            <Link
-              href={`/products/${line.slug}`}
-              className="shrink-0"
-              aria-label={line.name}
+        {lines.map((line) => {
+          // Must mirror the subtotal math in cart-provider.tsx and the
+          // server-side lineTotal in checkout.actions.ts — a variant-value
+          // priced line (e.g. price per carat) needs unitPrice * quantity *
+          // variantValue, not just unitPrice * quantity.
+          const lineTotal =
+            line.calculatePriceOnVariantValue && line.variantValue
+              ? line.unitPrice * line.quantity * line.variantValue
+              : line.unitPrice * line.quantity;
+
+          return (
+            <li
+              key={`${line.productId}-${line.variantId ?? "default"}`}
+              className="flex gap-3 rounded-2xl border border-ivory-300 bg-white p-3 sm:gap-4 sm:p-4"
             >
-              {/* <GemImage
+              <Link
+                href={`/products/${line.slug}`}
+                className="shrink-0"
+                aria-label={line.name}
+              >
+                {/* <GemImage
                 color={line.gemColor}
                 className="size-20 rounded-xl sm:size-28"
               /> */}
-              <Image
-                src={line.image || ""}
-                alt={line.name}
-                width={110}
-                height={110}
-              />
-            </Link>
+                <Image
+                  src={line.image || ""}
+                  alt={line.name}
+                  width={110}
+                  height={110}
+                />
+              </Link>
 
-            <div className="flex min-w-0 flex-1 flex-col">
-              <div className="flex items-start justify-between gap-3">
-                <h2 className="line-2 text-[0.875rem] leading-snug font-semibold text-plum-900 sm:text-base">
-                  <Link href={`/products/${line.slug}`}>{line.name}</Link>
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => remove(line.productId)}
-                  aria-label={`Remove ${line.name} from cart`}
-                  className="grid size-9 shrink-0 place-items-center rounded-none text-plum-400 transition-colors hover:bg-danger-50 hover:text-danger-600"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-
-              <p className="mt-1 text-xs text-ink-muted tabular-nums">
-                {formatINR(line.unitPrice)} each
-              </p>
-
-              <div className="mt-auto flex items-center justify-between gap-3 pt-3">
-                <div className="flex items-center rounded-none border border-plum-900/15">
+              <div className="flex min-w-0 flex-1 flex-col">
+                <div className="flex items-start justify-between gap-3">
+                  <h2 className="line-2 text-[0.875rem] leading-snug font-semibold text-plum-900 sm:text-base">
+                    <Link href={`/products/${line.slug}`}>{line.variantName}</Link>
+                  </h2>
                   <button
                     type="button"
-                    onClick={() =>
-                      setQuantity(line.productId, line.quantity - 1)
-                    }
-                    disabled={line.quantity <= 1}
-                    aria-label="Decrease quantity"
-                    className="grid size-10 place-items-center rounded-none text-plum-700 hover:bg-ivory-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                    onClick={() => remove(line.productId, line.variantId)}
+                    aria-label={`Remove ${line.variantName} from cart`}
+                    className="grid size-9 shrink-0 place-items-center rounded-none text-plum-400 transition-colors hover:bg-danger-50 hover:text-danger-600"
                   >
-                    <Minus size={15} strokeWidth={2.5} />
-                  </button>
-                  <span className="w-7 text-center text-sm font-semibold tabular-nums">
-                    {line.quantity}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setQuantity(line.productId, line.quantity + 1)
-                    }
-                    aria-label="Increase quantity"
-                    className="grid size-10 place-items-center rounded-none text-plum-700 hover:bg-ivory-200"
-                  >
-                    <Plus size={15} strokeWidth={2.5} />
+                    <Trash2 size={16} />
                   </button>
                 </div>
 
-                <p className="text-base font-semibold text-plum-900 tabular-nums sm:text-lg">
-                  {formatINR(line.unitPrice * line.quantity)}
+                <p className="mt-1 text-xs text-ink-muted tabular-nums">
+                  {formatINR(line.unitPrice)} per {(line.variantType || "").toLowerCase()}
+                  {line.calculatePriceOnVariantValue && line.variantValue
+                    ? ` × ${line.variantValue} ${(line.variantType || "").toLowerCase()}`
+                    : ""}
                 </p>
+
+                <div className="mt-auto flex items-center justify-between gap-3 pt-3">
+                  <div className="flex items-center rounded-none border border-plum-900/15">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setQuantity(
+                          line.productId,
+                          line.quantity - 1,
+                          line.variantId,
+                        )
+                      }
+                      disabled={line.quantity <= 1}
+                      aria-label="Decrease quantity"
+                      className="grid size-10 place-items-center rounded-none text-plum-700 hover:bg-ivory-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                    >
+                      <Minus size={15} strokeWidth={2.5} />
+                    </button>
+                    <span className="w-7 text-center text-sm font-semibold tabular-nums">
+                      {line.quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setQuantity(
+                          line.productId,
+                          line.quantity + 1,
+                          line.variantId,
+                        )
+                      }
+                      aria-label="Increase quantity"
+                      className="grid size-10 place-items-center rounded-none text-plum-700 hover:bg-ivory-200"
+                    >
+                      <Plus size={15} strokeWidth={2.5} />
+                    </button>
+                  </div>
+
+                  <p className="text-base font-semibold text-plum-900 tabular-nums sm:text-lg">
+                    {formatINR(lineTotal)}
+                  </p>
+                </div>
               </div>
-            </div>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
 
       <aside className="mt-6 lg:sticky lg:top-28 lg:mt-0">
@@ -179,8 +200,7 @@ export function CartView({ settings }: { settings: any }) {
           </Link>
 
           <p className="mt-4 text-center text-xs leading-relaxed text-ink-muted">
-            Guest checkout — no account needed. GST invoice available for
-            business purchases.
+            Sign in required at checkout to track your order.
           </p>
         </div>
       </aside>

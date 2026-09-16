@@ -112,13 +112,13 @@ export default function InventoryPage() {
     try {
       const res = await savePromise;
       if (res.success) {
-        closeAdjustModal();
         fetchData();
       }
-    } catch (e) {
+    } catch {
       // Handled by toast
     } finally {
       setSavingAdjustment(false);
+      closeAdjustModal();
     }
   };
 

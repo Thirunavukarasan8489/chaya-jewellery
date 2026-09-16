@@ -34,53 +34,68 @@ const discountRuleSchema = z.object({
   discountPercentage: z.coerce.number().min(0).max(100, 'Invalid discount %'),
 });
 
-const variantSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  // sku/size are no longer edited on this screen (see AGENTS.md 2026-09-14 entry)
-  // but stay in the schema/defaultValues so existing values pass through untouched.
-  sku: z.string().optional(),
-  variantValue: z.number().optional(),
-  size: z.string().optional(),
-  price: z.number().min(0, 'Price must be >= 0'),
-  comparePrice: z.number().optional(),
-  lowStockThreshold: z.number().min(0).default(5),
-  purchaseType: z.enum(['ENQUIRE_ONLY', 'BUY_ONLY', 'BUY_ENQUIRE']).default('BUY_ENQUIRE'),
-  whatsappEnabled: z.boolean().default(false),
-  metaTitle: z.string().optional(),
-  metaDescription: z.string().optional(),
-  keywords: z.string().optional(),
-  primaryImage: z.object({ url: z.string(), altText: z.string().optional() }).optional(),
-  gallery: z.array(z.object({ url: z.string(), altText: z.string().optional() })).optional(),
-  discountRules: z.array(discountRuleSchema).optional().superRefine((rules, ctx) => {
-    if (!rules || rules.length <= 1) return;
+// Built per-render (not a module constant) so the variantValue requirement
+// can react to this category's calculatePriceOnVariantValue flag — when
+// true, Variant Value is the field that actually drives the price multiplier
+// (see lib/actions/checkout.actions.ts's resolveOrderItems), so leaving it
+// unset silently falls back to flat per-unit pricing.
+function buildVariantSchema(priceOnValue: boolean) {
+  return z.object({
+    name: z.string().min(1, 'Name is required'),
+    // sku/size are no longer edited on this screen (see AGENTS.md 2026-09-14 entry)
+    // but stay in the schema/defaultValues so existing values pass through untouched.
+    sku: z.string().optional(),
+    variantValue: z.number().optional(),
+    size: z.string().optional(),
+    price: z.number().min(0, 'Price must be >= 0'),
+    comparePrice: z.number().optional(),
+    lowStockThreshold: z.number().min(0).default(5),
+    purchaseType: z.enum(['ENQUIRE_ONLY', 'BUY_ONLY', 'BUY_ENQUIRE']).default('BUY_ENQUIRE'),
+    whatsappEnabled: z.boolean().default(false),
+    metaTitle: z.string().optional(),
+    metaDescription: z.string().optional(),
+    keywords: z.string().optional(),
+    primaryImage: z.object({ url: z.string(), altText: z.string().optional() }).optional(),
+    gallery: z.array(z.object({ url: z.string(), altText: z.string().optional() })).min(1, 'At least one gallery image is required'),
+    discountRules: z.array(discountRuleSchema).optional().superRefine((rules, ctx) => {
+      if (!rules || rules.length <= 1) return;
 
-    rules.forEach((rule, index) => {
-      if (rule.minQty > rule.maxQty) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Min Qty cannot be greater than Max Qty',
-          path: [index, 'minQty'],
-        });
-      }
-    });
-
-    for (let i = 0; i < rules.length; i++) {
-      for (let j = i + 1; j < rules.length; j++) {
-        const r1 = rules[i];
-        const r2 = rules[j];
-        if (r1.minQty <= r2.maxQty && r1.maxQty >= r2.minQty) {
+      rules.forEach((rule, index) => {
+        if (rule.minQty > rule.maxQty) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: 'Discount ranges cannot overlap',
-            path: [j, 'minQty'],
+            message: 'Min Qty cannot be greater than Max Qty',
+            path: [index, 'minQty'],
           });
         }
-      }
-    }
-  }),
-});
+      });
 
-type VariantFormValues = z.infer<typeof variantSchema>;
+      for (let i = 0; i < rules.length; i++) {
+        for (let j = i + 1; j < rules.length; j++) {
+          const r1 = rules[i];
+          const r2 = rules[j];
+          if (r1.minQty <= r2.maxQty && r1.maxQty >= r2.minQty) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'Discount ranges cannot overlap',
+              path: [j, 'minQty'],
+            });
+          }
+        }
+      }
+    }),
+  }).superRefine((values, ctx) => {
+    if (priceOnValue && !values.variantValue) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Variant value is required for this category',
+        path: ['variantValue'],
+      });
+    }
+  });
+}
+
+type VariantFormValues = z.infer<ReturnType<typeof buildVariantSchema>>;
 
 const tabs = [
   { id: 'basic', label: '1. Basic Details', shortLabel: 'Basic' },
@@ -141,7 +156,7 @@ export default function VariantForm({
   );
 
   const methods = useForm<VariantFormValues>({
-    resolver: zodResolver(variantSchema) as any,
+    resolver: zodResolver(buildVariantSchema(priceOnValue)) as any,
     defaultValues: {
       // When priceOnValue is true this field is disabled and server-computed
       // (see buildVariantName in product.actions.ts) — seed it with the
@@ -422,7 +437,7 @@ export default function VariantForm({
                     error={errors.name?.message}
                   />
                   <AdminInput
-                    label={`${variantValueLabel} (Numeric)`}
+                    label={`${variantValueLabel} (Numeric)${priceOnValue ? ' *' : ''}`}
                     type="text"
                     placeholder={priceOnValue ? 'e.g. 1.5' : 'Set when Calculate Price on Variant Value is on'}
                     disabled={!priceOnValue}
@@ -464,7 +479,7 @@ export default function VariantForm({
 
                 <div className="space-y-3">
                   <label className="block text-sm font-semibold text-plum-700 dark:text-plum-300">
-                    Cover Image (Primary)
+                    Cover Image (Primary) *
                   </label>
 
                   {coverFile ? (
@@ -497,8 +512,11 @@ export default function VariantForm({
 
                 <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-plum-800">
                   <label className="block text-sm font-semibold text-plum-700 dark:text-plum-300">
-                    Gallery Images
+                    Gallery Images *
                   </label>
+                  {!Array.isArray(errors.gallery) && errors.gallery?.message && (
+                    <p className="text-xs text-red-600">{errors.gallery.message as string}</p>
+                  )}
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {galleryItems.map((item, idx) => (
                       <div key={item.id} className="space-y-2">

@@ -18,13 +18,6 @@ type FormData = {
   lastName: string;
   email: string;
   phone: string;
-  purchaseType: "PERSONAL" | "BUSINESS";
-  // Business fields
-  businessName: string;
-  contactPerson: string;
-  gstin: string;
-  gstLegalName: string;
-  isGstRegistered: boolean;
   // Shipping
   address: string;
   apartment: string;
@@ -63,12 +56,6 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
     lastName: customer?.profile?.lastName || "",
     email: customer?.contact?.email || "",
     phone: customer?.contact?.phone || "",
-    purchaseType: customer?.type === "BUSINESS" ? "BUSINESS" : "PERSONAL",
-    businessName: customer?.business?.name || "",
-    contactPerson: customer?.business?.contactPerson || "",
-    gstin: customer?.business?.gstin || "",
-    gstLegalName: customer?.business?.legalName || "",
-    isGstRegistered: !!customer?.business?.gstin,
     address: customer?.addresses?.[0]?.street1 || "",
     apartment: customer?.addresses?.[0]?.apartment || "",
     city: customer?.addresses?.[0]?.city || "",
@@ -80,11 +67,11 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
 
   useEffect(() => {
     if (subtotal > 0) {
-      calculateOrderTotals(subtotal, formData.state || "", formData.purchaseType)
+      calculateOrderTotals(subtotal, formData.state || "")
         .then((res) => setTotals(res))
         .catch(console.error);
     }
-  }, [subtotal, formData.state, formData.purchaseType]);
+  }, [subtotal, formData.state]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -97,29 +84,59 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
     }
   };
 
-  const isBusiness = formData.purchaseType === "BUSINESS";
-
   // Step 1 summary
-  const step1Summary = `${formData.firstName} ${formData.lastName} • ${formData.email} • ${formData.phone}${isBusiness ? ` • ${formData.businessName}` : ""}`;
+  const step1Summary = `${formData.firstName} ${formData.lastName} • ${formData.email} • ${formData.phone}`;
   // Step 2 summary
   const step2Summary = [formData.address, formData.city, formData.state, formData.zip].filter(Boolean).join(", ");
+
+  // Each step must be fully and validly filled before the next one unlocks —
+  // returns an error message, or null when the step is valid.
+  const validateStep = (targetStep: number): string | null => {
+    if (targetStep === 2) {
+      if (!formData.firstName.trim() || !formData.lastName.trim()) {
+        return "Please enter your first and last name.";
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+        return "Please enter a valid email address.";
+      }
+      if (formData.phone.trim().length < 10) {
+        return "Please enter a valid phone number.";
+      }
+    }
+    if (targetStep === 3) {
+      if (!formData.address.trim() || !formData.city.trim() || !formData.state.trim()) {
+        return "Please complete the shipping address.";
+      }
+      if (formData.zip.trim().length < 5) {
+        return "Please enter a valid PIN code.";
+      }
+    }
+    return null;
+  };
+
+  // Shared by both the "Continue" buttons and Enter-key form submission
+  // (a bare form submit skips the button's onClick entirely), so a step
+  // can't be skipped through either path.
+  const goToStep = (target: number) => {
+    const error = validateStep(target);
+    if (error) {
+      toast.error(error);
+      return;
+    }
+    setStep(target);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (step < 3) {
-      setStep((s) => s + 1);
+      goToStep(step + 1);
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const gstDetails =
-        isBusiness && formData.isGstRegistered
-          ? { gstin: formData.gstin, legalName: formData.gstLegalName }
-          : undefined;
-
       const shippingAddressObj = {
         street: formData.address,
         apartment: formData.apartment,
@@ -133,10 +150,6 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
         customerName: `${formData.firstName} ${formData.lastName}`.trim(),
         email: formData.email,
         phone: formData.phone,
-        purchaseType: formData.purchaseType,
-        businessName: isBusiness ? formData.businessName : undefined,
-        contactPerson: isBusiness ? formData.contactPerson : undefined,
-        gstDetails,
         shippingAddress: shippingAddressObj,
         billingAddress: shippingAddressObj, // Map billing to shipping
         items: lines.map((l) => ({
@@ -349,99 +362,10 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
                 <input required name="phone" value={formData.phone} onChange={handleChange} className="w-full rounded-xl border border-plum-200 px-4 py-2.5 focus:ring-2 focus:ring-gold-500 outline-none text-sm" placeholder="+91 98765 43210" />
               </div>
 
-              {/* Purchase Type */}
-              <div className="col-span-2">
-                <label className="block text-sm font-medium text-plum-900 mb-2">Purchase Type *</label>
-                <div className="flex gap-4">
-                  {[
-                    { value: "PERSONAL", label: "Personal" },
-                    { value: "BUSINESS", label: "Business (GST)" },
-                  ].map((opt) => (
-                    <label
-                      key={opt.value}
-                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 cursor-pointer transition-colors text-sm font-medium ${
-                        formData.purchaseType === opt.value
-                          ? "border-gold-500 bg-gold-50 text-gold-800"
-                          : "border-plum-200 text-plum-700 hover:border-plum-400"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="purchaseType"
-                        value={opt.value}
-                        checked={formData.purchaseType === opt.value}
-                        onChange={handleChange}
-                        className="sr-only"
-                      />
-                      {formData.purchaseType === opt.value && <CheckCircle2 className="w-4 h-4 text-gold-600" />}
-                      {opt.label}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Business fields */}
-              {isBusiness && (
-                <div className="col-span-2 space-y-4 pt-2 border-t border-plum-100">
-                  <p className="text-sm font-semibold text-plum-700">Business Details</p>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-plum-900 mb-1">Business Name *</label>
-                      <input required={isBusiness} name="businessName" value={formData.businessName} onChange={handleChange} className="w-full rounded-xl border border-plum-200 px-4 py-2.5 focus:ring-2 focus:ring-gold-500 outline-none text-sm" placeholder="Acme Pvt. Ltd." />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-plum-900 mb-1">Contact Person *</label>
-                      <input required={isBusiness} name="contactPerson" value={formData.contactPerson} onChange={handleChange} className="w-full rounded-xl border border-plum-200 px-4 py-2.5 focus:ring-2 focus:ring-gold-500 outline-none text-sm" placeholder="John Smith" />
-                    </div>
-                  </div>
-
-                  {/* GST registered toggle */}
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="isGstRegistered"
-                      checked={formData.isGstRegistered}
-                      onChange={handleChange}
-                      className="w-4 h-4 rounded accent-[#d9a441] border-plum-300 focus:ring-2 focus:ring-gold-400"
-                    />
-                    <span className="text-sm font-medium text-plum-900">GST Registered</span>
-                  </label>
-
-                  {formData.isGstRegistered && (
-                    <div className="grid grid-cols-2 gap-4 p-4 bg-gold-50 rounded-xl border border-gold-200">
-                      <div>
-                        <label className="block text-sm font-medium text-plum-900 mb-1">GSTIN *</label>
-                        <input
-                          required={formData.isGstRegistered}
-                          name="gstin"
-                          value={formData.gstin}
-                          onChange={handleChange}
-                          className="w-full rounded-xl border border-plum-200 px-4 py-2.5 focus:ring-2 focus:ring-gold-500 outline-none text-sm uppercase"
-                          placeholder="29AABCT1332L1ZJ"
-                          maxLength={15}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-plum-900 mb-1">Legal Business Name *</label>
-                        <input
-                          required={formData.isGstRegistered}
-                          name="gstLegalName"
-                          value={formData.gstLegalName}
-                          onChange={handleChange}
-                          className="w-full rounded-xl border border-plum-200 px-4 py-2.5 focus:ring-2 focus:ring-gold-500 outline-none text-sm"
-                          placeholder="As per GST certificate"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
               <div className="col-span-2 flex justify-end mt-2">
                 <button
                   type="button"
-                  onClick={() => setStep(2)}
+                  onClick={() => goToStep(2)}
                   className="bg-plum-900 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-plum-800 transition-colors"
                 >
                   Continue to Shipping →
@@ -508,7 +432,7 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
 
               <div className="flex justify-between items-center mt-4">
                 <button type="button" onClick={() => setStep(1)} className="text-plum-500 hover:text-plum-700 text-sm font-medium">← Back</button>
-                <button type="button" onClick={() => setStep(3)} className="bg-plum-900 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-plum-800 transition-colors">Continue to Payment →</button>
+                <button type="button" onClick={() => goToStep(3)} className="bg-plum-900 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-plum-800 transition-colors">Continue to Payment →</button>
               </div>
             </div>
           )}
@@ -573,22 +497,33 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
           <h2 className="text-xl font-bold text-plum-900 mb-6">Order Summary</h2>
 
           <div className="space-y-4 mb-6 max-h-[30vh] overflow-y-auto pr-2">
-            {lines.map((item, idx) => (
-              <div key={idx} className="flex justify-between items-center text-sm">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center font-bold text-plum-300 text-xs border border-plum-100">
-                    {item.quantity}x
+            {lines.map((item, idx) => {
+              // Must mirror the subtotal math in cart-provider.tsx and the
+              // server-side lineTotal in checkout.actions.ts — a variant-value
+              // priced line (e.g. price per carat) needs unitPrice * quantity *
+              // variantValue, not just unitPrice * quantity.
+              const lineTotal =
+                item.calculatePriceOnVariantValue && item.variantValue
+                  ? item.unitPrice * item.quantity * item.variantValue
+                  : item.unitPrice * item.quantity;
+
+              return (
+                <div key={idx} className="flex justify-between items-center text-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center font-bold text-plum-300 text-xs border border-plum-100">
+                      {item.quantity}x
+                    </div>
+                    <div>
+                      <p className="font-medium text-plum-900 line-clamp-1">{item.name}</p>
+                      {item.variantName && <p className="text-plum-500 text-xs">{item.variantName}</p>}
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-plum-900 line-clamp-1">{item.name}</p>
-                    {item.variantName && <p className="text-plum-500 text-xs">{item.variantName}</p>}
-                  </div>
+                  <span className="font-semibold text-plum-900">
+                    ₹{lineTotal.toLocaleString("en-IN")}
+                  </span>
                 </div>
-                <span className="font-semibold text-plum-900">
-                  ₹{(item.unitPrice * item.quantity).toLocaleString("en-IN")}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="border-t border-plum-200 pt-4 space-y-2 text-sm">

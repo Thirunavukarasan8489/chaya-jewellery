@@ -30,7 +30,7 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex h-screen bg-gold-50 dark:bg-gold-950 overflow-hidden font-sans text-gold-900 dark:text-gold-100">
+    <div className="flex h-screen  overflow-hidden font-san bg-gold-50/50">
       {/* Sidebar Navigation */}
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 

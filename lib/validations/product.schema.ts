@@ -5,6 +5,11 @@ export const ImageSchema = z.object({
   altText: z.string().optional(),
 });
 
+const RequiredImageSchema = z.object({
+  url: z.string().min(1, 'Image is required'),
+  altText: z.string().optional(),
+});
+
 export const VariantSchema = z.object({
   name: z.string().optional(),
   slug: z.string().optional(),
@@ -40,7 +45,7 @@ export const ProductSchema = z.object({
   discountRules: z.array(DiscountRuleSchema).optional(),
 
   hasVariants: z.boolean().default(true),
-  variants: z.array(VariantSchema).optional(),
+  variants: z.array(VariantSchema).min(1, 'At least one product variant is required'),
   
   reservedQuantity: z.coerce.number().int().min(0).default(0),
   stockStatus: z.enum(['IN_STOCK', 'LOW_STOCK', 'OUT_OF_STOCK']).default('IN_STOCK'),
@@ -49,8 +54,8 @@ export const ProductSchema = z.object({
   purchaseType: z.enum(['ENQUIRE_ONLY', 'BUY_ONLY', 'BUY_ENQUIRE']),
   whatsappEnabled: z.boolean().default(false),
 
-  primaryImage: ImageSchema.optional(),
-  gallery: z.array(ImageSchema).optional(),
+  primaryImage: RequiredImageSchema,
+  gallery: z.array(RequiredImageSchema).min(1, 'At least one gallery image is required'),
   
   metaTitle: z.string().optional(),
   metaDescription: z.string().optional(),

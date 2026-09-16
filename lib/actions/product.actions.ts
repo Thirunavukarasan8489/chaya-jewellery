@@ -236,14 +236,12 @@ export async function createProduct(data: any) {
       mappedData.baseSku = `${baseSkuPrefix}-001`;
     }
 
-    let totalStock = 0;
     let stockStatus: 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK' = 'OUT_OF_STOCK';
     let formattedVariants: any[] = [];
 
     if (mappedData.hasVariants && initialVariants.length > 0) {
       const result = formatVariants(initialVariants, mappedData.name, categoryObj, baseSkuPrefix, slug);
       formattedVariants = result.formatted;
-      totalStock = result.totalStock;
       stockStatus = result.stockStatus;
     }
 
@@ -462,6 +460,26 @@ export async function createVariant(productId: string, data: any) {
     if (!product) throw new Error('Product not found');
 
     const category = await Category.findById(product.category).lean();
+
+    // Basic details, cover image, gallery image, and (when this category
+    // prices per variant value) the variant value are all required to save —
+    // mirrors the client-side variantSchema in VariantForm.tsx.
+    if (!data.name?.trim()) {
+      return { success: false, error: 'Variant name is required' };
+    }
+    if (data.price === undefined || data.price === null || Number(data.price) < 0) {
+      return { success: false, error: 'Selling price is required' };
+    }
+    if (!data.primaryImage?.url?.trim()) {
+      return { success: false, error: 'Cover image is required' };
+    }
+    if (!Array.isArray(data.gallery) || !data.gallery.some((g: any) => g?.url?.trim())) {
+      return { success: false, error: 'At least one gallery image is required' };
+    }
+    if (category?.calculatePriceOnVariantValue && !data.variantValue) {
+      return { success: false, error: `${variantTypeLabel(category.variantType)} value is required for this category` };
+    }
+
     const existingCount = await ProductVariant.countDocuments({ productId });
 
     const catShort = generateShortname(category?.name || 'Uncategorized');
@@ -536,6 +554,27 @@ export async function updateVariant(productId: string, variantId: string, data: 
     const existing = await ProductVariant.findOne({ _id: variantId, productId }).lean();
     if (!existing) throw new Error('Variant not found');
 
+    const category = await Category.findById(existing.categoryId).select('name variantType calculatePriceOnVariantValue').lean();
+
+    // Basic details, cover image, gallery image, and (when this category
+    // prices per variant value) the variant value are all required to save —
+    // mirrors the client-side variantSchema in VariantForm.tsx.
+    if (!data.name?.trim()) {
+      return { success: false, error: 'Variant name is required' };
+    }
+    if (data.price === undefined || data.price === null || Number(data.price) < 0) {
+      return { success: false, error: 'Selling price is required' };
+    }
+    if (!data.primaryImage?.url?.trim()) {
+      return { success: false, error: 'Cover image is required' };
+    }
+    if (!Array.isArray(data.gallery) || !data.gallery.some((g: any) => g?.url?.trim())) {
+      return { success: false, error: 'At least one gallery image is required' };
+    }
+    if (category?.calculatePriceOnVariantValue && !data.variantValue) {
+      return { success: false, error: `${variantTypeLabel(category.variantType)} value is required for this category` };
+    }
+
     const updateData = { ...data };
 
     // Editing variantValue never regenerated `name` before, so it went stale
@@ -547,10 +586,7 @@ export async function updateVariant(productId: string, variantId: string, data: 
       updateData.variantValue !== undefined &&
       Number(updateData.variantValue) !== Number(existing.variantValue)
     ) {
-      const [product, category] = await Promise.all([
-        Product.findById(productId).select('name').lean(),
-        Category.findById(existing.categoryId).select('variantType calculatePriceOnVariantValue').lean(),
-      ]);
+      const product = await Product.findById(productId).select('name').lean();
 
       if (product && category?.calculatePriceOnVariantValue) {
         const siblings = await ProductVariant.find({ productId })

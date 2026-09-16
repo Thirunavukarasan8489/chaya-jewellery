@@ -24,8 +24,10 @@ const OrderSchema = new mongoose.Schema(
     phone: { type: String, required: true },
     email: { type: String },
     
-    // Purchase Type (Personal / Business)
-    purchaseType: { type: String, enum: ['PERSONAL', 'BUSINESS'], required: true },
+    // Retail-only storefront — always 'PERSONAL' going forward (see
+    // checkout.actions.ts placeOrder). Enum/history kept for old orders
+    // placed before the business/GST purchase flow was removed.
+    purchaseType: { type: String, enum: ['PERSONAL', 'BUSINESS'], default: 'PERSONAL' },
     
     // GST Info (If Business)
     isGstRegistered: { type: Boolean, default: false },

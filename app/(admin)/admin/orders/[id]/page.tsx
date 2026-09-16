@@ -4,7 +4,7 @@ import { StatusBadge } from "@/components/admin/status-badge";
 import { ProcessingCard } from "@/components/admin/orders/processing-card";
 import { format } from "date-fns";
 import Link from "next/link";
-import { ArrowLeft, User, MapPin, CreditCard, Receipt, FileText, Package } from "lucide-react";
+import { ArrowLeft, User, MapPin, CreditCard, FileText, Package } from "lucide-react";
 
 export const metadata = {
   title: "Order Details - Chaya Jewellery Admin",
@@ -63,7 +63,16 @@ export default async function OrderDetailPage(props: { params: Promise<{ id: str
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-plum-800/50">
-                  {order.items.map((item: any, idx: number) => (
+                  {order.items.map((item: any, idx: number) => {
+                    // Must mirror the lineTotal math in checkout.actions.ts —
+                    // a variant-value priced line (e.g. price per carat) needs
+                    // price * quantity * variantValue, not just price * quantity.
+                    const lineTotal =
+                      item.calculatePriceOnVariantValue && item.variantValue
+                        ? item.price * item.quantity * item.variantValue
+                        : item.price * item.quantity;
+
+                    return (
                     <tr key={idx}>
                       <td className="py-4">
                         <div className="font-medium text-plum-900 dark:text-ivory-100">{item.name}</div>
@@ -71,9 +80,10 @@ export default async function OrderDetailPage(props: { params: Promise<{ id: str
                       </td>
                       <td className="py-4 text-center text-slate-700 dark:text-slate-300">{item.quantity}</td>
                       <td className="py-4 text-right text-slate-700 dark:text-slate-300">₹{item.price.toLocaleString("en-IN")}</td>
-                      <td className="py-4 text-right font-medium text-plum-900 dark:text-ivory-100">₹{(item.price * item.quantity).toLocaleString("en-IN")}</td>
+                      <td className="py-4 text-right font-medium text-plum-900 dark:text-ivory-100">₹{lineTotal.toLocaleString("en-IN")}</td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
               
@@ -160,26 +170,6 @@ export default async function OrderDetailPage(props: { params: Promise<{ id: str
             </div>
           </div>
 
-          {/* GST Details (if business) */}
-          {order.purchaseType === 'BUSINESS' && order.gstDetails && (
-            <div className="bg-white dark:bg-plum-900 border border-gray-200 dark:border-plum-800 rounded-lg shadow-sm">
-              <div className="px-6 py-4 border-b border-gray-200 dark:border-plum-800 bg-slate-50 dark:bg-plum-950/50 flex items-center gap-2">
-                <Receipt className="w-5 h-5 text-slate-500 dark:text-slate-400" />
-                <h2 className="text-lg font-semibold text-plum-900 dark:text-ivory-100">GST Information</h2>
-              </div>
-              <div className="p-6 text-sm space-y-3">
-                <div>
-                  <p className="text-slate-500 dark:text-slate-400 text-xs">Legal Business Name</p>
-                  <p className="font-medium text-plum-900 dark:text-ivory-100">{order.gstDetails.legalName}</p>
-                </div>
-                <div>
-                  <p className="text-slate-500 dark:text-slate-400 text-xs">GSTIN</p>
-                  <p className="font-mono font-medium text-plum-900 dark:text-ivory-100">{order.gstDetails.gstin}</p>
-                </div>
-              </div>
-            </div>
-          )}
-          
           {/* Notes */}
           {order.notes && (
             <div className="bg-white dark:bg-plum-900 border border-gray-200 dark:border-plum-800 rounded-lg shadow-sm">

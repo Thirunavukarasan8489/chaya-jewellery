@@ -3,12 +3,10 @@
 import dbConnect from '@/lib/db';
 import { Order } from '@/lib/models/order';
 import { Customer } from '@/lib/models/customer';
-import { Product } from '@/lib/models/product';
 import { ProductVariant } from '@/lib/models/product-variant';
 import { Category } from '@/lib/models/category';
 import Counter from '@/lib/models/counter';
 import mongoose from 'mongoose';
-import { getSession } from '@/lib/auth';
 import { reserveInventory } from '@/lib/inventory';
 
 /**
@@ -115,8 +113,6 @@ export async function placeOrder(data: any) {
       return { success: false, error: 'Missing required fields' };
     }
 
-    const session = await getSession();
-
     // Resolve canonical prices/quantities BEFORE starting the transaction —
     // if a line item doesn't resolve (deleted product, tampered ID), fail
     // fast without ever opening a transaction or reserving stock.
@@ -141,10 +137,12 @@ export async function placeOrder(data: any) {
       const orderNumber = `ORD-${new Date().getFullYear()}-${counter.seq.toString().padStart(4, '0')}`;
 
       const serverSubtotal = resolvedItems.reduce((acc, item) => acc + item.lineTotal, 0);
-      const totals = await calculateOrderTotals(serverSubtotal, data.shippingAddress.state || "", data.purchaseType || "PERSONAL");
+      const totals = await calculateOrderTotals(serverSubtotal, data.shippingAddress.state || "");
 
       const orderPayload = {
         ...data,
+        // Retail-only storefront — no business/GST purchase flow.
+        purchaseType: 'PERSONAL',
         items: resolvedItems.map((item) => ({
           productId: item.productId,
           variantId: item.variantId,
@@ -178,7 +176,7 @@ export async function placeOrder(data: any) {
       if (!customer) {
         // If guest checkout and customer doesn't exist, create one
         customer = await Customer.create([{
-          type: data.purchaseType || 'PERSONAL',
+          type: 'PERSONAL',
           contact: { email: data.email, phone: data.phone },
           profile: { firstName: data.customerName.split(' ')[0], lastName: data.customerName.split(' ').slice(1).join(' ') || '' },
           addresses: [data.shippingAddress],
@@ -258,7 +256,7 @@ export async function verifyRazorpaySignature(razorpay_order_id: string, razorpa
   return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
 }
 
-export async function calculateOrderTotals(subtotal: number, state: string, purchaseType: string) {
+export async function calculateOrderTotals(subtotal: number, state: string) {
   // Free shipping over ₹25,000, otherwise ₹500
   const shippingFee = subtotal > 25000 ? 0 : 500;
   

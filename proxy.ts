@@ -76,9 +76,11 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  const isPublicProtectedRoute = pathname.startsWith("/account"); // Removed /checkout from strictly CUSTOMER
+  // Guest checkout is no longer allowed — /checkout now requires a signed-in
+  // CUSTOMER, same as /account/*.
+  const isPublicProtectedRoute = pathname.startsWith("/account") || pathname.startsWith("/checkout");
 
-  // Protection logic for /account routes
+  // Protection logic for /account and /checkout routes
   if (isPublicProtectedRoute) {
     if (!token || token.role !== "CUSTOMER") {
       const callbackUrl = encodeURIComponent(pathname);

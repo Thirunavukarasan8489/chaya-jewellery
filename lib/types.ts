@@ -77,6 +77,12 @@ export interface Product {
 
   hasVariants: boolean;
   variants?: ProductVariant[];
+  /** From the product's category — true when variant price is a per-unit
+   *  rate (e.g. per carat) that must be multiplied by variantValue. */
+  calculatePriceOnVariantValue?: boolean;
+  /** Human label for the category's variantType (e.g. "Carat", "Weight") —
+   *  see lib/utils.ts's variantTypeLabel(). */
+  variantType?: string;
 
   seo?: ProductSeo;
 
@@ -129,6 +135,10 @@ export interface CartLine {
   variantName?: string;
   variantValue?: number;
   calculatePriceOnVariantValue?: boolean;
+  /** Human label for the category's variantType (e.g. "Carat") — see
+   *  lib/utils.ts's variantTypeLabel(). Absent on lines added before this
+   *  field existed, so callers must not assume it's always set. */
+  variantType?: string;
 }
 
 export interface LeadNote {

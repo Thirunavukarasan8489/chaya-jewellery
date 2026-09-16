@@ -20,10 +20,11 @@ type CartContextValue = {
     variantValue?: number,
     calculatePriceOnVariantValue?: boolean,
     variantId?: string,
-    sku?: string
+    sku?: string,
+    variantType?: string
   ) => void;
-  setQuantity: (productId: string, quantity: number) => void;
-  remove: (productId: string) => void;
+  setQuantity: (productId: string, quantity: number, variantId?: string) => void;
+  remove: (productId: string, variantId?: string) => void;
   clear: () => void;
   lastAdded: CartLine | null;
   dismissLastAdded: () => void;
@@ -102,7 +103,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       variantValue?: number,
       calculatePriceOnVariantValue?: boolean,
       variantId?: string,
-      sku?: string
+      sku?: string,
+      variantType?: string
     ) => {
       const line: CartLine = {
         productId: product.id,
@@ -117,6 +119,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         variantName,
         variantValue,
         calculatePriceOnVariantValue,
+        variantType,
       };
 
       setLines((current) => {
@@ -135,21 +138,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  // Two different variants of the same product share a productId, so the
+  // line identity must be productId+variantId — matching on productId alone
+  // let adjusting/removing one variant's line silently affect every other
+  // variant of that product sitting in the cart too (and produced duplicate
+  // React keys in cart-view.tsx when both were present).
   const setQuantity = React.useCallback(
-    (productId: string, quantity: number) => {
+    (productId: string, quantity: number, variantId?: string) => {
       setLines((current) =>
         quantity <= 0
-          ? current.filter((l) => l.productId !== productId)
+          ? current.filter((l) => !(l.productId === productId && l.variantId === variantId))
           : current.map((l) =>
-              l.productId === productId ? { ...l, quantity } : l,
+              l.productId === productId && l.variantId === variantId ? { ...l, quantity } : l,
             ),
       );
     },
     [],
   );
 
-  const remove = React.useCallback((productId: string) => {
-    setLines((current) => current.filter((l) => l.productId !== productId));
+  const remove = React.useCallback((productId: string, variantId?: string) => {
+    setLines((current) => current.filter((l) => !(l.productId === productId && l.variantId === variantId)));
   }, []);
 
   const clear = React.useCallback(() => setLines([]), []);

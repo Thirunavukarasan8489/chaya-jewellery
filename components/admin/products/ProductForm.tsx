@@ -44,7 +44,7 @@ const productSchema = z.object({
   description: z.string().optional(),
   // Variants
   hasVariants: z.boolean(),
-  variants: z.array(variantSchema).optional(),
+  variants: z.array(variantSchema).min(1, 'At least one product variant is required'),
 
   // Purchase Rules
   purchaseType: z.enum(['BUY_ONLY', 'ENQUIRE_ONLY', 'BUY_ENQUIRE']),
@@ -86,7 +86,7 @@ const productSchema = z.object({
 
   // Images & Media
   primaryImage: z.object({ url: z.string(), altText: z.string().optional() }).optional(),
-  gallery: z.array(z.object({ url: z.string(), altText: z.string().optional() })).optional(),
+  gallery: z.array(z.object({ url: z.string(), altText: z.string().optional() })).min(1, 'At least one gallery image is required'),
 
   // SEO
   metaTitle: z.string().optional(),
@@ -139,7 +139,6 @@ export default function ProductForm({ initialData, categories = [] }: { initialD
   });
 
   const {
-    control,
     handleSubmit,
     setValue,
     getValues,

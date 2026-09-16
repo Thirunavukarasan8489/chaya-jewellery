@@ -25,6 +25,7 @@ function LoginForm() {
   const [loginError, setLoginError] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
 
   const {
     register,
@@ -50,11 +51,13 @@ function LoginForm() {
       }
 
       // Honour ?callbackUrl= (set by the proxy when an unauthenticated
-      // visitor is redirected here from a protected /account/* route) so
-      // signing in lands back where they were headed, not always the
-      // dashboard. Only ever follow a same-site relative path.
-      const callbackUrl = searchParams.get("callbackUrl");
-      router.push(callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/account/dashboard");
+      // visitor is redirected here from a protected /account/* or /checkout
+      // route) so signing in lands back where they were headed. Only ever
+      // follow a same-site relative path. With no callbackUrl, customers
+      // land on the cart, not the dashboard — most logins here happen
+      // mid-shop (e.g. "sign in to check out"), not as a standalone
+      // destination.
+      router.push(callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/cart");
     } catch {
       setLoginError("An unexpected error occurred. Please try again.");
     }
@@ -215,7 +218,14 @@ function LoginForm() {
 
           <p className="mt-6 text-center text-sm text-ink-soft">
             Don&apos;t have an account?{" "}
-            <Link href="/register" className="font-semibold text-gold-700 hover:text-gold-600">
+            <Link
+              href={
+                callbackUrl && callbackUrl.startsWith("/")
+                  ? `/register?callbackUrl=${encodeURIComponent(callbackUrl)}`
+                  : "/register"
+              }
+              className="font-semibold text-gold-700 hover:text-gold-600"
+            >
               Create one
             </Link>
           </p>

@@ -22,15 +22,15 @@ export default function DeleteConfirmButton({ entityId, entityName, deleteAction
       const result = await deleteAction(entityId);
       if (result.success) {
         toast.success(`"${entityName}" deleted successfully`);
-        setIsOpen(false);
         router.refresh();
       } else {
         toast.error(result.error || 'Failed to delete item');
       }
-    } catch (error: any) {
+    } catch {
       toast.error('An unexpected error occurred');
     } finally {
       setIsDeleting(false);
+      setIsOpen(false);
     }
   };
 
