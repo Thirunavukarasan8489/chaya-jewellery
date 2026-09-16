@@ -534,6 +534,90 @@ confirmed all seven `--radius-*` custom properties equal `0px` in the
 actual served stylesheet, and that no `rounded-full` string remains in
 the rendered homepage HTML.
 
+## 2026-09-17 fix: admin edits took up to 60s to reach the public site
+
+User wanted admin panel changes to reach the public storefront almost
+immediately ("within 2 seconds"). Root cause: every public data read
+(`product-service.ts`, `category-service.ts`, `content-service.ts`,
+`cms.actions.ts`'s `getCachedHeroSections`) is wrapped in `unstable_cache`
+with `tags: [...]` and `revalidate: 60`. **Every** mutating admin action
+across the whole codebase (`grep -c revalidateTag lib/actions/*.ts`) only
+ever called `revalidatePath('/admin/...')` — zero calls to
+`revalidateTag`/`updateTag`, anywhere, before this fix. `revalidatePath`
+tells Next "re-render this route on next request," but the `unstable_cache`
+data calls *inside* that re-render are a separate cache layer keyed by
+their own tag + revalidate window — without busting that tag too, the
+route recomputes but still reads the stale cached data until its own 60s
+window naturally lapses. So admin saves were never technically broken,
+just slow by design (up to 60s), regardless of how many admin paths got
+revalidated.
+
+**Next.js 16 API change to know about** (this project's `next` is
+`^16.3.5` — see the "This is NOT the Next.js you know" block at the
+bottom of this file): `revalidateTag` was restructured and **now requires
+a second argument** (`revalidateTag(tag, 'max' | {expire})`) —
+`tsc` catches the old one-argument call as a hard type error, it doesn't
+silently work. More importantly, `revalidateTag('tag', 'max')` gives
+**stale-while-revalidate** semantics (the very next request can still
+see old data while a background refresh runs) — wrong for "the admin
+should see their own change immediately." The bundled docs
+(`node_modules/next/dist/docs/01-app/03-api-reference/04-functions/updateTag.md`)
+point to the actual right tool: **`updateTag(tag)`**, new in this
+version, single-argument, callable *only* from Server Actions, built
+specifically for read-your-own-writes — "the next request will wait to
+fetch fresh data rather than serving stale content." Every action touched
+here is invoked directly from an admin form as a Server Action, so
+`updateTag` applies uniformly; don't reach for `revalidateTag` in this
+codebase unless the caller is a Route Handler or webhook, where
+`updateTag` isn't available.
+
+**Fix — added `updateTag(...)` calls matching each service's existing
+tag, right after the existing `revalidatePath` calls (kept, they still
+serve the admin-side pages):**
+- `lib/actions/product.actions.ts` — `updateTag('products')` in
+  `createProduct`, `updateProduct`, `deleteProduct`, `createVariant`,
+  `updateVariant`, `deleteVariant` (all 6 mutating functions).
+- `lib/actions/category.actions.ts` — `updateTag('categories')` **and**
+  `updateTag('products')` in `createCategory`/`updateCategory`/
+  `deleteCategory` (product listings embed category name/slug, so a
+  category rename needs both busted).
+- `lib/actions/cms.actions.ts` — `updateTag('content')` in
+  `createHeroSection`, `updateHeroSection`, `deleteHeroSection`,
+  `reorderHeroSections` (`getCachedHeroSections` shares the `'content'`
+  tag with `content-service.ts`'s FAQ/testimonial/policy reads).
+- `lib/actions/inventory.actions.ts` — `updateTag('products')` in
+  `updateStockLevel`, since a manual stock adjustment changes the public
+  in-stock/low-stock/sold-out badge, not just admin-side numbers.
+- **Not touched:** FAQs/testimonials/policies have no admin CRUD UI at
+  all yet (confirmed by grep — nothing in `lib/actions` or
+  `components/admin` imports those models), so there's no mutation path
+  to fix there; if that admin UI gets built later, its actions need
+  `updateTag('content')` too. `settings.actions.ts`'s `getSettings()`
+  isn't wrapped in `unstable_cache` at all — its existing
+  `revalidatePath('/', 'layout')` is already sufficient, nothing to add.
+  Checkout/webhook-driven inventory changes (`lib/inventory.ts`'s
+  `reserveInventory`/`finalizeInventory`/`releaseInventory`) were left
+  alone — out of scope (the user asked about admin panel edits
+  specifically), and `updateTag` isn't callable from the Razorpay webhook
+  route handler anyway (`revalidateTag(tag, {expire: 0})` would be the
+  Route Handler equivalent if this is ever needed there).
+
+This is a caching/data-layer fix with no UI surface — "with proper
+responsive" from the request doesn't apply here; nothing visual changed.
+
+**Verification:** `tsc --noEmit` (this is what actually caught the
+`revalidateTag` two-argument signature change — trust the compiler over
+memory of older Next.js APIs on this project), `eslint`, and a full
+`npm run build` all clean. Did not fabricate a live browser click-through
+test (no headless browser tool available in this environment, and
+`updateTag`/`revalidateTag` can only be exercised inside a real Next.js
+server-action request — not from a standalone script) — verified the
+fix is the officially-documented correct API for this exact scenario
+instead, via the docs bundled in `node_modules/next/dist/docs`. If you
+touch this again, `node -e` scripts calling these functions directly will
+throw ("`updateTag` can only be called from within a Server Action") —
+that's expected, not a bug in the function.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

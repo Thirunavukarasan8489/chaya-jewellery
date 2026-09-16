@@ -330,7 +330,7 @@ export default function ProductForm({ initialData, categories = [] }: { initialD
           tablet, the step strip live inside ONE sticky wrapper so they always
           stay pinned together as a single unit — no separate sticky element
           to fall out of sync while scrolling. */}
-      <div className="sticky top-0 z-30 bg-white/90 dark:bg-plum-950/90 backdrop-blur-md border-b border-gray-200 dark:border-plum-800 rounded-b-2xl shadow-sm -mx-4 sm:mx-0 mb-8">
+      <div className=" top-0 z-30 bg-white/90 dark:bg-plum-950/90 backdrop-blur-md border-b border-gray-200 dark:border-plum-800 rounded-b-2xl shadow-sm -mx-4 sm:mx-0 mb-8">
         <div className="py-4 px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Link

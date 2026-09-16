@@ -5,7 +5,7 @@ import { Category } from '@/lib/models/category';
 import { Product } from '@/lib/models/product';
 import { getSession } from '@/lib/auth';
 import { CategorySchema } from '@/lib/validations/category.schema';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 
 // Helper to check auth
 async function checkAuth(allowedRoles: string[]) {
@@ -80,6 +80,11 @@ export async function createCategory(data: any) {
     
     const category = await Category.create(validatedData);
     revalidatePath('/admin/categories');
+    // Public storefront reads categories (and product listings, which embed
+    // category name/slug) through unstable_cache — bust both tags so a new
+    // category shows up immediately instead of after the 60s cache window.
+    updateTag('categories');
+    updateTag('products');
     return { success: true, data: JSON.parse(JSON.stringify(category)) };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -105,6 +110,8 @@ export async function updateCategory(id: string, data: any) {
     
     const category = await Category.findByIdAndUpdate(id, validatedData, { returnDocument: 'after' }).lean();
     revalidatePath('/admin/categories');
+    updateTag('categories');
+    updateTag('products');
     return { success: true, data: JSON.parse(JSON.stringify(category)) };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -127,6 +134,8 @@ export async function deleteCategory(id: string) {
     
     await Category.findByIdAndDelete(id);
     revalidatePath('/admin/categories');
+    updateTag('categories');
+    updateTag('products');
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };

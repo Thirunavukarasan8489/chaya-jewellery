@@ -5,7 +5,7 @@ import { ProductVariant } from '@/lib/models/product-variant';
 import { StockHistory } from '@/lib/models/stock-history';
 import { getSession } from '@/lib/auth';
 import { logAuditAction } from '@/lib/actions/audit';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import mongoose from 'mongoose';
 import { recalcProductStockStatus, adjustInventory } from '@/lib/inventory';
 
@@ -147,6 +147,10 @@ export async function updateStockLevel(params: {
 
       revalidatePath('/admin/inventory');
       revalidatePath('/admin/products');
+      // A manual stock adjustment changes what the public product page shows
+      // (in stock / low stock / sold out) — bust the same 'products' tag the
+      // storefront's cached reads use, not just the admin views.
+      updateTag('products');
       return { success: true, newStock, stockStatus, available: totalAvailable };
     } catch (txError: any) {
       await session.abortTransaction();

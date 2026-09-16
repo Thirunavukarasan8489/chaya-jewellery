@@ -10,7 +10,7 @@ import { getSession } from '@/lib/auth';
 import { logAuditAction } from '@/lib/actions/audit';
 import { deleteMediaByUrl } from '@/lib/actions/media.actions';
 import { ProductSchema } from '@/lib/validations/product.schema';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import mongoose from 'mongoose';
 import { variantTypeLabel } from '@/lib/utils';
 import { sanitizeRichText } from '@/lib/sanitize';
@@ -294,6 +294,11 @@ export async function createProduct(data: any) {
     revalidatePath('/admin/products');
     revalidatePath('/admin/inventory');
     revalidatePath('/admin/productvarients');
+    // Public storefront reads products through unstable_cache (tag
+    // 'products', 60s window) — without this, a new/edited/deleted product
+    // wouldn't show up on the public site until that window naturally
+    // lapsed, no matter how many admin paths above get revalidated.
+    updateTag('products');
     return { success: true, data: JSON.parse(JSON.stringify(product)) };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -374,6 +379,7 @@ export async function updateProduct(id: string, data: any) {
 
     revalidatePath('/admin/products');
     revalidatePath('/admin/inventory');
+    updateTag('products');
     return { success: true, data: JSON.parse(JSON.stringify(product)) };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -427,6 +433,7 @@ export async function deleteProduct(id: string) {
     revalidatePath('/admin/products');
     revalidatePath('/admin/inventory');
     revalidatePath('/admin/productvarients');
+    updateTag('products');
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -514,6 +521,7 @@ export async function createVariant(productId: string, data: any) {
     revalidatePath('/admin/products');
     revalidatePath('/admin/productvarients');
     revalidatePath('/admin/inventory');
+    updateTag('products');
     return { success: true, data: JSON.parse(JSON.stringify(variant)) };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -578,6 +586,7 @@ export async function updateVariant(productId: string, variantId: string, data: 
 
     revalidatePath('/admin/products');
     revalidatePath('/admin/productvarients');
+    updateTag('products');
     return { success: true, data: JSON.parse(JSON.stringify(variant)) };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -626,6 +635,7 @@ export async function deleteVariant(variantId: string) {
     revalidatePath('/admin/products');
     revalidatePath('/admin/productvarients');
     revalidatePath('/admin/inventory');
+    updateTag('products');
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };

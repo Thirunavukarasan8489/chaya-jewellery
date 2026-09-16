@@ -3,7 +3,7 @@
 import dbConnect from '@/lib/db';
 import { HeroSection } from '@/lib/models/hero-section';
 import { getSession } from '@/lib/auth';
-import { revalidatePath, unstable_cache } from 'next/cache';
+import { revalidatePath, updateTag, unstable_cache } from 'next/cache';
 import { HeroSectionSchema } from '@/lib/validations/hero-section.schema';
 import { deleteMediaByUrl } from '@/lib/actions/media.actions';
 
@@ -80,9 +80,13 @@ export async function createHeroSection(data: any) {
     }
 
     const section = await HeroSection.create(data);
-    
+
     revalidatePath('/');
     revalidatePath('/admin/website/hero-section');
+    // getCachedHeroSections() is tagged 'content' — revalidatePath('/') alone
+    // recomputes the homepage, but its unstable_cache data call still
+    // returns the stale cached list until this tag is explicitly busted.
+    updateTag('content');
     return { success: true, data: JSON.parse(JSON.stringify(section)) };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -135,6 +139,7 @@ export async function updateHeroSection(id: string, data: any) {
     revalidatePath('/');
     revalidatePath('/admin/website/hero-section');
     revalidatePath(`/admin/website/hero-section/${id}`);
+    updateTag('content');
     return { success: true, data: JSON.parse(JSON.stringify(section)) };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -156,6 +161,7 @@ export async function deleteHeroSection(id: string) {
 
     revalidatePath('/');
     revalidatePath('/admin/website/hero-section');
+    updateTag('content');
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -180,9 +186,10 @@ export async function reorderHeroSections(updates: { id: string, displayOrder: n
     }));
 
     await HeroSection.bulkWrite(bulkOps);
-    
+
     revalidatePath('/');
     revalidatePath('/admin/website/hero-section');
+    updateTag('content');
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };

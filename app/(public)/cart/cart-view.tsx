@@ -5,15 +5,15 @@ import Link from "next/link";
 import { Lock, Minus, Plus, ShoppingBag, Trash2, Truck } from "lucide-react";
 import { useCart } from "@/components/public/cart/cart-provider";
 import { buttonStyles } from "@/components/public/ui/button";
-import { GemImage } from "@/components/public/ui/gem-image";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { validateCart } from "@/lib/actions/cart.actions";
 import { formatINR } from "@/lib/utils";
+import Image from "next/image";
 
 export function CartView({ settings }: { settings: any }) {
   const { lines, hydrated, subtotal, setQuantity, remove } = useCart();
-
+  
   if (!hydrated) {
     return (
       <div className="space-y-3" aria-busy>
@@ -34,8 +34,8 @@ export function CartView({ settings }: { settings: any }) {
           Your cart is empty
         </h2>
         <p className="mt-2 max-w-sm text-[0.9375rem] leading-relaxed text-ink-muted">
-          Nothing here yet. Browse the catalogue, or tell us what you are looking
-          for and we will source it.
+          Nothing here yet. Browse the catalogue, or tell us what you are
+          looking for and we will source it.
         </p>
         <div className="mt-7 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
           <Link href="/products" className={buttonStyles({ size: "lg" })}>
@@ -53,7 +53,8 @@ export function CartView({ settings }: { settings: any }) {
   }
 
   // shippingFor logic can be implemented here based on settings
-  const shipping = subtotal > settings.freeShippingThreshold ? 0 : settings.flatShippingFee;
+  const shipping =
+    subtotal > settings.freeShippingThreshold ? 0 : settings.flatShippingFee;
   const toFreeShipping = settings.freeShippingThreshold - subtotal;
 
   return (
@@ -69,9 +70,15 @@ export function CartView({ settings }: { settings: any }) {
               className="shrink-0"
               aria-label={line.name}
             >
-              <GemImage
+              {/* <GemImage
                 color={line.gemColor}
                 className="size-20 rounded-xl sm:size-28"
+              /> */}
+              <Image
+                src={line.image || ""}
+                alt={line.name}
+                width={110}
+                height={110}
               />
             </Link>
 
