@@ -26,6 +26,8 @@ const csp = [
   // in the admin media-upload forms (hero banners, product images, etc.) —
   // the browser blocks rendering a blob: <img> without it, showing a
   // broken-image icon even though the file itself uploads fine.
+  // previews used by every admin upload form (category/product/variant/hero
+  // images) before the file is actually uploaded to Cloudinary.
   "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://*.razorpay.com",
   "font-src 'self' data:",
   "connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://checkout.razorpay.com https://www.google-analytics.com https://analytics.google.com",

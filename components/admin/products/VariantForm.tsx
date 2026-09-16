@@ -24,7 +24,7 @@ import {
   AlertCircle,
   CheckCircle2,
 } from 'lucide-react';
-import { updateVariant } from '@/lib/actions/product.actions';
+import { createVariant, updateVariant } from '@/lib/actions/product.actions';
 import { uploadMedia } from '@/lib/actions/media.actions';
 import { variantTypeLabel } from '@/lib/utils';
 
@@ -100,12 +100,16 @@ const tabFields: Record<string, (keyof VariantFormValues)[]> = {
 
 export default function VariantForm({
   productId,
-  variant,
+  variant = {},
+  productName,
   calculatePriceOnVariantValue = false,
   variantType,
 }: {
   productId: string;
-  variant: any;
+  /** Omitted (or {}) for create mode — every field falls back to an empty/default value. */
+  variant?: any;
+  /** Only used in create mode, where there's no existing variant.productId to read it from. */
+  productName?: string;
   /** From the parent product's category — mirrors the same flag on the main
    * product form's Pricing & Variants tab: when true, Variant Value is the
    * editable field (Variant Name is auto-generated and locked); when false,
@@ -114,6 +118,7 @@ export default function VariantForm({
   variantType?: string;
 }) {
   const router = useRouter();
+  const isCreateMode = !variant?._id;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
   const priceOnValue = !!calculatePriceOnVariantValue;
@@ -138,7 +143,12 @@ export default function VariantForm({
   const methods = useForm<VariantFormValues>({
     resolver: zodResolver(variantSchema) as any,
     defaultValues: {
-      name: variant.name || '',
+      // When priceOnValue is true this field is disabled and server-computed
+      // (see buildVariantName in product.actions.ts) — seed it with the
+      // product name in create mode so the disabled/empty field doesn't trip
+      // the "Name is required" client-side validation before it ever reaches
+      // the server override.
+      name: variant.name || (priceOnValue ? productName || '' : ''),
       sku: variant.sku || '',
       variantValue: variant.variantValue,
       size: variant.size || '',
@@ -257,13 +267,15 @@ export default function VariantForm({
         keywords: data.keywords ? data.keywords.split(',').map((k: string) => k.trim()).filter(Boolean) : [],
       };
 
-      const result = await updateVariant(productId, variant._id, formattedData);
+      const result = isCreateMode
+        ? await createVariant(productId, formattedData)
+        : await updateVariant(productId, variant._id, formattedData);
 
       if (result.success) {
-        toast.success('Variant updated successfully!');
+        toast.success(isCreateMode ? 'Variant created successfully!' : 'Variant updated successfully!');
         setTimeout(() => router.push('/admin/productvarients'), 1200);
       } else {
-        toast.error(result.error || 'Failed to update variant');
+        toast.error(result.error || `Failed to ${isCreateMode ? 'create' : 'update'} variant`);
       }
     } catch (err: any) {
       toast.error(err.message || 'An unexpected error occurred');
@@ -294,13 +306,17 @@ export default function VariantForm({
             <div>
               <h1 className="text-2xl font-bold text-plum-900 dark:text-ivory-100 flex items-center gap-2">
                 <Package className="w-6 h-6 text-gold-500" />
-                {variant.name}
+                {isCreateMode ? 'New Variant' : variant.name}
               </h1>
               <p className="text-xs text-plum-500 dark:text-plum-400 mt-0.5">
                 Variant of{' '}
                 {product ? (
                   <Link href={`/admin/products/${product._id}`} className="text-gold-600 hover:underline">
                     {product.name}
+                  </Link>
+                ) : productName ? (
+                  <Link href={`/admin/products/${productId}`} className="text-gold-600 hover:underline">
+                    {productName}
                   </Link>
                 ) : (
                   'product'
@@ -314,7 +330,7 @@ export default function VariantForm({
             </AdminButton>
             <AdminButton type="button" onClick={handleFormSubmit} isLoading={isSubmitting} className="gap-2">
               <Save size={18} />
-              {isSubmitting ? 'Saving...' : 'Update Variant'}
+              {isSubmitting ? 'Saving...' : isCreateMode ? 'Create Variant' : 'Update Variant'}
             </AdminButton>
           </div>
         </div>
