@@ -28,9 +28,9 @@ export async function FeaturedCategories() {
               <Reveal delay={i * 60}>
                 <Link
                   href={`/products?category=${cat.slug}`}
-                  className="group flex w-20 flex-col items-center gap-2.5 sm:w-36"
+                  className="group flex w-20 flex-col items-center gap-2.5 sm:w-44"
                 >
-                  <span className="relative block size-20 shrink-0 overflow-hidden rounded-full ring-1 ring-ivory-300 transition-[box-shadow,ring-color] duration-300 group-hover:shadow-md group-hover:ring-gold-400 sm:size-36">
+                  <span className="relative block size-20 shrink-0 overflow-hidden rounded-full ring-1 ring-ivory-300 transition-[box-shadow,ring-color] duration-300 group-hover:shadow-md group-hover:ring-gold-400 sm:size-44">
                     {cat.image ? (
                       <Image
                         src={cat.image}
