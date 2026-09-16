@@ -57,7 +57,7 @@ export function GemImage({
       <div
         className="absolute inset-0"
         style={{
-          background: `radial-gradient(125% 100% at ${lightX}% ${lightY}%, ${color} 0%, ${color} 20%, color-mix(in oklab, ${color} 62%, #1e0722) 56%, #170519 100%)`,
+          background: `radial-gradient(125% 100% at ${lightX}% ${lightY}%, ${color} 0%, ${color} 20%, color-mix(in oklab, ${color} 62%, #16001d) 56%, #0e0013 100%)`,
         }}
       />
 
@@ -121,7 +121,7 @@ export function GemImage({
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(75% 65% at 50% 45%, transparent 40%, rgba(30,7,34,.55) 100%)",
+              "radial-gradient(75% 65% at 50% 45%, transparent 40%, rgba(22,0,29,.55) 100%)",
           }}
         />
       )}

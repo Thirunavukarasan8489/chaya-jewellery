@@ -18,8 +18,8 @@ const banners = [
     body: "Chokers, necklaces and bangles made for the big day — and the years after it.",
     cta: "Explore bridal",
     href: "/products?category=necklaces",
-    from: "#8B4A9B",
-    to: "#2b0a31",
+    from: "#6E3C75",
+    to: "#26002f",
   },
   {
     eyebrow: "Everyday gold",
@@ -27,8 +27,8 @@ const banners = [
     body: "Lightweight 18K gold, made for daily wear and dispatched within 48 hours.",
     cta: "Shop bracelets",
     href: "/products?category=bracelets",
-    from: "#5A1766",
-    to: "#370c3f",
+    from: "#4A0B52",
+    to: "#2f0338",
   },
   {
     eyebrow: "Statement pieces",
@@ -36,8 +36,8 @@ const banners = [
     body: "Solitaires, bands and temple-motif rings, hallmarked and finished by hand.",
     cta: "Shop rings",
     href: "/products?category=rings",
-    from: "#A8752E",
-    to: "#370c3f",
+    from: "#98732E",
+    to: "#2f0338",
   },
   {
     eyebrow: "Free with every order",
@@ -45,8 +45,8 @@ const banners = [
     body: "Not sure what suits the occasion or your budget? Get an honest opinion before you spend a rupee.",
     cta: "Start a conversation",
     href: "/contact",
-    from: "#d6a04f",
-    to: "#4e1359",
+    from: "#d9a441",
+    to: "#410849",
   },
 ];
 

@@ -163,7 +163,7 @@ export function MobileDrawer({ categories }: { categories: any[] }) {
                           aria-hidden
                           className="size-6 shrink-0 rotate-45 rounded-[0.3rem]"
                           style={{
-                            background: `linear-gradient(135deg, ${color}, color-mix(in oklab, ${color} 45%, #1e0722))`,
+                            background: `linear-gradient(135deg, ${color}, color-mix(in oklab, ${color} 45%, #16001d))`,
                           }}
                         />
                         <span>

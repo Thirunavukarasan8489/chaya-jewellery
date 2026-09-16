@@ -230,7 +230,7 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
             email: orderData.email,
             contact: orderData.phone,
           },
-          theme: { color: "#d6a04f" },
+          theme: { color: "#d9a441" },
           modal: {
             ondismiss: function () {
               setIsSubmitting(false);
@@ -403,7 +403,7 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
                       name="isGstRegistered"
                       checked={formData.isGstRegistered}
                       onChange={handleChange}
-                      className="w-4 h-4 rounded accent-[#d6a04f] border-plum-300 focus:ring-2 focus:ring-gold-400"
+                      className="w-4 h-4 rounded accent-[#d9a441] border-plum-300 focus:ring-2 focus:ring-gold-400"
                     />
                     <span className="text-sm font-medium text-plum-900">GST Registered</span>
                   </label>

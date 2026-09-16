@@ -1,55 +1,61 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 /* ============================================================================
-   CHAYA JEWELLERY — DESIGN TOKENS  ("Royal Purple & Gold")
+   CHAYA JEWELLERY — DESIGN TOKENS
    ----------------------------------------------------------------------------
-   Palette rationale (official brand palette, 2026 rebrand from gemstone
-   retailer "A1 Gems" to jewellery house "Chaya Jewellery"):
-   - PLUM  : now the brand's Royal/Primary Purple family (Deep Purple #2B0A31
-             → Light Purple #8B4A9B), used for text-ink, dark "premium"
-             surfaces (hero/banner sections) and primary CTAs. Kept the token
-             name so every component that already references plum-* repaints
-             for free — only the hex values changed, not the token contract.
-   - GOLD  : primary action / brand accent — anchored to Luxury Gold #D6A04F,
-             with Button Hover Gold #B98232 as the 600 hover step and Dark
-             Gold #A8752E as 700.
+   2026-09-16: recalibrated to the official brand kit (docs/chaya color
+   code.jpeg — "Brand Colour Palette" poster — and docs/chaya home
+   page.jpeg's matching implementation-guide strip). Every anchor value
+   below is copied verbatim from that poster, not approximated:
+   - PLUM  : Royal Plum #4A0B52 (highlights/gradients), Chaya Plum #26002F
+             (brand/headings/buttons), Deep Plum #16001D (luxury dark
+             sections — nav/footer). Token kept the pre-existing "plum"
+             name so every component already using plum-* repaints for
+             free; only the hex anchors changed.
+   - GOLD  : Champagne Gold #D9A441 (primary accent — icons/borders/
+             highlights) and Soft Gold #F4D58A (hover/light accent — the
+             brand kit explicitly wants hover states to *lighten* toward
+             gold, matching the site's existing gold-foil hover sweep).
    - EMERALD: secondary/functional accent (in-stock, success states) — not
              part of the brand palette, left unchanged on purpose.
-   - IVORY : page background — anchored to White/Warm White/Cream.
-   - INK   : text colour now taken literally from brand Text Black / Soft
-             Grey rather than derived from the purple scale.
+   - IVORY : Pure White #FFFFFF (main background), Soft Ivory #FFFDF9
+             (warm sections), Petal Mist #F8F1F7 (product/category
+             panels), Fine Line #E9DFE7 (borders/dividers) — an exact 1:1
+             map, no interpolation needed.
+   - INK   : Ink #1C1720 (main text), Muted #756B76 (secondary text).
    ========================================================================= */
 
 @theme {
-  /* ---- Plum → Royal Purple (brand primary) -------------------------------
-     Anchors are the four brand purples; 50-300/600/800/950 are interpolated
-     tints/shades to keep a full, evenly-stepped Tailwind-style scale. */
-  --color-plum-50: #f3edf5;
-  --color-plum-100: #e2d2e6;
-  --color-plum-200: #c5a4cd;
-  --color-plum-300: #a877b4;
-  --color-plum-400: #8b4a9b; /* Light Purple */
-  --color-plum-500: #5a1766; /* Royal Purple */
-  --color-plum-600: #4e1359;
-  --color-plum-700: #430f4d; /* Primary Purple */
-  --color-plum-800: #370c3f;
-  --color-plum-900: #2b0a31; /* Deep Purple */
-  --color-plum-950: #1e0722;
+  /* ---- Plum (brand primary) -----------------------------------------------
+     500/900/950 are the exact brand anchors (Royal/Chaya/Deep Plum); every
+     other step is interpolated between them to keep a full, evenly-stepped
+     Tailwind-style scale. */
+  --color-plum-50: #f1ecf1;
+  --color-plum-100: #dbcedc;
+  --color-plum-200: #baa2bd;
+  --color-plum-300: #926d97;
+  --color-plum-400: #6e3c75;
+  --color-plum-500: #4a0b52; /* Royal Plum */
+  --color-plum-600: #410849;
+  --color-plum-700: #380641;
+  --color-plum-800: #2f0338;
+  --color-plum-900: #26002f; /* Chaya Plum */
+  --color-plum-950: #16001d; /* Deep Plum */
 
-  /* ---- Gold (primary accent) ---------------------------------------------
-     Anchors are the four brand golds; Button Hover Gold is the dedicated
-     600 hover step so `hover:bg-gold-600` matches the brand spec exactly. */
-  --color-gold-50: #fcf6eb;
-  --color-gold-100: #f8e9cd;
-  --color-gold-200: #f2d49b; /* Champagne Gold */
-  --color-gold-300: #e7be70; /* Bright Gold */
-  --color-gold-400: #deaf5f;
-  --color-gold-500: #d6a04f; /* Luxury Gold */
-  --color-gold-600: #b98232; /* Button Hover Gold */
-  --color-gold-700: #a8752e; /* Dark Gold */
-  --color-gold-800: #865e25;
-  --color-gold-900: #65461c;
-  --color-gold-950: #3b2910;
+  /* ---- Gold (primary accent) -----------------------------------------------
+     300/500 are the exact brand anchors (Soft/Champagne Gold); every other
+     step is interpolated to keep a full scale. */
+  --color-gold-50: #faecca;
+  --color-gold-100: #f8e4b3;
+  --color-gold-200: #f6db9c;
+  --color-gold-300: #f4d58a; /* Soft Gold — hover/light accent */
+  --color-gold-400: #e7bd66;
+  --color-gold-500: #d9a441; /* Champagne Gold — primary accent */
+  --color-gold-600: #b98b37;
+  --color-gold-700: #98732e;
+  --color-gold-800: #715522;
+  --color-gold-900: #4c3917;
+  --color-gold-950: #2b210d;
 
   /* ---- Emerald (secondary) ---------------------------------------------- */
   --color-emerald-50: #ecfdf6;
@@ -63,11 +69,11 @@
   --color-emerald-800: #085b45;
   --color-emerald-900: #084b3a;
 
-  /* ---- Ivory (surfaces) — brand White / Warm White / Cream --------------- */
-  --color-ivory-50: #ffffff; /* White */
-  --color-ivory-100: #faf8f5; /* Warm White */
-  --color-ivory-200: #f7f0e5; /* Cream */
-  --color-ivory-300: #e3ddd3;
+  /* ---- Ivory (surfaces) — exact brand anchors, no interpolation ---------- */
+  --color-ivory-50: #ffffff; /* Pure White */
+  --color-ivory-100: #fffdf9; /* Soft Ivory */
+  --color-ivory-200: #f8f1f7; /* Petal Mist */
+  --color-ivory-300: #e9dfe7; /* Fine Line */
 
   /* ---- Semantic --------------------------------------------------------- */
   --color-danger-50: #fff1f2;
@@ -87,14 +93,14 @@
   --color-info-700: #1d4ed8;
 
   /* ---- Aliases used across the UI --------------------------------------- */
-  --color-canvas: var(--color-ivory-50); /* Primary Background: #FFFFFF */
+  --color-canvas: var(--color-ivory-50); /* Pure White — main background */
   --color-surface: #ffffff;
-  --color-surface-sunken: var(--color-ivory-200);
-  --color-premium-bg: var(--color-plum-700); /* Premium Background: #430F4D */
-  --color-ink: #171717; /* Text Black */
-  --color-ink-soft: #6b6870; /* Soft Grey */
-  --color-ink-muted: #8a8790;
-  --color-hairline: var(--color-ivory-300);
+  --color-surface-sunken: var(--color-ivory-200); /* Petal Mist — product/category panels */
+  --color-premium-bg: var(--color-plum-950); /* Deep Plum — luxury dark sections */
+  --color-ink: #1c1720; /* Ink */
+  --color-ink-soft: #756b76; /* Muted */
+  --color-ink-muted: #96909a;
+  --color-hairline: var(--color-ivory-300); /* Fine Line */
 
   /* ---- Type --------------------------------------------------------------
      Cormorant (tall, engraved-catalogue serif) + Hind (a Latin/Devanagari
@@ -114,11 +120,11 @@
   --radius-2xl: 1.75rem;
 
   /* ---- Elevation — warm purple-tinted shadows, never grey ---------------- */
-  --shadow-xs: 0 1px 2px 0 rgb(30 7 34 / 0.06);
-  --shadow-sm: 0 1px 3px 0 rgb(30 7 34 / 0.08), 0 1px 2px -1px rgb(30 7 34 / 0.06);
-  --shadow-md: 0 4px 14px -4px rgb(30 7 34 / 0.14), 0 2px 6px -2px rgb(30 7 34 / 0.07);
-  --shadow-lg: 0 12px 32px -8px rgb(30 7 34 / 0.18), 0 4px 10px -4px rgb(30 7 34 / 0.08);
-  --shadow-gold: 0 6px 20px -6px rgb(214 160 79 / 0.45);
+  --shadow-xs: 0 1px 2px 0 rgb(22 0 29 / 0.06);
+  --shadow-sm: 0 1px 3px 0 rgb(22 0 29 / 0.08), 0 1px 2px -1px rgb(22 0 29 / 0.06);
+  --shadow-md: 0 4px 14px -4px rgb(22 0 29 / 0.14), 0 2px 6px -2px rgb(22 0 29 / 0.07);
+  --shadow-lg: 0 12px 32px -8px rgb(22 0 29 / 0.18), 0 4px 10px -4px rgb(22 0 29 / 0.08);
+  --shadow-gold: 0 6px 20px -6px rgb(217 164 65 / 0.45);
 
   /* ---- Motion ----------------------------------------------------------- */
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
@@ -142,11 +148,11 @@
 
   /* Admin primary now follows the brand gold accent (was generic dashboard
      blue) so the admin panel reads as the same product as the storefront. */
-  --color-admin-primary-50: #fcf6eb;
-  --color-admin-primary-100: #f8e9cd;
-  --color-admin-primary-500: #d6a04f;
-  --color-admin-primary-600: #b98232;
-  --color-admin-primary-700: #a8752e;
+  --color-admin-primary-50: #faecca;
+  --color-admin-primary-100: #f8e4b3;
+  --color-admin-primary-500: #d9a441;
+  --color-admin-primary-600: #b98b37;
+  --color-admin-primary-700: #98732e;
 
   --color-admin-bg: #f8fafc;
   --color-admin-surface: #ffffff;

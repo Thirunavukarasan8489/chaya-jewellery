@@ -81,7 +81,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   viewportFit: "cover",
-  themeColor: "#1e0722",
+  themeColor: "#16001d",
 };
 
 import { GoogleAnalytics } from "@/components/shared/analytics";

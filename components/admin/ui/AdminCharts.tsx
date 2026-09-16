@@ -46,11 +46,11 @@ export function RevenueOrdersChart({
         fill: true,
         label: 'Revenue (₹)',
         data: revenueData,
-        borderColor: '#d6a04f',
+        borderColor: '#d9a441',
         backgroundColor: 'rgba(214, 160, 79, 0.08)',
         tension: 0.35,
         borderWidth: 2,
-        pointBackgroundColor: '#d6a04f',
+        pointBackgroundColor: '#d9a441',
         pointRadius: 4,
         pointHoverRadius: 6,
       },
@@ -127,7 +127,7 @@ export function LeadStatusChart({
     datasets: [
       {
         data: [newLeads, contacted, qualified, converted],
-        backgroundColor: ['#d6a04f', '#5a1766', '#f59e0b', '#10b981'],
+        backgroundColor: ['#d9a441', '#4a0b52', '#f59e0b', '#10b981'],
         borderColor: ['#ffffff', '#ffffff', '#ffffff', '#ffffff'],
         borderWidth: 2,
       },

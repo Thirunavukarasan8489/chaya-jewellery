@@ -38,10 +38,10 @@ export function Logo({
         />
       </span>
 
-      {/* <span className="flex flex-col leading-none">
+      <span className="flex flex-col leading-none">
         <span
           className={cn(
-            "font-display text-base font-semibold tracking-tight sm:text-lg",
+            "font-display text-base font-semibold tracking-tight sm:text-lg uppercase",
             onDark ? "text-ivory-100" : "text-plum-900",
           )}
         >
@@ -53,9 +53,9 @@ export function Logo({
             onDark ? "text-gold-400" : "text-gold-700",
           )}
         >
-          Certified Gemstones
+          Certified Jewellery
         </span>
-      </span> */}
+      </span>
     </Link>
   );
 }

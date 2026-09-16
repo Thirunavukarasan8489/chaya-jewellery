@@ -42,7 +42,7 @@ export function buttonStyles({
   className?: string;
 } = {}) {
   return cn(
-    "inline-flex items-center justify-center rounded-full whitespace-nowrap",
+    "inline-flex items-center justify-center whitespace-nowrap",
     "transition-[background-color,border-color,transform,box-shadow] duration-200 ease-[var(--ease-out-soft)]",
     "active:scale-[0.98] touch-manipulation select-none",
     "disabled:pointer-events-none disabled:opacity-45",

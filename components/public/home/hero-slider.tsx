@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 const AUTOPLAY_MS = 6000;
 
 // Placeholder-art accent, cycled by index, for slides with no uploaded image.
-const SLIDE_ACCENTS = ["#D6A04F", "#8B4A9B", "#5A1766"];
+const SLIDE_ACCENTS = ["#d9a441", "#6E3C75", "#4A0B52"];
 
 type Slide = {
   badge?: string;

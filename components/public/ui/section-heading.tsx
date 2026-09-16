@@ -56,7 +56,7 @@ export function SectionHeading({
           </h2>
         </div>
 
-        {href && (
+        {/* {href && (
           <Link
             href={href}
             className={cn(
@@ -72,7 +72,7 @@ export function SectionHeading({
               className="transition-transform duration-200 group-hover:translate-x-0.5"
             />
           </Link>
-        )}
+        )} */}
       </div>
 
       {body && (

@@ -43,14 +43,14 @@ export function discountPercent(sellingPaise: number, comparePaise?: number) {
  * instead of every card falling back to the same flat colour.
  */
 const JEWEL_TONE_PALETTE = [
-  "#8B4A9B", // light purple
-  "#D6A04F", // luxury gold
-  "#5A1766", // royal purple
+  "#6E3C75", // light plum
+  "#D9A441", // champagne gold
+  "#4A0B52", // royal plum
   "#C81E4A", // ruby
   "#0F9C68", // emerald
   "#1F4FD8", // sapphire
   "#E0A713", // amber/topaz
-  "#A8752E", // dark gold
+  "#98732E", // dark gold
 ];
 
 export function gemColorFor(seed: string) {
