@@ -173,13 +173,35 @@ export async function placeOrder(data: any) {
       // 4. Update or Create Customer Profile Metrics
       let customer = await Customer.findOne({ 'contact.phone': data.phone }).session(dbSession);
 
+      // Customer.addresses is a *strict* sub-schema (name/phone/street1/zip
+      // all required — see lib/models/customer.ts) that doesn't match the
+      // free-form shape `shippingAddress` uses everywhere else
+      // (street/pincode, no name/phone — Order.shippingAddress is a plain
+      // Object with no schema, so that shape works fine there). Passing
+      // `data.shippingAddress` straight into `customer.addresses` failed
+      // Mongoose validation on every first-time checkout (new customer, or
+      // an existing one with no saved address yet) and rolled back the
+      // whole order-placement transaction. Map it to what the sub-schema
+      // actually requires instead of changing the wire shape everywhere
+      // else that already reads `.street`/`.pincode`.
+      const customerAddress = {
+        name: data.customerName,
+        phone: data.phone,
+        street1: data.shippingAddress.street,
+        street2: data.shippingAddress.apartment || undefined,
+        city: data.shippingAddress.city,
+        state: data.shippingAddress.state,
+        zip: data.shippingAddress.pincode,
+        country: data.shippingAddress.country || 'India',
+      };
+
       if (!customer) {
         // If guest checkout and customer doesn't exist, create one
         customer = await Customer.create([{
           type: 'PERSONAL',
           contact: { email: data.email, phone: data.phone },
           profile: { firstName: data.customerName.split(' ')[0], lastName: data.customerName.split(' ').slice(1).join(' ') || '' },
-          addresses: [data.shippingAddress],
+          addresses: [customerAddress],
           metrics: { totalOrders: 1, totalSpend: totals.total }
         }], { session: dbSession });
         customer = customer[0]; // because create returns an array when passed an array
@@ -187,13 +209,13 @@ export async function placeOrder(data: any) {
         // Update existing customer metrics
         customer.metrics.totalOrders = (customer.metrics.totalOrders || 0) + 1;
         customer.metrics.totalSpend = (customer.metrics.totalSpend || 0) + totals.total;
-        
+
         // Ensure address is saved if new
         // Basic check: just add if address array is empty
         if (!customer.addresses || customer.addresses.length === 0) {
-          customer.addresses = [data.shippingAddress];
+          customer.addresses = [customerAddress];
         }
-        
+
         await customer.save({ session: dbSession });
       }
 
@@ -212,48 +234,70 @@ export async function placeOrder(data: any) {
   }
 }
 
-import Razorpay from 'razorpay';
-import crypto from 'crypto';
+import { createCashfreeOrder } from '@/lib/services/cashfree';
 
-export async function createRazorpayOrder(amount: number) {
+/**
+ * Creates the Cashfree order + payment session for an order that
+ * `placeOrder` already wrote to Mongo. Looked up by `orderNumber` (which
+ * doubles as the Cashfree `order_id`) and priced from `order.total` —
+ * never from a client-submitted amount, same rule `resolveOrderItems`
+ * enforces above for cart line prices.
+ */
+export async function createCashfreePaymentSession(orderNumber: string) {
   try {
-    const instance = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID || '',
-      key_secret: process.env.RAZORPAY_KEY_SECRET || '',
+    await dbConnect();
+    const order = await Order.findOne({ orderNumber });
+    if (!order) {
+      return { success: false, error: 'Order not found' };
+    }
+    if (order.paymentStatus === 'CONFIRMED') {
+      return { success: false, error: 'This order has already been paid.' };
+    }
+
+    const baseUrl = (process.env.NEXTAUTH_URL || 'http://localhost:3000').replace(/\/$/, '');
+
+    const session = await createCashfreeOrder({
+      orderNumber: order.orderNumber,
+      amount: order.total,
+      customerName: order.customerName,
+      customerEmail: order.email,
+      customerPhone: order.phone,
+      returnUrl: `${baseUrl}/checkout/success?order=${order.orderNumber}`,
+      notifyUrl: `${baseUrl}/api/webhooks/cashfree`,
     });
 
-    const options = {
-      amount: amount * 100, // amount in smallest currency unit (paise)
-      currency: "INR",
-      receipt: "receipt_" + Math.random().toString(36).substring(7),
-    };
-
-    const order = await instance.orders.create(options);
-    return { success: true, orderId: order.id };
+    return { success: true, paymentSessionId: session.payment_session_id };
   } catch (error: any) {
-    console.error("Razorpay order creation failed:", error);
-    return { success: false, error: "Payment initiation failed." };
+    console.error('createCashfreePaymentSession error:', error);
+    return { success: false, error: error.message || 'Failed to initiate payment.' };
   }
 }
 
-export async function verifyRazorpaySignature(razorpay_order_id: string, razorpay_payment_id: string, razorpay_signature: string) {
-  const secret = process.env.RAZORPAY_KEY_SECRET;
-  if (!secret) {
-    console.error('RAZORPAY_KEY_SECRET is not configured');
-    return false;
+/**
+ * Minimal, unauthenticated-safe order status lookup for the checkout
+ * success page — deliberately returns only what's needed to render a
+ * status message, not the full order (address, items, contact details).
+ */
+export async function getOrderStatusSummary(orderNumber: string) {
+  try {
+    await dbConnect();
+    const order = await Order.findOne({ orderNumber }).select(
+      'orderNumber paymentMethod paymentStatus orderStatus total',
+    ).lean();
+    if (!order) return { success: false, error: 'Order not found' };
+    return {
+      success: true,
+      data: {
+        orderNumber: (order as any).orderNumber,
+        paymentMethod: (order as any).paymentMethod,
+        paymentStatus: (order as any).paymentStatus,
+        orderStatus: (order as any).orderStatus,
+        total: (order as any).total,
+      },
+    };
+  } catch (error: any) {
+    return { success: false, error: error.message };
   }
-  const body = razorpay_order_id + "|" + razorpay_payment_id;
-
-  const expectedSignature = crypto
-    .createHmac("sha256", secret)
-    .update(body.toString())
-    .digest("hex");
-
-  // Constant-time compare: a plain === leaks timing information about how
-  // many leading bytes matched, which matters on a payment-integrity check.
-  const expected = Buffer.from(expectedSignature);
-  const actual = Buffer.from(razorpay_signature || '');
-  return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
 }
 
 export async function calculateOrderTotals(subtotal: number, state: string) {

@@ -1,38 +1,113 @@
 import Link from "next/link";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Clock, XCircle } from "lucide-react";
+import { getOrderStatusSummary } from "@/lib/actions/checkout.actions";
+import { PendingPaymentRefresh } from "./PendingPaymentRefresh";
 
-export default function CheckoutSuccessPage({
+/**
+ * COD/Bank Transfer orders land here with nothing further to confirm — the
+ * order itself IS the confirmation. Cashfree orders land here on redirect
+ * from their hosted checkout, which is NOT proof of payment (the redirect
+ * is client-controlled) — real confirmation comes from the webhook
+ * (app/api/webhooks/cashfree/route.ts), so this looks up the order's
+ * actual `paymentStatus` from the database rather than trusting arrival
+ * at this URL alone.
+ */
+export default async function CheckoutSuccessPage({
   searchParams,
 }: {
-  searchParams: { orderId?: string };
+  searchParams: Promise<{ order?: string; orderId?: string }>;
 }) {
-  return (
-    <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center">
-      <div className="bg-emerald-50 w-24 h-24 rounded-none flex items-center justify-center mb-6 shadow-sm ring-1 ring-emerald-100">
-        <CheckCircle2 className="w-12 h-12 text-emerald-500" />
+  const { order: orderNumber } = await searchParams;
+
+  const result = orderNumber ? await getOrderStatusSummary(orderNumber) : null;
+  const order = result?.success ? result.data : null;
+
+  const isGatewayOrder = order && order.paymentMethod !== "COD" && order.paymentMethod !== "BANK_TRANSFER";
+  const isPending = isGatewayOrder && order.paymentStatus === "PENDING";
+  const isFailed = isGatewayOrder && order.paymentStatus === "FAILED";
+
+  if (isFailed) {
+    return (
+      <div className="flex min-h-[70vh] flex-col items-center justify-center p-6 text-center">
+        <div className="mb-6 flex size-24 items-center justify-center bg-danger-50 shadow-sm ring-1 ring-danger-100">
+          <XCircle className="size-12 text-danger-500" />
+        </div>
+        <h1 className="mb-4 font-display text-3xl font-bold text-plum-950">
+          Payment Failed
+        </h1>
+        <p className="mx-auto mb-8 max-w-md text-plum-600">
+          Your payment couldn&apos;t be completed. No amount has been charged
+          — please try again, or reach out if the issue continues.
+        </p>
+        <div className="flex flex-wrap justify-center gap-4">
+          <Link
+            href="/checkout"
+            className="bg-gold-500 px-6 py-2.5 font-medium text-white transition-colors hover:bg-gold-600"
+          >
+            Try Again
+          </Link>
+          <Link
+            href="/contact"
+            className="border border-plum-200 bg-white px-6 py-2.5 font-medium text-plum-900 transition-colors hover:bg-plum-50"
+          >
+            Contact Us
+          </Link>
+        </div>
       </div>
-      <h1 className="text-3xl font-display font-bold text-plum-950 mb-4">
+    );
+  }
+
+  if (isPending) {
+    return (
+      <div className="flex min-h-[70vh] flex-col items-center justify-center p-6 text-center">
+        <PendingPaymentRefresh />
+        <div className="mb-6 flex size-24 items-center justify-center bg-gold-50 shadow-sm ring-1 ring-gold-100">
+          <Clock className="size-12 animate-pulse text-gold-600" />
+        </div>
+        <h1 className="mb-4 font-display text-3xl font-bold text-plum-950">
+          Confirming Your Payment
+        </h1>
+        <p className="mx-auto mb-2 max-w-md text-plum-600">
+          This usually takes just a few seconds. This page will update
+          automatically — no need to refresh or pay again.
+        </p>
+        {order && (
+          <p className="mb-8 font-medium text-plum-900">
+            Order Reference: #{order.orderNumber}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-[70vh] flex-col items-center justify-center p-6 text-center">
+      <div className="mb-6 flex size-24 items-center justify-center bg-emerald-50 shadow-sm ring-1 ring-emerald-100">
+        <CheckCircle2 className="size-12 text-emerald-500" />
+      </div>
+      <h1 className="mb-4 font-display text-3xl font-bold text-plum-950">
         Order Placed Successfully
       </h1>
-      <p className="text-plum-600 max-w-md mx-auto mb-2">
-        Thank you for your purchase! Your order has been placed and is currently being processed.
+      <p className="mx-auto mb-2 max-w-md text-plum-600">
+        Thank you for your purchase! Your order has been placed and is
+        currently being processed.
       </p>
-      {searchParams.orderId && (
-        <p className="text-plum-900 font-medium mb-8">
-          Order Reference: #{searchParams.orderId.slice(-6).toUpperCase()}
+      {order && (
+        <p className="mb-8 font-medium text-plum-900">
+          Order Reference: #{order.orderNumber}
         </p>
       )}
-      
-      <div className="flex gap-4">
-        <Link 
+
+      <div className="flex flex-wrap justify-center gap-4">
+        <Link
           href="/account/dashboard"
-          className="bg-gold-500 hover:bg-gold-600 text-white px-6 py-2.5 rounded-xl font-medium transition-colors"
+          className="bg-gold-500 px-6 py-2.5 font-medium text-white transition-colors hover:bg-gold-600"
         >
           View My Orders
         </Link>
-        <Link 
+        <Link
           href="/collections"
-          className="bg-white border border-plum-200 text-plum-900 hover:bg-plum-50 px-6 py-2.5 rounded-xl font-medium transition-colors"
+          className="border border-plum-200 bg-white px-6 py-2.5 font-medium text-plum-900 transition-colors hover:bg-plum-50"
         >
           Continue Shopping
         </Link>

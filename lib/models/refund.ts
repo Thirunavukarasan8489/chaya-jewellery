@@ -15,7 +15,7 @@ const RefundSchema = new mongoose.Schema(
       default: 'PENDING'
     },
     
-    gatewayRefundId: { type: String }, // Provided by payment gateway (e.g. Razorpay/Stripe)
+    gatewayRefundId: { type: String }, // Provided by the payment gateway (Cashfree)
     
     reason: { type: String },
     processedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

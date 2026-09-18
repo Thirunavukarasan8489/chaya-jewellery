@@ -682,6 +682,241 @@ build fails with a filesystem/chunk error that doesn't point at your
 actual change, check for a concurrent `dev` process on port 3000 before
 assuming the code is broken.
 
+## 2026-09-18 payment gateway: Razorpay → Cashfree
+
+User added real Cashfree sandbox credentials (`CASHFREE_APP_ID`/
+`CASHFREE_SECRET_KEY` in `.env.local`) and asked for payment integration.
+Found first: the existing Razorpay integration was **never actually
+functional** — `RAZORPAY_*` env vars were all commented out (falling back
+to `"rzp_test_dummy"` client-side), and independently of that, its webhook
+(`app/api/webhooks/razorpay/route.ts`) looked up
+`Order.findOne({ razorpayOrderId })` and later assigned
+`order.paymentStatus = "COMPLETED"` — **neither `razorpayOrderId` nor
+`"COMPLETED"` ever existed** on the `Order` schema (`paymentStatus` enum
+is `['PENDING','CONFIRMED','FAILED']`), so even with real keys the webhook
+could never have found an order or saved successfully. Given that, and
+the user's explicit choice, Razorpay was fully retired rather than kept
+alongside Cashfree — see "Deleted" below.
+
+**Verified against Cashfree's real sandbox API before calling this
+done**, not just compiled: `POST https://sandbox.cashfree.com/pg/orders`
+with the user's actual test credentials, from a throwaway script outside
+Next.js, returned a real `200` with a `payment_session_id` — confirms the
+API version, headers and payload shape are actually correct, not just
+docs-plausible. Also confirmed the webhook route 400s on both a missing
+and an invalid `x-webhook-signature` (fails closed).
+
+**New:**
+- `lib/services/cashfree.ts` — `createCashfreeOrder()` (raw `fetch`, no
+  SDK dependency — Cashfree's Orders API is simple enough that adding a
+  server-side SDK package felt like unnecessary dependency risk, see the
+  2026-09-14 nodemailer/next-auth ERESOLVE entry above for why that risk
+  is not hypothetical on this project) and
+  `verifyCashfreeWebhookSignature()` (`base64(HMAC-SHA256(secretKey,
+  timestamp + rawBody))`, constant-time compare). Sandbox vs production
+  base URL is derived from whether `CASHFREE_APP_ID` starts with `"TEST"`
+  (Cashfree's own convention) rather than a separate env flag that could
+  be left pointing the wrong way after a key rotation. API version pinned
+  to `2023-08-01` (a long-stable, well-documented version — verified
+  working against the real sandbox above).
+- `app/api/webhooks/cashfree/route.ts` — verifies the signature (fails
+  closed — `503` if `CASHFREE_SECRET_KEY` is unset, matching the fail-
+  closed fix the Razorpay webhook had received previously), then on
+  `PAYMENT_SUCCESS_WEBHOOK` checks `data.payment.payment_status ===
+  "SUCCESS"` **and** that `data.order.order_amount` matches `order.total`
+  (same amount-integrity rule the old Razorpay webhook had — a valid
+  signature only proves the event came from Cashfree, not that the paid
+  amount matches this specific order) before marking the order
+  `CONFIRMED` and calling `finalizeInventory` inside a transaction, same
+  pattern as before. `PAYMENT_FAILED_WEBHOOK`/`PAYMENT_USER_DROPPED_WEBHOOK`
+  mark `paymentStatus: 'FAILED'` but deliberately leave `orderStatus:
+  'PAYMENT_PENDING'` alone — the existing `release-inventory` cron
+  filters only on `orderStatus`, so it still sweeps and frees the stock
+  after 30 minutes without this route needing to duplicate that logic.
+- **`Order.findOne({ orderNumber })` is the webhook's lookup** — no new
+  gateway-order-id field needed for that, because `createCashfreePaymentSession`
+  (in `checkout.actions.ts`) sends Cashfree our own `orderNumber` AS
+  their `order_id` in the first place. This is the fix for the exact
+  class of bug that silently broke the Razorpay webhook (a lookup field
+  that was never actually persisted) — don't reintroduce a separate
+  "gateway's order id" field as the primary lookup key if you touch this
+  again; keep `orderNumber` as the one shared identifier.
+  `gatewayOrderId`/`gatewayPaymentId` (new, optional, on `Order`) are
+  populated by the webhook purely for admin-side support/reconciliation
+  display (`app/(admin)/admin/orders/[id]/page.tsx`, which used to read
+  the never-populated `order.razorpayPaymentId` — fixed to read
+  `gatewayPaymentId`) — never used for lookups.
+- `createCashfreePaymentSession(orderNumber)` (`checkout.actions.ts`) —
+  re-fetches the order server-side and prices the Cashfree order from
+  `order.total`, never a client-submitted amount, same rule
+  `resolveOrderItems()`'s doc-comment already established for cart line
+  prices in this file.
+- `getOrderStatusSummary(orderNumber)` (`checkout.actions.ts`) — minimal
+  fields only (no address/items/contact info), used by the now-dynamic
+  `/checkout/success` page, which **no longer assumes success on arrival**
+  for gateway orders: Cashfree's `return_url` redirect is client-
+  controlled and not proof of payment, so the page looks up the order's
+  real `paymentStatus` (set by the webhook) and renders success/pending/
+  failed accordingly. COD/Bank Transfer orders still show success
+  immediately — no gateway involved, the order itself is the
+  confirmation, same as before. A pending order auto-refreshes itself
+  (`PendingPaymentRefresh.tsx`, `router.refresh()` every 5s, capped at 10
+  tries) since the webhook typically lands a few seconds after redirect.
+- `types/cashfree-js.d.ts` — `@cashfreepayments/cashfree-js` ships no
+  type declarations; hand-written, narrow ambient types covering only
+  `load()`/`checkout()`, the only surface used.
+- `CheckoutClient.tsx` — swapped the Razorpay `checkout.js` CDN
+  script-tag + `window.Razorpay` modal flow for the npm package
+  `@cashfreepayments/cashfree-js`'s `load()`/`checkout()`
+  (`redirectTarget: "_self"` — a full-page redirect to Cashfree's hosted
+  checkout, not a modal; some payment methods there, e.g. netbanking,
+  need the full page and don't work reliably inside an iframe/modal).
+  `placeOrder()` now always runs first regardless of payment method
+  (previously only for COD/Bank Transfer) — Cashfree needs a real,
+  already-created order to attach a payment session to.
+
+**Deleted (superseded, not left as dead code — these are internet-
+reachable route files and an unused dependency, a different risk profile
+than unused UI components elsewhere in this codebase):**
+- `app/api/webhooks/razorpay/route.ts` — broken as described above, and
+  Razorpay was never configured with real keys or webhooks in any actual
+  Razorpay dashboard.
+- `app/api/webhooks/payment/route.ts` and `lib/services/payment.ts` —
+  were *already* marked "DEAD CODE, candidate for deletion" by a prior
+  pass (unfinished generic gateway stub, `verifyWebhookSignature` always
+  returned `true`); squarely in scope now, so cleaned up rather than
+  left cluttering the same problem space as the real integration.
+- `razorpay` npm dependency (`createRazorpayOrder`/`verifyRazorpaySignature`
+  in `checkout.actions.ts` had zero remaining callers after the above).
+
+**Not done:** no `Payment` model documents are created by the webhook —
+matches the prior Razorpay webhook's behavior (it only ever updated
+`Order`, never created a `lib/models/payment.ts` record either), not a
+new gap introduced here. Admin-side payment reconciliation still reads
+`Order.gatewayPaymentId` directly, not a `Payment` collection.
+
+**Environment note:** Cashfree's `notify_url` (webhook) must be a
+publicly reachable URL — it cannot reach `http://localhost:3000` in
+local dev. Testing the actual webhook delivery (not just order creation)
+needs a tunnel (ngrok or similar) pointed at the dev server, or testing
+against a deployed environment.
+
+**Verification:** `tsc --noEmit`, `eslint`, and a full `npm run build`
+all clean (one transient Google Fonts fetch failure on the first build
+attempt, unrelated to this change — resolved on retry). Confirmed live
+against the real Cashfree sandbox (see above) and confirmed the webhook
+route 400s on missing/invalid signatures. Did not fabricate an end-to-end
+browser payment test — no headless browser tool in this environment, and
+a real webhook can't reach local dev without a tunnel (see above); the
+order-creation half is verified for real, the webhook half is verified
+by code review + signature-rejection behavior, not a live payment.
+
+## 2026-09-18 fix: checkout failed for every first-time customer (`addresses.0.zip`/`street1`/`phone`/`name` required)
+
+Real, order-breaking bug, not related to the Cashfree work above (same
+day, separate issue): **any checkout where the customer's phone number
+had no existing `Customer` record, or an existing one with zero saved
+addresses, failed outright** — `placeOrder` (`checkout.actions.ts`)
+threw a Mongoose validation error and rolled back the *entire*
+transaction (order included, not just the customer update), because
+step 4 pushed `data.shippingAddress` straight into `customer.addresses`.
+
+Root cause: two different address shapes that look similar but aren't.
+`shippingAddress` as built in `CheckoutClient.tsx` uses `street`/
+`apartment`/`pincode` and has no `name`/`phone` at all — fine for
+`Order.shippingAddress`/`billingAddress`, which are schemaless
+`type: Object` fields. But `Customer.addresses` (`lib/models/customer.ts`)
+is a *strict* sub-schema requiring `name`, `phone`, `street1`, `zip` —
+confirmed by reproducing the exact reported error message against the
+real schema before touching any code, not just reasoning about it
+(`CheckoutClient.tsx` itself already knew the correct shape — it reads
+`customer.addresses[0].street1`/`.zip` correctly when *pre-filling* the
+form for a returning customer; only the *write* side going into
+`Customer.addresses` was wrong).
+
+**Fix:** `placeOrder` now builds a separate `customerAddress` object
+mapped to what the `Customer.addresses` sub-schema actually requires
+(`name`/`phone` from the order's own `customerName`/`phone`, `street1`
+from `.street`, `zip` from `.pincode`, etc.) and uses *that* wherever an
+address gets pushed onto `customer.addresses` — the `Order` document's
+own `shippingAddress`/`billingAddress` fields are untouched (still the
+original free-form shape every admin/account order view already reads).
+Deliberately fixed at this one mapping point rather than changing
+`CheckoutClient.tsx`'s field names to match the Customer schema — that
+would have meant auditing and updating every other place that already
+reads `.street`/`.pincode`/`.apartment` off an order's stored address
+(admin order detail, account order history, shipment labels, etc.).
+
+**Verification:** reproduced the user's exact error message character-
+for-character against the real `Customer`/`AddressSchema` definitions
+(a throwaway script, not the actual model files, to avoid needing
+ts-node) before fixing anything, then confirmed the new mapped shape
+passes validation cleanly. `tsc --noEmit`, `eslint`, and a full
+`npm run build` all clean (one transient Google Fonts fetch failure on
+first attempt again, same as the Cashfree entry above — resolved on
+retry; if you hit this exact font error, just retry the build before
+assuming your change broke something).
+
+## 2026-09-18 fix: checkout failed client-side with a generic error — CSP was never updated for Cashfree
+
+Follow-on from the same day's Cashfree integration above. After the
+customer-address fix, checkout got further but still failed with a bare
+"An unexpected error occurred" toast — and the `catch` in
+`CheckoutClient.tsx` that produced it didn't even log the real error
+(`catch { ... }`, no error binding), so there was nothing to read.
+
+**Found by reproducing, not guessing:** checked the live database first
+— three real orders existed (`ORD-2026-0001..0003`), all
+`paymentStatus: PENDING`, proving `placeOrder` was succeeding. Then
+replayed `createCashfreePaymentSession`'s exact request against the real
+Cashfree sandbox for the most recent order and got back `409
+order_already_exists` — meaning **Cashfree already had that order_id
+registered**, which only happens if the user's own earlier attempt had
+already successfully created the Cashfree order server-side. So the
+failure had to be *after* that point — client-side, in the SDK hand-off,
+not in any of the code reviewed/tested when the integration was built.
+
+**Root cause:** the exact same class of bug as the 2026-09-15
+`img-src`/`blob:` CSP entry (see above) — `next.config.ts`'s CSP was
+written for Razorpay and **never updated** when Cashfree replaced it
+earlier the same day. `@cashfreepayments/cashfree-js`'s `load()`
+dynamically injects `<script src="https://sdk.cashfree.com/js/v3/cashfree.js">`
+at runtime (confirmed by grepping the actual installed package —
+`node_modules/@cashfreepayments/cashfree-js/dist/script.js`, not
+assumed from docs) — a domain nowhere in `script-src`. The browser
+silently blocked it; no console-visible link back to `next.config.ts`,
+which is exactly why it needed the database/API reproduction above
+instead of being obvious from a stack trace.
+
+**Fix:**
+- `next.config.ts` — replaced every leftover Razorpay-only CSP entry
+  (`script-src`, `img-src`, `connect-src`, `frame-src`) with
+  `https://*.cashfree.com`. Used the wildcard rather than enumerating
+  `sdk.cashfree.com` alone because Cashfree's checkout hand-off likely
+  also touches their API/checkout-page subdomains (api.cashfree.com,
+  sandbox.cashfree.com, payment pages) that weren't independently
+  confirmed the way the script URL was — if you tighten this later,
+  verify each subdomain against a real checkout attempt first, the same
+  way the script URL was confirmed here.
+- `CheckoutClient.tsx`'s catch block now does `console.error("Checkout
+  failed:", error)` before the toast. **This should have existed from
+  the start** — the bare `catch { }` this replaced is why this bug took
+  a database query and a replayed API call to find instead of five
+  seconds of reading the browser console. Don't reintroduce a
+  swallowed-error catch block in a payment flow.
+
+**Lesson for next time a third-party client-side SDK is added to this
+project:** grep the actual installed package for hardcoded URLs
+(`grep -oE "https?://[^\"' ]+"` on its dist file) and add them to
+`next.config.ts`'s CSP in the *same change* that adds the SDK — don't
+treat it as a follow-up. This is now the second time in one project a
+new third-party script silently broke on CSP with no helpful error
+message.
+
+**Verification:** confirmed live via `curl -I` that the served CSP
+header now includes `https://*.cashfree.com` in all four directives.
+`tsc --noEmit`, `eslint`, and a full `npm run build` all clean.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

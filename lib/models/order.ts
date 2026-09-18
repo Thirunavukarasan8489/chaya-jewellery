@@ -51,6 +51,13 @@ const OrderSchema = new mongoose.Schema(
     // Payment
     paymentMethod: { type: String, enum: ['UPI', 'CARD', 'NET_BANKING', 'COD', 'BANK_TRANSFER'], required: true },
     paymentStatus: { type: String, enum: ['PENDING', 'CONFIRMED', 'FAILED'], default: 'PENDING' },
+    // Cashfree reconciliation fields — populated by the webhook
+    // (app/api/webhooks/cashfree/route.ts) once payment actually completes.
+    // `orderNumber` above IS the Cashfree `order_id` we send them (one fewer
+    // field to keep in sync); these two are Cashfree's own IDs, kept only
+    // for support/reconciliation lookups in the Cashfree dashboard.
+    gatewayOrderId: { type: String },
+    gatewayPaymentId: { type: String },
     
     // Order Lifecycle
     orderStatus: {

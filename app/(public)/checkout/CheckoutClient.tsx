@@ -1,15 +1,13 @@
 "use client";
 
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
-
 import { useState, useEffect } from "react";
 import { useCart } from "@/components/public/cart/cart-provider";
 import { useRouter } from "next/navigation";
-import { placeOrder, calculateOrderTotals } from "@/lib/actions/checkout.actions";
+import {
+  placeOrder,
+  calculateOrderTotals,
+  createCashfreePaymentSession,
+} from "@/lib/actions/checkout.actions";
 import toast from "react-hot-toast";
 import { CheckCircle2, ChevronRight } from "lucide-react";
 
@@ -169,93 +167,55 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
         total: totals.total,
       };
 
+      // Order is always created first, regardless of payment method — COD/
+      // Bank Transfer need nothing further; everything else needs a
+      // Cashfree payment session against this now-real order.
+      const result = await placeOrder(orderData);
+      if (!result.success) {
+        toast.error(result.error || "Failed to place order.");
+        setIsSubmitting(false);
+        return;
+      }
+
       if (
         formData.paymentMethod === "COD" ||
         formData.paymentMethod === "BANK_TRANSFER"
       ) {
-        const result = await placeOrder(orderData);
-        if (result.success) {
-          toast.success("Order placed successfully!");
-          clear();
-          router.push(`/checkout/success?orderId=${result.data._id}`);
-        } else {
-          toast.error(result.error || "Failed to place order.");
-          setIsSubmitting(false);
-        }
-      } else {
-        const { createRazorpayOrder, verifyRazorpaySignature } = await import(
-          "@/lib/actions/checkout.actions"
-        );
-        const rzpOrderRes = await createRazorpayOrder(totals.total);
-
-        if (!rzpOrderRes.success || !rzpOrderRes.orderId) {
-          toast.error("Failed to initiate payment.");
-          setIsSubmitting(false);
-          return;
-        }
-
-        if (!window.Razorpay) {
-          await new Promise((resolve) => {
-            const script = document.createElement("script");
-            script.src = "https://checkout.razorpay.com/v1/checkout.js";
-            script.onload = resolve;
-            document.body.appendChild(script);
-          });
-        }
-
-        const options = {
-          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_dummy",
-          amount: totals.total * 100,
-          currency: "INR",
-          name: "Chaya Jewellery",
-          description: "Purchase from Chaya Jewellery",
-          order_id: rzpOrderRes.orderId,
-          handler: async function (response: any) {
-            const isValid = await verifyRazorpaySignature(
-              response.razorpay_order_id,
-              response.razorpay_payment_id,
-              response.razorpay_signature
-            );
-
-            if (!isValid) {
-              toast.error("Payment verification failed.");
-              setIsSubmitting(false);
-              return;
-            }
-
-            const result = await placeOrder({
-              ...orderData,
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
-            });
-            if (result.success) {
-              toast.success("Payment successful! Order placed.");
-              clear();
-              router.push(`/checkout/success?orderId=${result.data._id}`);
-            } else {
-              toast.error(result.error || "Order creation failed after payment.");
-              setIsSubmitting(false);
-            }
-          },
-          prefill: {
-            name: orderData.customerName,
-            email: orderData.email,
-            contact: orderData.phone,
-          },
-          theme: { color: "#d9a441" },
-          modal: {
-            ondismiss: function () {
-              setIsSubmitting(false);
-            },
-          },
-        };
-
-        const rzp = new window.Razorpay(options);
-        rzp.open();
+        toast.success("Order placed successfully!");
+        clear();
+        router.push(`/checkout/success?order=${result.data.orderNumber}`);
         return;
       }
-    } catch {
+
+      const sessionRes = await createCashfreePaymentSession(result.data.orderNumber);
+      if (!sessionRes.success || !sessionRes.paymentSessionId) {
+        toast.error(sessionRes.error || "Failed to initiate payment.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const { load } = await import("@cashfreepayments/cashfree-js");
+      const cashfree = await load({
+        mode: process.env.NEXT_PUBLIC_CASHFREE_MODE === "production" ? "production" : "sandbox",
+      });
+
+      // The cart is already saved server-side as an order at this point —
+      // safe to clear it before handing off to Cashfree's hosted checkout,
+      // which navigates the whole page away (redirectTarget: "_self") and
+      // returns to /checkout/success. Actual payment confirmation comes
+      // from the webhook, not this redirect — see checkout/success/page.tsx.
+      clear();
+      cashfree.checkout({
+        paymentSessionId: sessionRes.paymentSessionId,
+        redirectTarget: "_self",
+      });
+      return;
+    } catch (error) {
+      // This swallowed the real error with no trace before — the
+      // Cashfree CSP fix (next.config.ts) was only findable by
+      // reproducing the failure directly, because this line gave no clue
+      // it was a blocked-script issue rather than a server/logic bug.
+      console.error("Checkout failed:", error);
       toast.error("An unexpected error occurred.");
       setIsSubmitting(false);
     }

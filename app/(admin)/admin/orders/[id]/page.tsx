@@ -146,10 +146,10 @@ export default async function OrderDetailPage(props: { params: Promise<{ id: str
                 <span className="text-slate-500 dark:text-slate-400">Status</span>
                 <StatusBadge status={order.paymentStatus} />
               </div>
-              {order.razorpayPaymentId && (
+              {order.gatewayPaymentId && (
                 <div className="flex justify-between">
                   <span className="text-slate-500 dark:text-slate-400">Transaction ID</span>
-                  <span className="font-mono text-xs text-plum-900 dark:text-ivory-100">{order.razorpayPaymentId}</span>
+                  <span className="font-mono text-xs text-plum-900 dark:text-ivory-100">{order.gatewayPaymentId}</span>
                 </div>
               )}
             </div>
