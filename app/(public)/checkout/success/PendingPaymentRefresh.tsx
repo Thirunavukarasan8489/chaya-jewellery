@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useCart } from "@/components/public/cart/cart-provider";
 
 /**
  * Payment confirmation arrives async via the Cashfree webhook, typically a
@@ -12,7 +13,13 @@ import { useRouter } from "next/navigation";
  */
 export function PendingPaymentRefresh() {
   const router = useRouter();
+  const { clear } = useCart();
   const attempts = useRef(0);
+
+  useEffect(() => {
+    // Clear cart lines once checkout successfully lands on success
+    clear();
+  }, [clear]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -25,6 +32,16 @@ export function PendingPaymentRefresh() {
     }, 5000);
     return () => clearInterval(interval);
   }, [router]);
+
+  return null;
+}
+
+export function SuccessCartClearer() {
+  const { clear } = useCart();
+
+  useEffect(() => {
+    clear();
+  }, [clear]);
 
   return null;
 }

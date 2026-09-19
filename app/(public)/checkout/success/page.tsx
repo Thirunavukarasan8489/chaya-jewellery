@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CheckCircle2, Clock, XCircle } from "lucide-react";
 import { getOrderStatusSummary } from "@/lib/actions/checkout.actions";
-import { PendingPaymentRefresh } from "./PendingPaymentRefresh";
+import { PendingPaymentRefresh, SuccessCartClearer } from "./PendingPaymentRefresh";
 
 /**
  * COD/Bank Transfer orders land here with nothing further to confirm — the
@@ -82,6 +82,7 @@ export default async function CheckoutSuccessPage({
 
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center p-6 text-center">
+      <SuccessCartClearer />
       <div className="mb-6 flex size-24 items-center justify-center bg-emerald-50 shadow-sm ring-1 ring-emerald-100">
         <CheckCircle2 className="size-12 text-emerald-500" />
       </div>

@@ -16,6 +16,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import StatusBadge from "@/components/admin/ui/StatusBadge";
+import { finalizeCashfreePayment } from "@/lib/actions/checkout.actions";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,21 @@ export default async function OrdersPage() {
   }
   if (customer?.contact?.email && customer.contact.email !== userEmail) {
     orderConditions.push({ email: customer.contact.email });
+  }
+
+  if (orderConditions.length > 0) {
+    // 1. Reconcile any PENDING online orders with Cashfree in real time
+    const pendingGatewayOrders = await Order.find({
+      $or: orderConditions,
+      paymentStatus: "PENDING",
+      paymentMethod: { $nin: ["COD", "BANK_TRANSFER"] },
+    })
+      .select("orderNumber")
+      .lean();
+
+    for (const po of pendingGatewayOrders) {
+      await finalizeCashfreePayment(po.orderNumber);
+    }
   }
 
   const orders =

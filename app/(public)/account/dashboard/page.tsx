@@ -6,6 +6,7 @@ import dbConnect from "@/lib/db";
 import Link from "next/link";
 import { ArrowRight, Package, TrendingUp } from "lucide-react";
 import StatusBadge from "@/components/admin/ui/StatusBadge";
+import { finalizeCashfreePayment } from "@/lib/actions/checkout.actions";
 
 export const dynamic = "force-dynamic";
 
@@ -35,22 +36,43 @@ export default async function AccountDashboardPage() {
   }
 
   let recentOrders: any[] = [];
-  let totalOrdersCount = customer?.metrics?.totalOrders || 0;
-  let totalSpendAmount = customer?.metrics?.totalSpend || 0;
+  let totalOrdersCount = 0;
+  let totalSpendAmount = 0;
 
   if (orderConditions.length > 0) {
+    // 1. Reconcile any PENDING online orders with Cashfree in real time
+    const pendingGatewayOrders = await Order.find({
+      $or: orderConditions,
+      paymentStatus: "PENDING",
+      paymentMethod: { $nin: ["COD", "BANK_TRANSFER"] },
+    })
+      .select("orderNumber")
+      .lean();
+
+    for (const po of pendingGatewayOrders) {
+      await finalizeCashfreePayment(po.orderNumber);
+    }
+
+    // 2. Fetch fresh matching orders
     const matchingOrders = await Order.find({ $or: orderConditions })
       .sort({ createdAt: -1 })
       .lean();
 
     recentOrders = matchingOrders.slice(0, 5);
-    if (matchingOrders.length > 0) {
-      totalOrdersCount = Math.max(totalOrdersCount, matchingOrders.length);
-      const calculatedSpend = matchingOrders.reduce(
-        (sum: number, o: any) => sum + (o.total || 0),
-        0
-      );
-      totalSpendAmount = Math.max(totalSpendAmount, calculatedSpend);
+    totalOrdersCount = matchingOrders.length;
+    // Total spent is the sum of paid / confirmed orders
+    totalSpendAmount = matchingOrders
+      .filter((o: any) => o.paymentStatus === "CONFIRMED" || o.orderStatus === "CONFIRMED")
+      .reduce((sum: number, o: any) => sum + (o.total || 0), 0);
+
+    // Sync corrected metrics directly to customer in DB
+    if (customer && (customer as any)._id) {
+      await Customer.findByIdAndUpdate((customer as any)._id, {
+        $set: {
+          "metrics.totalOrders": totalOrdersCount,
+          "metrics.totalSpend": totalSpendAmount,
+        },
+      });
     }
   }
 
@@ -137,7 +159,7 @@ export default async function AccountDashboardPage() {
                     className="hover:bg-plum-50/30 transition-colors"
                   >
                     <td className="px-6 py-4 font-medium text-plum-900">
-                      #{order._id.toString().slice(-6).toUpperCase()}
+                      #{order.orderNumber || order._id.toString().slice(-6).toUpperCase()}
                     </td>
                     <td className="px-6 py-4">
                       {new Date(order.createdAt).toLocaleDateString("en-IN", {
@@ -150,16 +172,16 @@ export default async function AccountDashboardPage() {
                       ₹{(order.total || 0).toLocaleString("en-IN")}
                     </td>
                     <td className="px-6 py-4">
-                      <StatusBadge
-                        label={order.status?.replace(/_/g, " ")}
-                        variant={
-                          order.status === "DELIVERED"
-                            ? "success"
-                            : order.status === "CANCELLED"
-                              ? "danger"
-                              : "neutral"
-                        }
-                      />
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <StatusBadge
+                          status={order.orderStatus}
+                          label={order.orderStatus?.replace(/_/g, " ")}
+                        />
+                        <StatusBadge
+                          status={order.paymentStatus}
+                          label={`Pay: ${order.paymentStatus?.replace(/_/g, " ")}`}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -195,26 +195,48 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
       }
 
       const { load } = await import("@cashfreepayments/cashfree-js");
+      const cashfreeMode = (process.env.NEXT_PUBLIC_CASHFREE_MODE === "production" ? "production" : "sandbox") as "production" | "sandbox";
       const cashfree = await load({
-        mode: process.env.NEXT_PUBLIC_CASHFREE_MODE === "production" ? "production" : "sandbox",
+        mode: cashfreeMode,
       });
 
-      // The cart is already saved server-side as an order at this point —
-      // safe to clear it before handing off to Cashfree's hosted checkout,
-      // which navigates the whole page away (redirectTarget: "_self") and
-      // returns to /checkout/success. Actual payment confirmation comes
-      // from the webhook, not this redirect — see checkout/success/page.tsx.
-      clear();
-      cashfree.checkout({
+      if (!cashfree) {
+        toast.error("Failed to load payment gateway SDK. Please try again.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // DO NOT clear() the cart before checkout! If clear() runs prematurely,
+      // count drops to 0, unmounting the checkout page and flashing "Your cart is empty".
+      const checkoutResult = await cashfree.checkout({
         paymentSessionId: sessionRes.paymentSessionId,
-        redirectTarget: "_self",
+        redirectTarget: "_modal",
       });
+
+      if (checkoutResult?.error) {
+        console.warn("Cashfree checkout error / cancelled:", checkoutResult.error);
+        toast.error(checkoutResult.error.message || "Payment was cancelled or failed. You can try again.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (checkoutResult?.redirect) {
+        // Redirection triggered by Cashfree (e.g. 3DS bank page)
+        clear();
+        return;
+      }
+
+      if (checkoutResult?.paymentDetails) {
+        toast.success("Payment completed successfully!");
+        clear();
+        router.push(`/checkout/success?order=${result.data.orderNumber}`);
+        return;
+      }
+
+      // If modal was dismissed without explicit error or payment details
+      setIsSubmitting(false);
       return;
     } catch (error) {
-      // This swallowed the real error with no trace before — the
-      // Cashfree CSP fix (next.config.ts) was only findable by
-      // reproducing the failure directly, because this line gave no clue
-      // it was a blocked-script issue rather than a server/logic bug.
       console.error("Checkout failed:", error);
       toast.error("An unexpected error occurred.");
       setIsSubmitting(false);

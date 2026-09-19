@@ -42,7 +42,7 @@ const csp = [
   "frame-src 'self' https://*.cashfree.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
-  "form-action 'self'",
+  "form-action 'self' https://*.cashfree.com",
 ].join('; ');
 
 const securityHeaders = [

@@ -7,7 +7,7 @@ import { ProductVariant } from '@/lib/models/product-variant';
 import { Category } from '@/lib/models/category';
 import Counter from '@/lib/models/counter';
 import mongoose from 'mongoose';
-import { reserveInventory } from '@/lib/inventory';
+import { reserveInventory, finalizeInventory } from '@/lib/inventory';
 
 /**
  * Resolves the REAL, database-backed price/quantity for every cart line
@@ -234,7 +234,58 @@ export async function placeOrder(data: any) {
   }
 }
 
-import { createCashfreeOrder } from '@/lib/services/cashfree';
+import { createCashfreeOrder, fetchCashfreeOrder } from '@/lib/services/cashfree';
+
+/**
+ * Reconciles an order's payment state directly with Cashfree.
+ * Called automatically when an order is checked or viewed, ensuring that orders
+ * paid via Cashfree get confirmed even if the webhook couldn't reach localhost.
+ */
+export async function finalizeCashfreePayment(orderNumber: string, cfOrderData?: any) {
+  try {
+    await dbConnect();
+    const order = await Order.findOne({ orderNumber });
+    if (!order) return { success: false, error: 'Order not found' };
+
+    if (order.paymentStatus === 'CONFIRMED') {
+      return { success: true, paymentStatus: 'CONFIRMED', orderStatus: order.orderStatus };
+    }
+
+    const cfOrder = cfOrderData || (await fetchCashfreeOrder(orderNumber));
+    if (!cfOrder || cfOrder.order_status !== 'PAID') {
+      return { success: false, status: cfOrder?.order_status || 'PENDING' };
+    }
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      order.paymentStatus = 'CONFIRMED';
+      order.orderStatus = 'CONFIRMED';
+      if (cfOrder.cf_order_id) {
+        order.gatewayOrderId = String(cfOrder.cf_order_id);
+      }
+      await order.save({ session });
+
+      for (const item of order.items) {
+        if (item.productId && item.variantId) {
+          await finalizeInventory(item.productId.toString(), item.variantId, item.quantity, session);
+        }
+      }
+
+      await session.commitTransaction();
+      session.endSession();
+
+      return { success: true, paymentStatus: 'CONFIRMED', orderStatus: 'CONFIRMED' };
+    } catch (err) {
+      await session.abortTransaction();
+      session.endSession();
+      throw err;
+    }
+  } catch (err: any) {
+    console.error('finalizeCashfreePayment error:', err);
+    return { success: false, error: err.message };
+  }
+}
 
 /**
  * Creates the Cashfree order + payment session for an order that
@@ -275,24 +326,38 @@ export async function createCashfreePaymentSession(orderNumber: string) {
 
 /**
  * Minimal, unauthenticated-safe order status lookup for the checkout
- * success page — deliberately returns only what's needed to render a
- * status message, not the full order (address, items, contact details).
+ * success page — automatically verifies and syncs with Cashfree if still PENDING.
  */
 export async function getOrderStatusSummary(orderNumber: string) {
   try {
     await dbConnect();
     const order = await Order.findOne({ orderNumber }).select(
       'orderNumber paymentMethod paymentStatus orderStatus total',
-    ).lean();
+    );
     if (!order) return { success: false, error: 'Order not found' };
+
+    // Real-time payment reconciliation:
+    // If an online order is still PENDING, verify directly with Cashfree
+    if (
+      order.paymentStatus === 'PENDING' &&
+      order.paymentMethod !== 'COD' &&
+      order.paymentMethod !== 'BANK_TRANSFER'
+    ) {
+      const syncResult = await finalizeCashfreePayment(orderNumber);
+      if (syncResult.success && syncResult.paymentStatus === 'CONFIRMED') {
+        order.paymentStatus = 'CONFIRMED';
+        order.orderStatus = 'CONFIRMED';
+      }
+    }
+
     return {
       success: true,
       data: {
-        orderNumber: (order as any).orderNumber,
-        paymentMethod: (order as any).paymentMethod,
-        paymentStatus: (order as any).paymentStatus,
-        orderStatus: (order as any).orderStatus,
-        total: (order as any).total,
+        orderNumber: order.orderNumber,
+        paymentMethod: order.paymentMethod,
+        paymentStatus: order.paymentStatus,
+        orderStatus: order.orderStatus,
+        total: order.total,
       },
     };
   } catch (error: any) {

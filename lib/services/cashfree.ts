@@ -38,6 +38,15 @@ function sanitizeCustomerId(value: string) {
   return value.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 50) || 'guest-customer';
 }
 
+/** Cashfree requires a valid 10-digit customer phone number. */
+function sanitizePhone(phone: string) {
+  const digits = (phone || '').replace(/\D/g, '');
+  if (digits.length >= 10) {
+    return digits.slice(-10);
+  }
+  return digits || '9999999999';
+}
+
 export async function createCashfreeOrder(params: {
   orderNumber: string;
   amount: number;
@@ -47,6 +56,9 @@ export async function createCashfreeOrder(params: {
   returnUrl: string;
   notifyUrl: string;
 }) {
+  const cleanPhone = sanitizePhone(params.customerPhone);
+  const cleanAmount = Math.max(1, Math.round(params.amount * 100) / 100);
+
   const res = await fetch(`${baseUrl()}/orders`, {
     method: 'POST',
     headers: authHeaders(),
@@ -54,13 +66,13 @@ export async function createCashfreeOrder(params: {
       order_id: params.orderNumber,
       // Cashfree takes the amount in the currency's major unit (rupees),
       // not paise — unlike Razorpay, do not multiply by 100 here.
-      order_amount: params.amount,
+      order_amount: cleanAmount,
       order_currency: 'INR',
       customer_details: {
-        customer_id: sanitizeCustomerId(params.customerPhone || params.customerName),
-        customer_name: params.customerName,
-        customer_email: params.customerEmail || undefined,
-        customer_phone: params.customerPhone,
+        customer_id: sanitizeCustomerId(cleanPhone || params.customerName),
+        customer_name: params.customerName?.trim() || 'Customer',
+        customer_email: params.customerEmail?.trim() || undefined,
+        customer_phone: cleanPhone,
       },
       order_meta: {
         return_url: params.returnUrl,
@@ -102,3 +114,36 @@ export function verifyCashfreeWebhookSignature(rawBody: string, timestamp: strin
   const actualBuf = Buffer.from(signature);
   return expectedBuf.length === actualBuf.length && crypto.timingSafeEqual(expectedBuf, actualBuf);
 }
+
+/**
+ * Fetches order details directly from Cashfree Orders API.
+ * Used for immediate payment verification when webhooks cannot reach
+ * the server (e.g. local development) or as a real-time fallback check.
+ */
+export async function fetchCashfreeOrder(orderNumber: string) {
+  try {
+    const res = await fetch(`${baseUrl()}/orders/${orderNumber}`, {
+      method: 'GET',
+      headers: authHeaders(),
+      cache: 'no-store',
+    });
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const data = await res.json();
+    return data as {
+      order_id: string;
+      order_status: 'ACTIVE' | 'PAID' | 'EXPIRED' | string;
+      order_amount: number;
+      order_currency: string;
+      cf_order_id: string;
+      payment_session_id?: string;
+    };
+  } catch (err) {
+    console.error(`Error fetching Cashfree order ${orderNumber}:`, err);
+    return null;
+  }
+}
+
