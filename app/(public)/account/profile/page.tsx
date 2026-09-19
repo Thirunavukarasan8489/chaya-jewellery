@@ -4,6 +4,7 @@ import { Customer } from "@/lib/models/customer";
 import dbConnect from "@/lib/db";
 import ProfileForm from "./ProfileForm";
 import { redirect } from "next/navigation";
+import { BackButton } from "@/components/public/ui/back-button";
 import mongoose from "mongoose";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +49,7 @@ export default async function ProfilePage() {
     <div className="space-y-6">
       <div className="bg-white rounded-2xl border border-plum-100 shadow-sm overflow-hidden">
         <div className="p-6 sm:p-8 border-b border-plum-100 bg-plum-50/30">
+          <BackButton fallbackHref="/account/dashboard" label="Back to Dashboard" className="mb-3" />
           <h1 className="text-2xl font-bold text-plum-950">Profile Settings</h1>
           <p className="text-sm text-plum-600 mt-1">
             Update your personal information and contact details.

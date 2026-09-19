@@ -16,6 +16,8 @@ export default async function CartPage() {
         eyebrow="Cart"
         title="Your cart"
         breadcrumbs={[{ label: "Cart" }]}
+        backHref="/products"
+        backLabel="Continue Shopping"
       />
       <div className="shell gutter py-8 sm:py-12">
         <CartView settings={settings.commerce} />

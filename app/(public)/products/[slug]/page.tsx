@@ -12,6 +12,7 @@ import { ProductGallery } from "@/components/public/product/product-gallery";
 import { ProductRail } from "@/components/public/product/product-rail";
 import { Badge } from "@/components/public/ui/badge";
 import { Breadcrumbs } from "@/components/public/ui/page-header";
+import { BackButton } from "@/components/public/ui/back-button";
 import { ProductPurchaseOptions } from "@/components/public/product/product-purchase-options";
 
 import { Accordion } from "@/components/public/ui/accordion";
@@ -67,8 +68,10 @@ export default async function ProductDetailPage(
 
   return (
     <>
-      <div className="shell gutter pt-5">
-        {/* <Breadcrumbs
+      <div className="shell gutter pt-5 pb-1 flex items-center gap-3 flex-wrap">
+        <BackButton fallbackHref="/products" label="Back" />
+        <div className="h-4 w-px bg-plum-200/70 hidden sm:block" />
+        <Breadcrumbs
           items={[
             { label: "Products", href: "/products" },
             ...(category
@@ -81,7 +84,7 @@ export default async function ProductDetailPage(
               : []),
             { label: product.name },
           ]}
-        /> */}
+        />
       </div>
 
       <div className="shell gutter py-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-12 lg:py-10">

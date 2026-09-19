@@ -11,6 +11,7 @@ import { z } from "zod";
 import { Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/public/layout/logo";
 import { buttonStyles } from "@/components/public/ui/button";
+import { BackButton } from "@/components/public/ui/back-button";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
@@ -84,6 +85,10 @@ function LoginForm() {
           {/* <div className="mb-8 flex justify-center lg:hidden">
             <Logo />
           </div> */}
+
+          <div className="mb-6 flex items-center justify-between">
+            <BackButton fallbackHref="/" label="Back to Store" />
+          </div>
 
           <div className="mb-8 text-center lg:text-left">
             <h1 className="font-display text-3xl font-semibold text-plum-900 lg:text-4xl">

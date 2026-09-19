@@ -7,6 +7,7 @@ import Link from "next/link";
 import { ArrowRight, Package, TrendingUp } from "lucide-react";
 import StatusBadge from "@/components/admin/ui/StatusBadge";
 import { finalizeCashfreePayment } from "@/lib/actions/checkout.actions";
+import { BackButton } from "@/components/public/ui/back-button";
 import mongoose from "mongoose";
 
 export const dynamic = "force-dynamic";
@@ -100,7 +101,11 @@ export default async function AccountDashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      <div>
+        <BackButton fallbackHref="/" label="Back to Home" />
+      </div>
+
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-plum-900 to-plum-800 rounded-3xl p-8 sm:p-10 text-white relative overflow-hidden shadow-lg shadow-plum-900/20">
         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-none bg-gold-400/20 blur-3xl mix-blend-screen"></div>

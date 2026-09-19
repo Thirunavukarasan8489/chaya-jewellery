@@ -32,6 +32,8 @@ export default async function CheckoutPage() {
         title="Secure Checkout"
         body="Review your cart, provide your details, and place your order safely."
         breadcrumbs={[{ label: "Cart", href: "/cart" }, { label: "Checkout" }]}
+        backHref="/cart"
+        backLabel="Back to Cart"
       />
 
       <div className="shell gutter py-10 sm:py-14">

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import StatusBadge from "@/components/admin/ui/StatusBadge";
 import { finalizeCashfreePayment } from "@/lib/actions/checkout.actions";
+import { BackButton } from "@/components/public/ui/back-button";
 import mongoose from "mongoose";
 
 export const dynamic = "force-dynamic";
@@ -67,6 +68,7 @@ export default async function OrdersPage() {
       {/* Header Container */}
       <div className="bg-white rounded-2xl border border-plum-100 p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
+          <BackButton fallbackHref="/account/dashboard" label="Back to Dashboard" className="mb-3" />
           <h1 className="text-2xl font-bold font-display text-plum-950">
             Order History
           </h1>

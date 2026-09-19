@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Mail, Lock, User, Eye, EyeOff, ShieldCheck, ArrowRight } from "lucide-react";
 import toast from "react-hot-toast";
+import { BackButton } from "@/components/public/ui/back-button";
 
 const registerSchema = z.object({
   firstName: z.string().min(2, "First name is required"),
@@ -84,7 +85,10 @@ function RegisterForm() {
   return (
     <div className="flex min-h-[calc(100vh-100px)] flex-col justify-center bg-plum-50 px-4 py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center font-display text-4xl font-bold tracking-tight text-plum-900">
+        <div className="mb-4">
+          <BackButton fallbackHref="/" label="Back to Store" />
+        </div>
+        <h2 className="mt-2 text-center font-display text-4xl font-bold tracking-tight text-plum-900">
           Create an Account
         </h2>
         <p className="mt-2 text-center text-sm text-plum-600">

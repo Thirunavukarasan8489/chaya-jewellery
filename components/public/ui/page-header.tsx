@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight, SearchX } from "lucide-react";
 import { OrnamentalBg } from "@/components/public/ui/ornamental-bg";
+import { BackButton } from "@/components/public/ui/back-button";
 import { cn } from "@/lib/utils";
 
 export function Breadcrumbs({
@@ -65,21 +66,37 @@ export function PageHeader({
   title,
   body,
   breadcrumbs,
+  showBack = true,
+  backHref = "/",
+  backLabel = "Back",
   children,
 }: {
   eyebrow?: string;
   title: string;
   body?: string;
   breadcrumbs?: { label: string; href?: string }[];
+  showBack?: boolean;
+  backHref?: string;
+  backLabel?: string;
   children?: React.ReactNode;
 }) {
   return (
     <section className="relative overflow-hidden bg-plum-950 text-ivory-100">
       <OrnamentalBg glowPosition="15% 0%" />
       <div className="shell gutter relative py-8 sm:py-12 lg:py-14">
-        {breadcrumbs && <Breadcrumbs items={breadcrumbs} onDark />}
+        {(showBack || breadcrumbs) && (
+          <div className="flex items-center gap-3 flex-wrap mb-4">
+            {showBack && (
+              <BackButton onDark fallbackHref={backHref} label={backLabel} />
+            )}
+            {showBack && breadcrumbs && (
+              <div className="h-3.5 w-px bg-plum-700/60 hidden sm:block" />
+            )}
+            {breadcrumbs && <Breadcrumbs items={breadcrumbs} onDark />}
+          </div>
+        )}
         {eyebrow && (
-          <p className="mt-4 text-[0.6875rem] font-semibold tracking-[0.18em] uppercase">
+          <p className="mt-2 text-[0.6875rem] font-semibold tracking-[0.18em] uppercase">
             <span className="text-foil">{eyebrow}</span>
           </p>
         )}

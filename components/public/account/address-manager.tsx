@@ -27,6 +27,7 @@ import {
   deleteCustomerAddress,
   setDefaultCustomerAddress,
 } from "@/lib/actions/customer.actions";
+import { BackButton } from "@/components/public/ui/back-button";
 
 export interface AddressItem {
   _id?: string;
@@ -179,6 +180,7 @@ export default function AddressManager({
       <div className="bg-white rounded-2xl border border-plum-100 shadow-sm overflow-hidden">
         <div className="p-6 sm:p-8 border-b border-plum-100 bg-plum-50/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
+            <BackButton fallbackHref="/account/dashboard" label="Back to Dashboard" className="mb-3" />
             <h1 className="text-2xl font-bold font-display text-plum-950">
               Saved Addresses
             </h1>
