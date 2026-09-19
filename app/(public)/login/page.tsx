@@ -12,6 +12,7 @@ import { Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/public/layout/logo";
 import { buttonStyles } from "@/components/public/ui/button";
 import { BackButton } from "@/components/public/ui/back-button";
+import { GoogleSignInButton } from "@/components/public/auth/google-sign-in-button";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
@@ -27,6 +28,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
+  const oauthError = searchParams.get("error");
 
   const {
     register,
@@ -64,6 +66,8 @@ function LoginForm() {
     }
   };
 
+  const activeError = loginError || (oauthError ? "Google sign-in was interrupted or failed. Please try again." : null);
+
   return (
     <div className="flex min-h-[calc(100vh-100px)] w-full flex-col bg-ivory-100 selection:bg-plum-200 selection:text-plum-900 lg:flex-row">
       {/* Brand panel — desktop only */}
@@ -100,11 +104,28 @@ function LoginForm() {
           </div>
 
           {/* Login Card */}
-          <div className="rounded-2xl border border-ivory-300 bg-white p-6 shadow-lg sm:p-8">
+          <div className="rounded-2xl border border-ivory-300 bg-white p-6 shadow-lg sm:p-8 space-y-6">
+            {/* Google OAuth Login */}
+            <GoogleSignInButton
+              callbackUrl={callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/cart"}
+              label="Continue with Google"
+            />
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-ivory-300" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-3 text-ink-soft font-medium tracking-wider">
+                  Or continue with email
+                </span>
+              </div>
+            </div>
+
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
-              {loginError && (
+              {activeError && (
                 <div className="rounded-lg border border-danger-100 bg-danger-50 p-3 text-sm text-danger-700">
-                  {loginError}
+                  {activeError}
                 </div>
               )}
 

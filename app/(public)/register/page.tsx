@@ -10,6 +10,7 @@ import { z } from "zod";
 import { Mail, Lock, User, Eye, EyeOff, ShieldCheck, ArrowRight } from "lucide-react";
 import toast from "react-hot-toast";
 import { BackButton } from "@/components/public/ui/back-button";
+import { GoogleSignInButton } from "@/components/public/auth/google-sign-in-button";
 
 const registerSchema = z.object({
   firstName: z.string().min(2, "First name is required"),
@@ -30,6 +31,7 @@ function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
+  const oauthError = searchParams.get("error");
 
   const {
     register,
@@ -42,45 +44,47 @@ function RegisterForm() {
   const onSubmit = async (data: RegisterFormValues) => {
     setRegisterError(null);
     try {
-      const response = await fetch("/api/auth/register", {
+      const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName: data.firstName,
-          lastName: data.lastName,
-          email: data.email,
-          password: data.password,
-        }),
+        body: JSON.stringify(data),
       });
 
-      const result = await response.json();
+      const json = await res.json();
 
-      if (!response.ok) {
-        setRegisterError(result.error || "Registration failed.");
+      if (!res.ok) {
+        setRegisterError(json.error || "Failed to create account. Please try again.");
+        return;
+      }
+
+      // Automatically sign in upon successful registration
+      const loginRes = await signIn("credentials", {
+        redirect: false,
+        email: data.email,
+        password: data.password,
+      });
+
+      if (!loginRes?.error) {
+        toast.success("Account created successfully! Welcome to Chaya.");
+        router.push(
+          callbackUrl && callbackUrl.startsWith("/")
+            ? callbackUrl
+            : "/account/dashboard"
+        );
       } else {
-        toast.success("Account created successfully!");
-        
-        const signInResult = await signIn("credentials", {
-          redirect: false,
-          email: data.email,
-          password: data.password,
-        });
-
-        if (signInResult?.error) {
-          toast.error("Auto-login failed. Please sign in manually.");
-          router.push("/login");
-        } else {
-          // Honour ?callbackUrl= the same way /login does (e.g. a guest
-          // bounced here from /checkout who registered instead of signing
-          // in) — only ever follow a same-site relative path.
-          router.push(callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/cart");
-          router.refresh();
-        }
+        toast.success("Account created! Please sign in with your credentials.");
+        router.push(
+          callbackUrl && callbackUrl.startsWith("/")
+            ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
+            : "/login"
+        );
       }
     } catch {
       setRegisterError("An unexpected error occurred. Please try again.");
     }
   };
+
+  const activeError = registerError || (oauthError ? "Google sign-in was interrupted or failed. Please try again." : null);
 
   return (
     <div className="flex min-h-[calc(100vh-100px)] flex-col justify-center bg-plum-50 px-4 py-12 sm:px-6 lg:px-8">
@@ -111,21 +115,39 @@ function RegisterForm() {
           {/* Subtle gradient effect in background */}
           <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-none bg-emerald-100/50 blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-1000"></div>
 
-          <form className="space-y-6 relative z-10" onSubmit={handleSubmit(onSubmit)}>
-            {registerError && (
+          <div className="relative z-10 space-y-6">
+            {/* Google OAuth Register */}
+            <GoogleSignInButton
+              callbackUrl={callbackUrl || "/account/dashboard"}
+              label="Sign up with Google"
+            />
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-plum-200/70" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-3 text-plum-500 font-semibold tracking-wider">
+                  Or register with email
+                </span>
+              </div>
+            </div>
+
+            {activeError && (
               <div className="rounded-xl bg-red-50 p-4 border border-red-100 flex items-start gap-3">
                 <ShieldCheck className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                <p className="text-sm text-red-700">{registerError}</p>
+                <p className="text-sm text-red-700">{activeError}</p>
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="firstName" className="block text-sm font-semibold leading-6 text-plum-900">
-                  First Name
-                </label>
-                <div className="relative mt-2">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="firstName" className="block text-sm font-semibold leading-6 text-plum-900">
+                    First Name
+                  </label>
+                  <div className="relative mt-2">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                     <User className="h-5 w-5 text-plum-400" aria-hidden="true" />
                   </div>
                   <input
@@ -250,6 +272,7 @@ function RegisterForm() {
               </button>
             </div>
           </form>
+        </div>
         </div>
       </div>
     </div>

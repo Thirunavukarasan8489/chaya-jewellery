@@ -4,7 +4,7 @@ const UserSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    password: { type: String, required: false },
     role: {
       type: String,
       enum: ["SUPER_ADMIN", "CONTENT_MANAGER", "LEAD_MANAGER", "CUSTOMER"],
@@ -19,6 +19,9 @@ const UserSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Customer",
     },
+    googleId: { type: String },
+    image: { type: String },
+    provider: { type: String, default: "credentials" },
   },
   { timestamps: true }
 );
