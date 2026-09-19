@@ -1,16 +1,18 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Gem, Home, MessageCircle, Search, ShoppingBag } from "lucide-react";
+import { Gem, Home, Search, ShoppingBag, User } from "lucide-react";
 import { useCart } from "@/components/public/cart/cart-provider";
+import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { href: "/", label: "Home", icon: Home, exact: true },
   { href: "/products", label: "Shop", icon: Gem },
   { href: "/search", label: "Search", icon: Search },
-  { href: "/contact", label: "Enquire", icon: MessageCircle },
+  { href: "/login", label: "Account", icon: User },
   { href: "/cart", label: "Cart", icon: ShoppingBag },
 ];
 
@@ -19,25 +21,46 @@ const tabs = [
  * Features a high-performance smooth sliding active tab indicator with spring physics and full route matching.
  */
 export function BottomNav() {
-  const pathname = usePathname();
+  const nextPathname = usePathname();
+  const [mounted, setMounted] = useState(false);
   const { count, hydrated } = useCart();
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Determine current active path reliably across SSR and client hydration
+  const rawPath = nextPathname || (typeof window !== "undefined" ? window.location.pathname : "/") || "/";
+  const normalizedPath = rawPath.length > 1 && rawPath.endsWith("/") ? rawPath.slice(0, -1) : rawPath;
 
   const isTabActive = (href: string, exact?: boolean) => {
-    if (exact) return pathname === href;
+    if (exact || href === "/") {
+      return normalizedPath === "/" || normalizedPath === "";
+    }
     if (href === "/products") {
       return (
-        pathname === "/products" ||
-        pathname.startsWith("/products/")
+        normalizedPath === "/products" ||
+        normalizedPath.startsWith("/products/") ||
+        normalizedPath === "/collections" ||
+        normalizedPath.startsWith("/collections/")
+      );
+    }
+    if (href === "/login") {
+      return (
+        normalizedPath === "/login" ||
+        normalizedPath.startsWith("/login") ||
+        normalizedPath.startsWith("/account")
       );
     }
     if (href === "/cart") {
       return (
-        pathname === "/cart" ||
-        pathname.startsWith("/cart/") ||
-        pathname.startsWith("/checkout")
+        normalizedPath === "/cart" ||
+        normalizedPath.startsWith("/cart/") ||
+        normalizedPath.startsWith("/checkout")
       );
     }
-    return pathname === href || pathname.startsWith(`${href}/`);
+    return normalizedPath === href || normalizedPath.startsWith(`${href}/`);
   };
 
   const activeIndex = tabs.findIndex(({ href, exact }) =>
@@ -51,18 +74,21 @@ export function BottomNav() {
       className="fixed bottom-[calc(0.625rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-1.5rem)] max-w-md lg:hidden"
       suppressHydrationWarning
     >
-      <div className="relative rounded-full border border-gold-500/30 bg-plum-950/92 p-1.5 shadow-[0_10px_35px_-5px_rgba(19,11,27,0.75)] backdrop-blur-xl ring-1 ring-white/10" suppressHydrationWarning>
+      <div className="relative rounded-full border border-gold-500/30 bg-plum-950/92 p-1.5 shadow-[0_10px_35px_-5px_rgba(19,11,27,0.75)] backdrop-blur-xl ring-1 ring-white/10">
         {/* Ambient Subtle Gold Glow Ring */}
         <div
           aria-hidden
           className="pointer-events-none absolute -inset-0.5 rounded-full bg-gradient-to-r from-gold-500/20 via-gold-400/30 to-gold-600/20 opacity-75 blur-sm"
         />
 
-        <ul className="relative grid grid-cols-5 items-center" suppressHydrationWarning>
+        <ul className="relative grid grid-cols-5 items-center">
           {/* Smooth Sliding Gold Active Pill Indicator */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-y-0 left-0 w-[20%] p-0.5 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+            className={cn(
+              "pointer-events-none absolute inset-y-0 left-0 w-[20%] p-0.5 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
+              activeIndex === -1 ? "opacity-0 scale-90" : "opacity-100 scale-100"
+            )}
             style={{
               transform: `translateX(${safeIndex * 100}%)`,
             }}
@@ -72,11 +98,13 @@ export function BottomNav() {
 
           {tabs.map(({ href, label, icon: Icon, exact }) => {
             const active = isTabActive(href, exact);
+            const targetHref = href === "/login" && session ? "/account/dashboard" : href;
+            const targetLabel = href === "/login" && session ? "Account" : label;
 
             return (
-              <li key={href} className="relative z-10" suppressHydrationWarning>
+              <li key={href} className="relative z-10">
                 <Link
-                  href={href}
+                  href={targetHref}
                   aria-current={active ? "page" : undefined}
                   className={cn(
                     "group relative flex flex-col items-center justify-center rounded-full py-2 px-1 text-[0.625rem] font-medium tracking-wide transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-95",
@@ -113,10 +141,10 @@ export function BottomNav() {
                     <span
                       className={cn(
                         "leading-none transition-colors duration-200",
-                        active ? "text-plum-950" : "text-plum-200"
+                        active ? "text-plum-950 font-bold" : "text-plum-200"
                       )}
                     >
-                      {label}
+                      {targetLabel}
                     </span>
                   </span>
                 </Link>

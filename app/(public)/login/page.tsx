@@ -81,9 +81,9 @@ function LoginForm() {
       <div className="flex flex-1 items-center justify-center p-4 py-10 sm:p-8 lg:p-12">
         <div className="w-full max-w-md">
           {/* Mobile-only branding */}
-          <div className="mb-8 flex justify-center lg:hidden">
+          {/* <div className="mb-8 flex justify-center lg:hidden">
             <Logo />
-          </div>
+          </div> */}
 
           <div className="mb-8 text-center lg:text-left">
             <h1 className="font-display text-3xl font-semibold text-plum-900 lg:text-4xl">
