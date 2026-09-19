@@ -917,6 +917,130 @@ message.
 header now includes `https://*.cashfree.com` in all four directives.
 `tsc --noEmit`, `eslint`, and a full `npm run build` all clean.
 
+## 2026-09-19 customer account isolation, order history & pending payment reconciliation
+
+User reported cross-account data leakage in the customer portal (a new user
+account could see orders placed by another customer) and Cashfree orders
+remaining in `PAYMENT PENDING` status on the dashboard despite successful
+payment completion.
+
+**Root cause:**
+- `app/(public)/account/dashboard/page.tsx` and `app/(public)/account/orders/page.tsx`
+  had queries that fell back loosely to phone number or unconstrained customer
+  lookups when email or user IDs were ambiguous. Because guest orders or multiple
+  test users often used the same dummy phone number, customer records merged or
+  cross-read orders.
+- Orders placed via online gateway redirect were only finalized if the webhook
+  landed immediately; if a user navigated directly to the dashboard, their
+  order stayed in `PENDING` until a manual sync.
+
+**Fix:**
+- **Strict identity scoping:** `dashboard/page.tsx` and `orders/page.tsx` now
+  strictly filter orders by authenticated user identity only:
+  `{ userId: new mongoose.Types.ObjectId(userId) }` and `{ email: userEmail }`.
+  Never match or scope customer data by phone number alone.
+- **Customer profile auto-linking:** On account page access, if a customer
+  record does not exist for the authenticated user, it is created and linked
+  bidirectionally (`Customer.userId = user._id` and `User.customerProfileId = customer._id`).
+  If a customer record exists with matching email, `userId` is patched to link it.
+- **Real-time Cashfree order reconciliation:** On loading `orders` or `dashboard`,
+  any orders for that user in `paymentStatus: "PENDING"` (excluding COD / Bank
+  Transfer) immediately invoke `finalizeCashfreePayment(orderNumber)` to poll
+  Cashfree's API and update the database, instantly reflecting `PAID` / `CONFIRMED`.
+- **Honest metrics computation:** Dashboard metrics (`totalOrders` and `totalSpend`)
+  are recalculated on the fly from the user's actual isolated orders rather than
+  trusting stale or unlinked counter fields.
+- **Account sidebar active states:** Corrected active navlink class logic in the
+  account dashboard layout sidebar so current subpage is accurately highlighted.
+
+## 2026-09-19 admin vs customer session separation in navbar & bottom navigation
+
+User noticed that while logged in as an Admin, clicking the user icon in the
+storefront navbar navigated to the admin login/portal instead of providing
+customer-facing access.
+
+**Fix:**
+- `components/public/layout/user-nav.tsx`: Replaced direct link with a smart,
+  accessible dropdown when a session exists:
+  - Displays authenticated user's name.
+  - Provides a direct link to "Customer Dashboard" (`/account/dashboard`).
+  - If the session role is administrative (`SUPER_ADMIN`, `CONTENT_MANAGER`,
+    `LEAD_MANAGER`), displays an "Admin Portal" link (`/admin`).
+  - Built-in accessible sign-out action.
+- `components/public/layout/bottom-nav.tsx`:
+  - Updated the Account tab to route dynamically to `/account/dashboard` if a
+    session is active, and `/login` when unauthenticated.
+  - Fixed initial homepage path (`/`) active tab highlighting bug so the "Home"
+    icon is correctly active on the root URL.
+
+## 2026-09-19 UX: product slug breadcrumbs restored & sitewide responsive BackButton
+
+User reported that on product slug pages (`/products/[slug]`), breadcrumb
+navigation was missing, and requested adding responsive Back buttons across
+all website pages.
+
+**Fix:**
+- `app/(public)/products/[slug]/page.tsx`: `<Breadcrumbs />` was commented out
+  in JSX. Restored the full breadcrumb hierarchy:
+  `Home` > `Products` > `Category` (e.g. Rings, Necklaces) > `Product Name`.
+- `components/public/ui/back-button.tsx` (new): Client component using Next.js
+  `useRouter()`. Intelligently performs `window.history.length > 1 ? router.back() : router.push(fallbackHref)`.
+  Features luxury styling adhering to Chaya theme tokens (`plum-*`, `gold-*`),
+  smooth hover micro-animation (arrow translates left on hover: `group-hover:-translate-x-1`),
+  active tactile feedback (`active:scale-95`), responsive touch targets (40-44px min),
+  and supports an `onDark` variant for dark header surfaces.
+- `components/public/ui/page-header.tsx`: Added `showBack`, `backHref`, `backLabel`
+  props. Equips all public pages utilizing `PageHeader` with Back navigation
+  beside breadcrumbs: Catalogue (`/products`), Cart (`/cart` -> "Continue Shopping"),
+  Checkout (`/checkout` -> "Back to Cart"), Contact, Search, Track Order, About,
+  FAQs, Testimonials, and Policy pages.
+- Added custom Back buttons to Account Dashboard, Orders, Addresses, Profile,
+  Login, and Register pages.
+
+## 2026-09-19 Google OAuth integration for customer registration & login
+
+User provided `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `.env.local`
+and requested Google OAuth login/registration support for customers.
+
+**Data-layer & Auth changes:**
+- `lib/models/user.ts`: Made `password` optional (`required: false`) on
+  `UserSchema` so Google OAuth users can be created without validation errors.
+  Added `googleId`, `image`, and `provider: { type: String, default: "credentials" }`.
+- `lib/authOptions.ts`:
+  - Dynamically registers `GoogleProvider` when `GOOGLE_CLIENT_ID` and
+    `GOOGLE_CLIENT_SECRET` are set.
+  - Configured `allowDangerousEmailAccountLinking: true` so customers who
+    previously registered via email/password can sign in with Google seamlessly
+    without getting blocked by `OAuthAccountNotLinked`.
+  - Added `signIn` callback: Normalizes email (`toLowerCase().trim()`). If user
+    does not exist, auto-provisions `User` (role `CUSTOMER`, status `ACTIVE`)
+    and creates a linked `Customer` record; if user exists, links Google ID and
+    profile picture and ensures `Customer.userId` association.
+  - Added `jwt` & `session` callbacks: Crucial fix for MongoDB scoping — resolves
+    the real MongoDB `_id` from the database for `token.id` and `session.user.id`
+    rather than storing Google's raw numeric subject ID string, ensuring all
+    downstream Mongo queries (`userId: new mongoose.Types.ObjectId(userId)`)
+    on orders and saved addresses match properly.
+  - Set `pages: { signIn: '/login', error: '/login' }` so OAuth redirects and
+    errors land on customer `/login` instead of `/admin/login` (admin routes
+    remain guarded independently by `proxy.ts`).
+- `.env.local`: Added `NEXTAUTH_URL=http://localhost:3000` for accurate OAuth
+  redirect URI resolution. Authorized redirect URI in Google Cloud Console is:
+  `http://localhost:3000/api/auth/callback/google` (and production equivalent).
+
+**UI Components:**
+- `components/public/auth/google-sign-in-button.tsx` (new): Reusable Google
+  button with official multi-color SVG icon, loading spinner state during redirect,
+  responsive styling matching brand theme, and `callbackUrl` awareness.
+- `app/(public)/register/page.tsx`: Added "Sign up with Google" button above the
+  registration form with an "Or register with email" divider and OAuth error handling.
+- `app/(public)/login/page.tsx`: Added "Continue with Google" button above the
+  login form with an "Or continue with email" divider and OAuth error handling.
+
+**Verification:** `npx tsc --noEmit` clean (0 errors across whole project);
+full `npm run build` with Turbopack and static optimization completed cleanly
+with all 36 routes and dynamic endpoints prerendered.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
