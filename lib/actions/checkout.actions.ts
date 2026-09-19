@@ -8,6 +8,7 @@ import { Category } from '@/lib/models/category';
 import Counter from '@/lib/models/counter';
 import mongoose from 'mongoose';
 import { reserveInventory, finalizeInventory } from '@/lib/inventory';
+import { getSession } from '@/lib/auth';
 
 /**
  * Resolves the REAL, database-backed price/quantity for every cart line
@@ -139,8 +140,87 @@ export async function placeOrder(data: any) {
       const serverSubtotal = resolvedItems.reduce((acc, item) => acc + item.lineTotal, 0);
       const totals = await calculateOrderTotals(serverSubtotal, data.shippingAddress.state || "");
 
+      // 2. Identify Authenticated User and Customer Profile
+      const session = await getSession();
+      const authenticatedUserId = session?.userId ? new mongoose.Types.ObjectId(session.userId) : null;
+      const userEmail = session?.email || data.email || '';
+
+      // Find customer strictly by user account or account email (NEVER by phone alone)
+      let customer = null;
+      if (authenticatedUserId) {
+        customer = await Customer.findOne({ userId: authenticatedUserId }).session(dbSession);
+      }
+      if (!customer && userEmail) {
+        customer = await Customer.findOne({ 'contact.email': userEmail }).session(dbSession);
+        if (customer && authenticatedUserId && !customer.userId) {
+          customer.userId = authenticatedUserId;
+        }
+      }
+
+      // Customer.addresses sub-schema validation
+      const customerAddress = {
+        name: data.customerName,
+        phone: data.phone,
+        street1: data.shippingAddress.street,
+        street2: data.shippingAddress.apartment || undefined,
+        city: data.shippingAddress.city,
+        state: data.shippingAddress.state,
+        zip: data.shippingAddress.pincode,
+        country: data.shippingAddress.country || 'India',
+      };
+
+      if (!customer) {
+        // Create new customer profile linked to the authenticated user
+        const newCustomerList = await Customer.create([{
+          type: 'PERSONAL',
+          userId: authenticatedUserId || undefined,
+          contact: { email: userEmail, phone: data.phone },
+          profile: {
+            firstName: data.customerName.split(' ')[0],
+            lastName: data.customerName.split(' ').slice(1).join(' ') || ''
+          },
+          addresses: [customerAddress],
+          metrics: { totalOrders: 1, totalSpend: totals.total }
+        }], { session: dbSession });
+        customer = newCustomerList[0];
+      } else {
+        // Update existing customer metrics
+        customer.metrics = customer.metrics || { totalOrders: 0, totalSpend: 0 };
+        customer.metrics.totalOrders = (customer.metrics.totalOrders || 0) + 1;
+        customer.metrics.totalSpend = (customer.metrics.totalSpend || 0) + totals.total;
+
+        if (authenticatedUserId && !customer.userId) {
+          customer.userId = authenticatedUserId;
+        }
+        if (!customer.contact?.phone) {
+          customer.contact = customer.contact || {};
+          customer.contact.phone = data.phone;
+        }
+        if (!customer.contact?.email && userEmail) {
+          customer.contact = customer.contact || {};
+          customer.contact.email = userEmail;
+        }
+
+        // Avoid duplicate address entries
+        const existingAddresses = customer.addresses || [];
+        const addressExists = existingAddresses.some(
+          (addr: any) =>
+            addr.street1 === customerAddress.street1 &&
+            addr.zip === customerAddress.zip &&
+            addr.city === customerAddress.city
+        );
+        if (!addressExists) {
+          existingAddresses.push(customerAddress);
+          customer.addresses = existingAddresses;
+        }
+
+        await customer.save({ session: dbSession });
+      }
+
       const orderPayload = {
         ...data,
+        userId: authenticatedUserId || undefined,
+        customerId: customer._id,
         // Retail-only storefront — no business/GST purchase flow.
         purchaseType: 'PERSONAL',
         items: resolvedItems.map((item) => ({
@@ -162,61 +242,12 @@ export async function placeOrder(data: any) {
         paymentStatus: 'PENDING'
       };
 
-      // 2. Create the Order
+      // 3. Create the Order
       const newOrder = await Order.create([orderPayload], { session: dbSession });
 
-      // 3. Update Product Inventory
+      // 4. Update Product Inventory
       for (const item of resolvedItems) {
         await reserveInventory(item.productId, item.variantId, item.quantity, dbSession);
-      }
-
-      // 4. Update or Create Customer Profile Metrics
-      let customer = await Customer.findOne({ 'contact.phone': data.phone }).session(dbSession);
-
-      // Customer.addresses is a *strict* sub-schema (name/phone/street1/zip
-      // all required — see lib/models/customer.ts) that doesn't match the
-      // free-form shape `shippingAddress` uses everywhere else
-      // (street/pincode, no name/phone — Order.shippingAddress is a plain
-      // Object with no schema, so that shape works fine there). Passing
-      // `data.shippingAddress` straight into `customer.addresses` failed
-      // Mongoose validation on every first-time checkout (new customer, or
-      // an existing one with no saved address yet) and rolled back the
-      // whole order-placement transaction. Map it to what the sub-schema
-      // actually requires instead of changing the wire shape everywhere
-      // else that already reads `.street`/`.pincode`.
-      const customerAddress = {
-        name: data.customerName,
-        phone: data.phone,
-        street1: data.shippingAddress.street,
-        street2: data.shippingAddress.apartment || undefined,
-        city: data.shippingAddress.city,
-        state: data.shippingAddress.state,
-        zip: data.shippingAddress.pincode,
-        country: data.shippingAddress.country || 'India',
-      };
-
-      if (!customer) {
-        // If guest checkout and customer doesn't exist, create one
-        customer = await Customer.create([{
-          type: 'PERSONAL',
-          contact: { email: data.email, phone: data.phone },
-          profile: { firstName: data.customerName.split(' ')[0], lastName: data.customerName.split(' ').slice(1).join(' ') || '' },
-          addresses: [customerAddress],
-          metrics: { totalOrders: 1, totalSpend: totals.total }
-        }], { session: dbSession });
-        customer = customer[0]; // because create returns an array when passed an array
-      } else {
-        // Update existing customer metrics
-        customer.metrics.totalOrders = (customer.metrics.totalOrders || 0) + 1;
-        customer.metrics.totalSpend = (customer.metrics.totalSpend || 0) + totals.total;
-
-        // Ensure address is saved if new
-        // Basic check: just add if address array is empty
-        if (!customer.addresses || customer.addresses.length === 0) {
-          customer.addresses = [customerAddress];
-        }
-
-        await customer.save({ session: dbSession });
       }
 
       await dbSession.commitTransaction();

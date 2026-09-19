@@ -4,6 +4,7 @@ import { Customer } from "@/lib/models/customer";
 import dbConnect from "@/lib/db";
 import ProfileForm from "./ProfileForm";
 import { redirect } from "next/navigation";
+import mongoose from "mongoose";
 
 export const dynamic = "force-dynamic";
 
@@ -16,16 +17,31 @@ export default async function ProfilePage() {
 
   await dbConnect();
   
-  // Find customer profile linked to the user
-  const customer = await Customer.findOne({ userId: (session.user as any).id }).lean();
+  const userId = (session.user as any).id;
+  let customer = await Customer.findOne({ userId }).lean();
 
-  if (!customer) {
-    return (
-      <div className="bg-white rounded-2xl border border-plum-100 p-8 shadow-sm text-center">
-        <h2 className="text-xl font-semibold text-plum-900">Profile Not Found</h2>
-        <p className="mt-2 text-plum-500">Could not locate your customer profile.</p>
-      </div>
-    );
+  if (!customer && session.user.email) {
+    customer = await Customer.findOne({ "contact.email": session.user.email }).lean();
+    if (customer && userId && !(customer as any).userId) {
+      await Customer.findByIdAndUpdate((customer as any)._id, { $set: { userId } });
+    }
+  }
+
+  if (!customer && (userId || session.user.email)) {
+    const fullName = session.user.name || "Customer";
+    const nameParts = fullName.trim().split(" ");
+    const createdCustomer = await Customer.create({
+      userId: userId ? new mongoose.Types.ObjectId(userId) : undefined,
+      type: "PERSONAL",
+      contact: { email: session.user.email || "" },
+      profile: {
+        firstName: nameParts[0] || "Customer",
+        lastName: nameParts.slice(1).join(" ") || "",
+      },
+      addresses: [],
+      metrics: { totalOrders: 0, totalSpend: 0 },
+    });
+    customer = createdCustomer.toObject();
   }
 
   return (
@@ -42,10 +58,10 @@ export default async function ProfilePage() {
           <ProfileForm 
             userId={(session.user as any).id}
             initialData={{
-              firstName: customer.profile?.firstName || "",
-              lastName: customer.profile?.lastName || "",
-              email: customer.contact?.email || session.user.email || "",
-              phone: customer.contact?.phone || "",
+              firstName: customer?.profile?.firstName || "",
+              lastName: customer?.profile?.lastName || "",
+              email: customer?.contact?.email || session.user.email || "",
+              phone: customer?.contact?.phone || "",
             }}
           />
         </div>

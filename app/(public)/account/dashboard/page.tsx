@@ -7,6 +7,7 @@ import Link from "next/link";
 import { ArrowRight, Package, TrendingUp } from "lucide-react";
 import StatusBadge from "@/components/admin/ui/StatusBadge";
 import { finalizeCashfreePayment } from "@/lib/actions/checkout.actions";
+import mongoose from "mongoose";
 
 export const dynamic = "force-dynamic";
 
@@ -18,21 +19,43 @@ export default async function AccountDashboardPage() {
   const userId = (session?.user as any)?.id;
   const userEmail = session?.user?.email;
 
-  // Find customer profile linked to the user
-  let customer = await Customer.findOne({ userId }).lean();
+  // 1. Resolve or initialize Customer Profile strictly by userId and email
+  let customer = null;
+  if (userId) {
+    customer = await Customer.findOne({ userId });
+  }
   if (!customer && userEmail) {
-    customer = await Customer.findOne({ "contact.email": userEmail }).lean();
+    customer = await Customer.findOne({ "contact.email": userEmail });
+    if (customer && userId && !customer.userId) {
+      customer.userId = userId;
+      await customer.save();
+    }
   }
 
+  // Auto-initialize customer profile if it doesn't exist yet
+  if (!customer && (userId || userEmail)) {
+    const fullName = session?.user?.name || "Customer";
+    const nameParts = fullName.trim().split(" ");
+    customer = await Customer.create({
+      userId: userId ? new mongoose.Types.ObjectId(userId) : undefined,
+      type: "PERSONAL",
+      contact: { email: userEmail || "" },
+      profile: {
+        firstName: nameParts[0] || "Customer",
+        lastName: nameParts.slice(1).join(" ") || "",
+      },
+      addresses: [],
+      metrics: { totalOrders: 0, totalSpend: 0 },
+    });
+  }
+
+  // Strictly scope orders to authenticated user identity — NEVER match by phone alone!
   const orderConditions: any[] = [];
-  if (customer?.contact?.phone) {
-    orderConditions.push({ phone: customer.contact.phone });
+  if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+    orderConditions.push({ userId: new mongoose.Types.ObjectId(userId) });
   }
   if (userEmail) {
     orderConditions.push({ email: userEmail });
-  }
-  if (customer?.contact?.email && customer.contact.email !== userEmail) {
-    orderConditions.push({ email: customer.contact.email });
   }
 
   let recentOrders: any[] = [];
@@ -53,7 +76,7 @@ export default async function AccountDashboardPage() {
       await finalizeCashfreePayment(po.orderNumber);
     }
 
-    // 2. Fetch fresh matching orders
+    // 2. Fetch fresh matching orders strictly for this user
     const matchingOrders = await Order.find({ $or: orderConditions })
       .sort({ createdAt: -1 })
       .lean();

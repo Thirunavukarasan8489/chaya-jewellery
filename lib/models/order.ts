@@ -19,10 +19,14 @@ const OrderSchema = new mongoose.Schema(
   {
     orderNumber: { type: String, required: true, unique: true },
     
+    // User Account Binding
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+    customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', index: true },
+
     // Customer Info
     customerName: { type: String, required: true },
     phone: { type: String, required: true },
-    email: { type: String },
+    email: { type: String, index: true },
     
     // Retail-only storefront — always 'PERSONAL' going forward (see
     // checkout.actions.ts placeOrder). Enum/history kept for old orders

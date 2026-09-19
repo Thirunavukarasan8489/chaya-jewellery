@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import StatusBadge from "@/components/admin/ui/StatusBadge";
 import { finalizeCashfreePayment } from "@/lib/actions/checkout.actions";
+import mongoose from "mongoose";
 
 export const dynamic = "force-dynamic";
 
@@ -32,20 +33,13 @@ export default async function OrdersPage() {
   const userId = (session.user as any)?.id;
   const userEmail = session.user?.email;
 
-  let customer = await Customer.findOne({ userId }).lean();
-  if (!customer && userEmail) {
-    customer = await Customer.findOne({ "contact.email": userEmail }).lean();
-  }
-
+  // Strictly query by authenticated user account identity
   const orderConditions: any[] = [];
-  if (customer?.contact?.phone) {
-    orderConditions.push({ phone: customer.contact.phone });
+  if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+    orderConditions.push({ userId: new mongoose.Types.ObjectId(userId) });
   }
   if (userEmail) {
     orderConditions.push({ email: userEmail });
-  }
-  if (customer?.contact?.email && customer.contact.email !== userEmail) {
-    orderConditions.push({ email: customer.contact.email });
   }
 
   if (orderConditions.length > 0) {

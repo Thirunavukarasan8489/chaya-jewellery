@@ -53,6 +53,7 @@ const CustomerSchema = new mongoose.Schema(
 // linearly-worsening collection scan on both hot paths as customers grow.
 CustomerSchema.index({ userId: 1 });
 CustomerSchema.index({ "contact.phone": 1 });
+CustomerSchema.index({ "contact.email": 1 });
 
 export const Customer =
   mongoose.models.Customer || mongoose.model("Customer", CustomerSchema);

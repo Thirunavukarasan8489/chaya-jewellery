@@ -59,7 +59,7 @@ export async function updateCustomerProfile(userId: string, data: { firstName: s
     await dbConnect();
 
     // Update Customer Profile
-    const updatedCustomer = await Customer.findOneAndUpdate(
+    let updatedCustomer = await Customer.findOneAndUpdate(
       { userId },
       { 
         $set: { 
@@ -71,7 +71,36 @@ export async function updateCustomerProfile(userId: string, data: { firstName: s
       { returnDocument: 'after' }
     );
 
-    if (!updatedCustomer) return { success: false, error: 'Customer not found' };
+    if (!updatedCustomer && session.email) {
+      updatedCustomer = await Customer.findOneAndUpdate(
+        { 'contact.email': session.email },
+        { 
+          $set: { 
+            userId,
+            'profile.firstName': data.firstName,
+            'profile.lastName': data.lastName,
+            'contact.phone': data.phone
+          }
+        },
+        { returnDocument: 'after' }
+      );
+    }
+
+    if (!updatedCustomer) {
+      // Auto-create customer profile if it does not exist yet
+      const created = await Customer.create({
+        userId,
+        type: 'PERSONAL',
+        contact: { email: session.email || '', phone: data.phone },
+        profile: { firstName: data.firstName, lastName: data.lastName },
+        addresses: [],
+        metrics: { totalOrders: 0, totalSpend: 0 }
+      });
+      updatedCustomer = created;
+    }
+
+    revalidatePath('/account/profile');
+    revalidatePath('/account/dashboard');
 
     return { success: true, data: JSON.parse(JSON.stringify(updatedCustomer)) };
   } catch (error: any) {
