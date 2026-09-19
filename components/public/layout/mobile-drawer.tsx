@@ -4,7 +4,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowRight, Menu, MessageCircle, Phone, X, User } from "lucide-react";
+import { ArrowRight, Menu, MessageCircle, Phone, X, User, ShieldCheck, LayoutDashboard } from "lucide-react";
 import { Logo } from "@/components/public/layout/logo";
 import { buttonStyles } from "@/components/public/ui/button";
 import { categoryTerms, gemColorFor, NAV_DATA, whatsappLink } from "@/lib/utils";
@@ -17,9 +17,7 @@ function AuthLinksMobile({ close }: { close: () => void }) {
     return <div className="text-sm text-plum-400">Loading...</div>;
   }
 
-  const isCustomer = (session?.user as any)?.role === "CUSTOMER";
-
-  if (!session || !isCustomer) {
+  if (!session) {
     return (
       <Link
         href="/login"
@@ -29,6 +27,51 @@ function AuthLinksMobile({ close }: { close: () => void }) {
         <User size={18} />
         Sign In / Register
       </Link>
+    );
+  }
+
+  const role = (session?.user as any)?.role;
+  const isAdmin = role && role !== "CUSTOMER";
+
+  if (isAdmin) {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center justify-between px-3 py-2 bg-plum-50/60 rounded-xl border border-plum-100">
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-plum-950 truncate">
+              {session.user?.name || "Administrator"}
+            </p>
+            <p className="text-[11px] text-plum-500 truncate">{session.user?.email}</p>
+          </div>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gold-100 text-gold-800 border border-gold-300 shrink-0 uppercase tracking-wider">
+            <ShieldCheck size={10} className="text-gold-600" />
+            Admin
+          </span>
+        </div>
+        <ul className="space-y-1">
+          <li>
+            <Link
+              href="/admin"
+              onClick={close}
+              className="flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-plum-800 hover:bg-plum-900/6 rounded-xl"
+            >
+              <LayoutDashboard size={16} className="text-gold-600" />
+              Admin Dashboard
+            </Link>
+          </li>
+          <li>
+            <button
+              onClick={() => {
+                close();
+                signOut({ callbackUrl: "/" });
+              }}
+              className="block w-full text-left px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl"
+            >
+              Sign Out
+            </button>
+          </li>
+        </ul>
+      </div>
     );
   }
 
@@ -42,6 +85,16 @@ function AuthLinksMobile({ close }: { close: () => void }) {
       <li>
         <Link href="/account/orders" onClick={close} className="block px-3 py-2 text-sm font-medium text-plum-800 hover:bg-plum-900/6 rounded-xl">
           Orders
+        </Link>
+      </li>
+      <li>
+        <Link href="/account/addresses" onClick={close} className="block px-3 py-2 text-sm font-medium text-plum-800 hover:bg-plum-900/6 rounded-xl">
+          Saved Addresses
+        </Link>
+      </li>
+      <li>
+        <Link href="/account/profile" onClick={close} className="block px-3 py-2 text-sm font-medium text-plum-800 hover:bg-plum-900/6 rounded-xl">
+          Profile Settings
         </Link>
       </li>
       <li>
