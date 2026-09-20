@@ -18,7 +18,10 @@ export async function WhatsappFab() {
   const navData = NAV_DATA;
   return (
     <a
-      href={whatsappLink(navData.business, "Hi Chaya Jewellery, I have a question.")}
+      href={whatsappLink(
+        navData.business,
+        "Hi Chaya Jewellery, I have a question.",
+      )}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat with us on WhatsApp"

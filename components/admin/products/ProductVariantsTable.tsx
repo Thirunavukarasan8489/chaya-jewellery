@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo, useState } from 'react';
-import Link from 'next/link';
-import { CldImage } from '@/components/shared/CldImage';
-import DataTable from '@/components/admin/ui/DataTable';
-import StatusBadge from '@/components/admin/ui/StatusBadge';
-import DeleteConfirmButton from '@/components/admin/ui/DeleteConfirmButton';
-import { deleteVariant } from '@/lib/actions/product.actions';
-import { Eye, Edit, Image as ImageIcon, Filter } from 'lucide-react';
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { CldImage } from "@/components/shared/CldImage";
+import DataTable from "@/components/admin/ui/DataTable";
+import StatusBadge from "@/components/admin/ui/StatusBadge";
+import DeleteConfirmButton from "@/components/admin/ui/DeleteConfirmButton";
+import { deleteVariant } from "@/lib/actions/product.actions";
+import { Eye, Edit, Image as ImageIcon, Filter } from "lucide-react";
 
 type VariantRow = {
   _id: string;
@@ -22,28 +22,43 @@ type VariantRow = {
 };
 
 function getStockStatus(item: VariantRow) {
-  const available = Math.max(0, (item.stock || 0) - (item.reservedQuantity || 0));
-  return available === 0 ? 'OUT_OF_STOCK' : available <= (item.lowStockThreshold || 5) ? 'LOW_STOCK' : 'IN_STOCK';
+  const available = Math.max(
+    0,
+    (item.stock || 0) - (item.reservedQuantity || 0),
+  );
+  return available === 0
+    ? "OUT_OF_STOCK"
+    : available <= (item.lowStockThreshold || 5)
+      ? "LOW_STOCK"
+      : "IN_STOCK";
 }
 
-export default function ProductVariantsTable({ variants }: { variants: VariantRow[] }) {
+export default function ProductVariantsTable({
+  variants,
+}: {
+  variants: VariantRow[];
+}) {
   const [filterOpen, setFilterOpen] = useState(false);
-  const [stockStatusFilter, setStockStatusFilter] = useState('');
-  const [parentProductFilter, setParentProductFilter] = useState('');
+  const [stockStatusFilter, setStockStatusFilter] = useState("");
+  const [parentProductFilter, setParentProductFilter] = useState("");
 
   const uniqueParentProducts = Array.from(
     new Set(
       variants
-        .map((v) => (typeof v.productId === 'object' ? v.productId?.name : null))
-        .filter(Boolean) as string[]
-    )
+        .map((v) =>
+          typeof v.productId === "object" ? v.productId?.name : null,
+        )
+        .filter(Boolean) as string[],
+    ),
   );
 
   const filteredVariants = useMemo(() => {
     return variants.filter((v) => {
-      if (stockStatusFilter && getStockStatus(v) !== stockStatusFilter) return false;
+      if (stockStatusFilter && getStockStatus(v) !== stockStatusFilter)
+        return false;
       if (parentProductFilter) {
-        const productName = typeof v.productId === 'object' ? v.productId?.name : null;
+        const productName =
+          typeof v.productId === "object" ? v.productId?.name : null;
         if (productName !== parentProductFilter) return false;
       }
       return true;
@@ -54,7 +69,7 @@ export default function ProductVariantsTable({ variants }: { variants: VariantRo
     <div className="relative">
       <button
         onClick={() => setFilterOpen(!filterOpen)}
-        className={`p-2 border rounded-lg transition-colors flex items-center gap-2 ${stockStatusFilter || parentProductFilter ? 'bg-gold-50 border-gold-300 text-gold-700' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+        className={`p-2 border rounded-lg transition-colors flex items-center gap-2 ${stockStatusFilter || parentProductFilter ? "bg-gold-50 border-gold-300 text-gold-700" : "border-gray-200 text-gray-700 hover:bg-gray-50"}`}
       >
         <Filter size={18} />
         {(stockStatusFilter || parentProductFilter) && (
@@ -68,8 +83,8 @@ export default function ProductVariantsTable({ variants }: { variants: VariantRo
             <h4 className="font-semibold text-sm">Filter Variants</h4>
             <button
               onClick={() => {
-                setStockStatusFilter('');
-                setParentProductFilter('');
+                setStockStatusFilter("");
+                setParentProductFilter("");
               }}
               className="text-xs text-red-500 hover:underline"
             >
@@ -78,7 +93,9 @@ export default function ProductVariantsTable({ variants }: { variants: VariantRo
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-gray-500">Stock Status</label>
+            <label className="text-xs font-medium text-gray-500">
+              Stock Status
+            </label>
             <select
               value={stockStatusFilter}
               onChange={(e) => setStockStatusFilter(e.target.value)}
@@ -92,7 +109,9 @@ export default function ProductVariantsTable({ variants }: { variants: VariantRo
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-gray-500">Parent Product</label>
+            <label className="text-xs font-medium text-gray-500">
+              Parent Product
+            </label>
             <select
               value={parentProductFilter}
               onChange={(e) => setParentProductFilter(e.target.value)}
@@ -100,7 +119,9 @@ export default function ProductVariantsTable({ variants }: { variants: VariantRo
             >
               <option value="">All Products</option>
               {uniqueParentProducts.map((name) => (
-                <option key={name} value={name}>{name}</option>
+                <option key={name} value={name}>
+                  {name}
+                </option>
               ))}
             </select>
           </div>
@@ -111,29 +132,43 @@ export default function ProductVariantsTable({ variants }: { variants: VariantRo
 
   const columns = [
     {
-      header: 'Variant',
+      header: "Variant",
       cell: (item: VariantRow) => (
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-plum-800 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200 dark:border-plum-700 relative">
             {item.primaryImage?.url ? (
-              <CldImage src={item.primaryImage.url} alt="" fill sizes="40px" className="object-cover" />
+              <CldImage
+                src={item.primaryImage.url}
+                alt=""
+                fill
+                sizes="40px"
+                className="object-cover"
+              />
             ) : (
               <ImageIcon size={16} className="text-gray-300" />
             )}
           </div>
           <div>
-            <p className="font-semibold text-gray-900 dark:text-white">{item.name}</p>
-            <p className="text-xs text-gray-500 font-mono mt-0.5">{item.sku || 'N/A'}</p>
+            <p className="font-semibold text-gray-900 dark:text-white">
+              {item.name}
+            </p>
+            <p className="text-xs text-gray-500 font-mono mt-0.5">
+              {item.sku || "N/A"}
+            </p>
           </div>
         </div>
       ),
     },
     {
-      header: 'Parent Product',
+      header: "Parent Product",
       cell: (item: VariantRow) => {
-        const product = typeof item.productId === 'object' ? item.productId : null;
+        const product =
+          typeof item.productId === "object" ? item.productId : null;
         return product ? (
-          <Link href={`/admin/products/${product._id}`} className="text-sm text-gold-700 dark:text-gold-300 hover:underline">
+          <Link
+            href={`/admin/products/${product._id}`}
+            className="text-sm text-gold-700 dark:text-gold-300 hover:underline"
+          >
             {product.name}
           </Link>
         ) : (
@@ -142,28 +177,39 @@ export default function ProductVariantsTable({ variants }: { variants: VariantRo
       },
     },
     {
-      header: 'Price',
+      header: "Price",
       cell: (item: VariantRow) => (
-        <span className="font-medium text-gray-900 dark:text-white">₹{(item.price || 0).toLocaleString('en-IN')}</span>
+        <span className="font-medium text-gray-900 dark:text-white">
+          ₹{(item.price || 0).toLocaleString("en-IN")}
+        </span>
       ),
     },
     {
-      header: 'Stock',
+      header: "Stock",
       cell: (item: VariantRow) => {
-        const available = Math.max(0, (item.stock || 0) - (item.reservedQuantity || 0));
+        const available = Math.max(
+          0,
+          (item.stock || 0) - (item.reservedQuantity || 0),
+        );
         return (
-          <span className={available <= (item.lowStockThreshold || 5) ? 'text-red-600 dark:text-red-400 font-medium' : 'text-gray-700 dark:text-gray-300'}>
+          <span
+            className={
+              available <= (item.lowStockThreshold || 5)
+                ? "text-red-600 dark:text-red-400 font-medium"
+                : "text-gray-700 dark:text-gray-300"
+            }
+          >
             {available} available
           </span>
         );
       },
     },
     {
-      header: 'Status',
+      header: "Status",
       cell: (item: VariantRow) => <StatusBadge status={getStockStatus(item)} />,
     },
     {
-      header: 'Actions',
+      header: "Actions",
       cell: (item: VariantRow) => (
         <div className="flex items-center justify-end gap-1">
           <Link
@@ -197,9 +243,13 @@ export default function ProductVariantsTable({ variants }: { variants: VariantRo
       title="Product Variants"
       renderFilter={renderFilter}
       getSearchText={(item) =>
-        [item.name, item.sku, typeof item.productId === 'object' ? item.productId?.name : null]
+        [
+          item.name,
+          item.sku,
+          typeof item.productId === "object" ? item.productId?.name : null,
+        ]
           .filter(Boolean)
-          .join(' ')
+          .join(" ")
       }
     />
   );

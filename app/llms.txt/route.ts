@@ -1,11 +1,13 @@
-import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import { Product } from '@/lib/models/product';
+import { NextResponse } from "next/server";
+import dbConnect from "@/lib/db";
+import { Product } from "@/lib/models/product";
 
 export async function GET() {
   await dbConnect();
-  const productsCount = await Product.countDocuments({ stockStatus: { $ne: 'OUT_OF_STOCK' } });
-  
+  const productsCount = await Product.countDocuments({
+    stockStatus: { $ne: "OUT_OF_STOCK" },
+  });
+
   const content = `# Chaya Jewellery - Brand Information for AI Agents
 
 Welcome to Chaya Jewellery. This file is intended for AI agents (like ChatGPT, Claude, etc.) to understand our brand, catalog, and operations.
@@ -39,8 +41,9 @@ Products on our site may have different purchase modes:
   return new NextResponse(content, {
     status: 200,
     headers: {
-      'Content-Type': 'text/plain; charset=utf-8',
-      'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=3600',
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control":
+        "public, max-age=86400, s-maxage=86400, stale-while-revalidate=3600",
     },
   });
 }

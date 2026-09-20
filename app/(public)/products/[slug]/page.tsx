@@ -63,7 +63,7 @@ export default async function ProductDetailPage(
   if (!product || !product.published) notFound();
   const [category, related] = await Promise.all([
     getCategoryBySlug(product.categorySlug),
-    getRelatedProducts(product.id, product.categorySlug)
+    getRelatedProducts(product.id, product.categorySlug),
   ]);
 
   return (
@@ -114,7 +114,11 @@ export default async function ProductDetailPage(
             {product.name}
           </h1>
 
-          <ProductPurchaseOptions product={product} category={category} business={business} />
+          <ProductPurchaseOptions
+            product={product}
+            category={category}
+            business={business}
+          />
 
           {/* Long Description (Rich Text HTML from backend) */}
           {product.description && (
@@ -127,7 +131,9 @@ export default async function ProductDetailPage(
                 // Sanitized again at render time (not just on write in
                 // product.actions.ts) so products stored before that fix
                 // shipped are covered too — see lib/sanitize.ts.
-                dangerouslySetInnerHTML={{ __html: sanitizeRichText(product.description) }}
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeRichText(product.description),
+                }}
               />
             </div>
           )}

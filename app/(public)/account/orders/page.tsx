@@ -47,7 +47,7 @@ export default async function OrdersPage() {
     // 1. Reconcile any PENDING online orders with Cashfree in real time
     const pendingGatewayOrders = await Order.find({
       $or: orderConditions,
-      paymentStatus: "PENDING",
+      paymentStatus: { $in: ["PENDING", "FAILED"] },
       paymentMethod: { $nin: ["COD", "BANK_TRANSFER"] },
     })
       .select("orderNumber")
@@ -60,7 +60,9 @@ export default async function OrdersPage() {
 
   const orders =
     orderConditions.length > 0
-      ? await Order.find({ $or: orderConditions }).sort({ createdAt: -1 }).lean()
+      ? await Order.find({ $or: orderConditions })
+          .sort({ createdAt: -1 })
+          .lean()
       : [];
 
   return (
@@ -68,7 +70,11 @@ export default async function OrdersPage() {
       {/* Header Container */}
       <div className="bg-white rounded-2xl border border-plum-100 p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <BackButton fallbackHref="/account/dashboard" label="Back to Dashboard" className="mb-3" />
+          <BackButton
+            fallbackHref="/account/dashboard"
+            label="Back to Dashboard"
+            className="mb-3"
+          />
           <h1 className="text-2xl font-bold font-display text-plum-950">
             Order History
           </h1>
@@ -94,8 +100,8 @@ export default async function OrdersPage() {
             No orders found
           </h2>
           <p className="mt-2 text-sm text-plum-500 max-w-md mx-auto leading-relaxed">
-            You haven&apos;t placed any orders with us yet. Explore our handcrafted
-            fine jewellery collections to find your signature piece.
+            You haven&apos;t placed any orders with us yet. Explore our
+            handcrafted fine jewellery collections to find your signature piece.
           </p>
           <div className="mt-8">
             <Link
@@ -117,7 +123,7 @@ export default async function OrdersPage() {
                 day: "2-digit",
                 month: "short",
                 year: "numeric",
-              }
+              },
             );
             const orderNum =
               order.orderNumber || order._id.toString().slice(-8).toUpperCase();
@@ -197,7 +203,8 @@ export default async function OrdersPage() {
                             {item.sku && <span>SKU: {item.sku}</span>}
                             <span>Qty: {item.quantity}</span>
                             <span>
-                              Price: ₹{(item.price || 0).toLocaleString("en-IN")}
+                              Price: ₹
+                              {(item.price || 0).toLocaleString("en-IN")}
                             </span>
                           </div>
                         </div>
@@ -225,12 +232,16 @@ export default async function OrdersPage() {
                       <div className="flex items-center gap-1.5">
                         <MapPin size={14} className="text-plum-400 shrink-0" />
                         <span className="truncate max-w-xs">
-                          {shipping.street}, {shipping.city} ({shipping.pincode})
+                          {shipping.street}, {shipping.city} ({shipping.pincode}
+                          )
                         </span>
                       </div>
                     )}
                     <div className="flex items-center gap-1.5">
-                      <CreditCard size={14} className="text-plum-400 shrink-0" />
+                      <CreditCard
+                        size={14}
+                        className="text-plum-400 shrink-0"
+                      />
                       <span>{order.paymentMethod || "Online Payment"}</span>
                     </div>
                   </div>

@@ -7,11 +7,17 @@ import { buttonStyles } from "@/components/public/ui/button";
 import { OrnamentalDivider } from "@/components/public/ui/ornamental-divider";
 import { cn } from "@/lib/utils";
 
-export function RashiFinder({ rashiList, categories }: { rashiList: any[], categories: any[] }) {
+export function RashiFinder({
+  rashiList,
+  categories,
+}: {
+  rashiList: any[];
+  categories: any[];
+}) {
   const [selected, setSelected] = React.useState(rashiList[0]?.slug);
   const rashi = rashiList.find((r) => r.slug === selected) ?? rashiList[0];
   const category = rashi?.categorySlug
-    ? categories.find(c => c.slug === rashi.categorySlug)
+    ? categories.find((c) => c.slug === rashi.categorySlug)
     : undefined;
 
   if (!rashiList || rashiList.length === 0) return null;
@@ -82,9 +88,7 @@ export function RashiFinder({ rashiList, categories }: { rashiList: any[], categ
             <p className="text-[0.6875rem] font-semibold tracking-[0.14em] text-gold-700 uppercase">
               Ruling planet
             </p>
-            <p className="mt-1 text-plum-900">
-              {rashi.planet}{" "}
-            </p>
+            <p className="mt-1 text-plum-900">{rashi.planet} </p>
 
             <p className="mt-4 text-[0.6875rem] font-semibold tracking-[0.14em] text-gold-700 uppercase">
               Recommended stone

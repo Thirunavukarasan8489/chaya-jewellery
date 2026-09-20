@@ -40,7 +40,10 @@ export function NewsletterForm() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className={buttonStyles({ size: "md", className: "shrink-0 font-semibold" })}
+        className={buttonStyles({
+          size: "md",
+          className: "shrink-0 font-semibold",
+        })}
       >
         {isSubmitting ? "Subscribing…" : "Subscribe"}
         <ArrowRight size={16} />

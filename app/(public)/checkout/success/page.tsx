@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { CheckCircle2, Clock, XCircle } from "lucide-react";
 import { getOrderStatusSummary } from "@/lib/actions/checkout.actions";
-import { PendingPaymentRefresh, SuccessCartClearer } from "./PendingPaymentRefresh";
+import {
+  PendingPaymentRefresh,
+  SuccessCartClearer,
+} from "./PendingPaymentRefresh";
 
 /**
  * COD/Bank Transfer orders land here with nothing further to confirm — the
@@ -22,7 +25,35 @@ export default async function CheckoutSuccessPage({
   const result = orderNumber ? await getOrderStatusSummary(orderNumber) : null;
   const order = result?.success ? result.data : null;
 
-  const isGatewayOrder = order && order.paymentMethod !== "COD" && order.paymentMethod !== "BANK_TRANSFER";
+  if (
+    !order ||
+    order.orderStatus === "CANCELLED" ||
+    order.orderStatus === "RETURNED"
+  ) {
+    return (
+      <div className="flex min-h-[70vh] flex-col items-center justify-center gap-4 p-6 text-center">
+        <h1 className="font-display text-3xl font-bold text-plum-950">
+          {!order ? "Order unavailable" : "This order is closed"}
+        </h1>
+        <p className="max-w-md text-plum-600">
+          {order?.paymentStatus === "CONFIRMED"
+            ? "We received a payment for a closed order. Please contact us so we can review fulfilment or a refund."
+            : "Check your account for the latest order details before trying again."}
+        </p>
+        <Link href="/account/orders" className="text-plum-900 underline">
+          View my orders
+        </Link>
+        <Link href="/contact" className="text-plum-900 underline">
+          Contact us
+        </Link>
+      </div>
+    );
+  }
+
+  const isGatewayOrder =
+    order &&
+    order.paymentMethod !== "COD" &&
+    order.paymentMethod !== "BANK_TRANSFER";
   const isPending = isGatewayOrder && order.paymentStatus === "PENDING";
   const isFailed = isGatewayOrder && order.paymentStatus === "FAILED";
 
@@ -36,8 +67,8 @@ export default async function CheckoutSuccessPage({
           Payment Failed
         </h1>
         <p className="mx-auto mb-8 max-w-md text-plum-600">
-          Your payment couldn&apos;t be completed. No amount has been charged
-          — please try again, or reach out if the issue continues.
+          Your payment hasn&apos;t been confirmed. Check your bank and order
+          status before retrying, or contact us if money was deducted.
         </p>
         <div className="flex flex-wrap justify-center gap-4">
           <Link
@@ -90,8 +121,8 @@ export default async function CheckoutSuccessPage({
         Order Placed Successfully
       </h1>
       <p className="mx-auto mb-2 max-w-md text-plum-600">
-        Thank you for your purchase! Your order has been placed and is
-        currently being processed.
+        Thank you for your purchase! Your order has been placed and is currently
+        being processed.
       </p>
       {order && (
         <p className="mb-8 font-medium text-plum-900">

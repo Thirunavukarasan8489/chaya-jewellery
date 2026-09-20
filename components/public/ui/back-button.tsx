@@ -37,7 +37,7 @@ export function BackButton({
         onDark
           ? "text-plum-200 hover:text-gold-300 hover:bg-white/10 border border-white/15 bg-white/5 backdrop-blur-sm"
           : "text-plum-800 hover:text-plum-950 hover:bg-plum-100/80 border border-plum-200/80 bg-white/80 shadow-xs backdrop-blur-sm",
-        className
+        className,
       )}
     >
       <ArrowLeft

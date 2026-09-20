@@ -13,7 +13,9 @@ export const metadata: Metadata = {
 export default async function TestimonialsPage() {
   const testimonials = await getTestimonials();
   const average =
-    testimonials.length > 0 ? testimonials.reduce((n, t) => n + t.rating, 0) / testimonials.length : 5;
+    testimonials.length > 0
+      ? testimonials.reduce((n, t) => n + t.rating, 0) / testimonials.length
+      : 5;
 
   return (
     <>
@@ -49,9 +51,14 @@ export default async function TestimonialsPage() {
                 </blockquote>
                 <figcaption className="mt-5 border-t border-ivory-300 pt-4">
                   <Rating value={t.rating} className="mb-2" />
-                  <p className="text-sm font-semibold text-plum-900">{t.customerName}</p>
+                  <p className="text-sm font-semibold text-plum-900">
+                    {t.customerName}
+                  </p>
                   <p className="mt-0.5 text-xs text-ink-muted">
-                    {t.location} {t.productReference?.name ? `· purchased ${t.productReference.name}` : ''}
+                    {t.location}{" "}
+                    {t.productReference?.name
+                      ? `· purchased ${t.productReference.name}`
+                      : ""}
                   </p>
                 </figcaption>
               </figure>

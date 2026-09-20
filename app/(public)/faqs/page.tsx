@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default async function FaqsPage() {
   const business = NAV_DATA.business;
   const faqs = await getFaqs();
-      return (
+  return (
     <>
       <PageHeader
         eyebrow="FAQ"
@@ -39,7 +39,10 @@ export default async function FaqsPage() {
             </p>
             <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
               <a
-                href={whatsappLink(business, "Hi Chaya Jewellery, I have a question.")}
+                href={whatsappLink(
+                  business,
+                  "Hi Chaya Jewellery, I have a question.",
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={buttonStyles({ variant: "whatsapp" })}

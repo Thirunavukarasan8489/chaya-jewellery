@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const LeadSchema = new mongoose.Schema(
   {
@@ -8,31 +8,41 @@ const LeadSchema = new mongoose.Schema(
     whatsapp: { type: String },
     email: { type: String },
     location: { type: String },
-    
+
     // Enquiry Info
-    product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
-    category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
+    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+    category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
     message: { type: String, required: true },
-    source: { type: String, default: 'Website' },
-    
+    source: { type: String, default: "Website" },
+
     // Management
     status: {
       type: String,
-      enum: ['NEW', 'CONTACTED', 'FOLLOW_UP', 'QUALIFIED', 'CONVERTED', 'CLOSED', 'SPAM'],
-      default: 'NEW'
+      enum: [
+        "NEW",
+        "CONTACTED",
+        "FOLLOW_UP",
+        "QUALIFIED",
+        "CONVERTED",
+        "CLOSED",
+        "SPAM",
+      ],
+      default: "NEW",
     },
-    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    notes: [{
-      content: { type: String },
-      addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-      createdAt: { type: Date, default: Date.now }
-    }],
-    followUpDate: { type: Date }
+    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    notes: [
+      {
+        content: { type: String },
+        addedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+    followUpDate: { type: Date },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 LeadSchema.index({ status: 1 });
 LeadSchema.index({ followUpDate: 1 });
 
-export const Lead = mongoose.models.Lead || mongoose.model('Lead', LeadSchema);
+export const Lead = mongoose.models.Lead || mongoose.model("Lead", LeadSchema);

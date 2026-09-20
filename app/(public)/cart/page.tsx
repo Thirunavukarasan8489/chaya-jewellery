@@ -2,14 +2,16 @@ import type { Metadata } from "next";
 import { CartView } from "./cart-view";
 import { PageHeader } from "@/components/public/ui/page-header";
 
-
 export const metadata: Metadata = {
   title: "Your Cart",
-  description: "Review the Jewellery in your Chaya Jewellery cart before checkout.",
+  description:
+    "Review the Jewellery in your Chaya Jewellery cart before checkout.",
 };
 
 export default async function CartPage() {
-  const settings = { commerce: { flatShippingFee: 200, freeShippingThreshold: 50000 } }; // fallback or service
+  const settings = {
+    commerce: { flatShippingFee: 200, freeShippingThreshold: 50000 },
+  }; // fallback or service
   return (
     <>
       <PageHeader

@@ -91,7 +91,7 @@ export interface Product {
   rating: number;
   reviewCount: number;
   published: boolean;
-  
+
   selectedVariantName?: string;
 }
 

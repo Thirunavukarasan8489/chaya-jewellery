@@ -18,7 +18,10 @@ export function OrnamentalBg({
   return (
     <div
       aria-hidden
-      className={cn("pointer-events-none absolute inset-0 overflow-hidden", className)}
+      className={cn(
+        "pointer-events-none absolute inset-0 overflow-hidden",
+        className,
+      )}
     >
       <div
         className="absolute inset-0"

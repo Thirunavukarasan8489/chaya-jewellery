@@ -9,11 +9,14 @@ import StatusBadge from "@/components/admin/ui/StatusBadge";
 import { finalizeCashfreePayment } from "@/lib/actions/checkout.actions";
 import { BackButton } from "@/components/public/ui/back-button";
 import mongoose from "mongoose";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function AccountDashboardPage() {
   const session = await getServerSession(authOptions);
+  if (!session?.user?.id || !session.user.role) redirect("/login");
+  if (session.user.role !== "CUSTOMER") redirect("/admin");
 
   await dbConnect();
 
@@ -67,7 +70,7 @@ export default async function AccountDashboardPage() {
     // 1. Reconcile any PENDING online orders with Cashfree in real time
     const pendingGatewayOrders = await Order.find({
       $or: orderConditions,
-      paymentStatus: "PENDING",
+      paymentStatus: { $in: ["PENDING", "FAILED"] },
       paymentMethod: { $nin: ["COD", "BANK_TRANSFER"] },
     })
       .select("orderNumber")
@@ -86,7 +89,10 @@ export default async function AccountDashboardPage() {
     totalOrdersCount = matchingOrders.length;
     // Total spent is the sum of paid / confirmed orders
     totalSpendAmount = matchingOrders
-      .filter((o: any) => o.paymentStatus === "CONFIRMED" || o.orderStatus === "CONFIRMED")
+      .filter(
+        (o: any) =>
+          o.paymentStatus === "CONFIRMED" || o.orderStatus === "CONFIRMED",
+      )
       .reduce((sum: number, o: any) => sum + (o.total || 0), 0);
 
     // Sync corrected metrics directly to customer in DB
@@ -187,7 +193,9 @@ export default async function AccountDashboardPage() {
                     className="hover:bg-plum-50/30 transition-colors"
                   >
                     <td className="px-6 py-4 font-medium text-plum-900">
-                      #{order.orderNumber || order._id.toString().slice(-6).toUpperCase()}
+                      #
+                      {order.orderNumber ||
+                        order._id.toString().slice(-6).toUpperCase()}
                     </td>
                     <td className="px-6 py-4">
                       {new Date(order.createdAt).toLocaleDateString("en-IN", {

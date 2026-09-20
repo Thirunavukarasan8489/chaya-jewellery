@@ -1,6 +1,6 @@
-import HeroSectionForm from '@/components/admin/website/HeroSectionForm';
+import HeroSectionForm from "@/components/admin/website/HeroSectionForm";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default function CreateHeroSectionPage() {
   return (

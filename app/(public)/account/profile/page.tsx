@@ -17,14 +17,18 @@ export default async function ProfilePage() {
   }
 
   await dbConnect();
-  
+
   const userId = (session.user as any).id;
   let customer = await Customer.findOne({ userId }).lean();
 
   if (!customer && session.user.email) {
-    customer = await Customer.findOne({ "contact.email": session.user.email }).lean();
+    customer = await Customer.findOne({
+      "contact.email": session.user.email,
+    }).lean();
     if (customer && userId && !(customer as any).userId) {
-      await Customer.findByIdAndUpdate((customer as any)._id, { $set: { userId } });
+      await Customer.findByIdAndUpdate((customer as any)._id, {
+        $set: { userId },
+      });
     }
   }
 
@@ -49,15 +53,19 @@ export default async function ProfilePage() {
     <div className="space-y-6">
       <div className="bg-white rounded-2xl border border-plum-100 shadow-sm overflow-hidden">
         <div className="p-6 sm:p-8 border-b border-plum-100 bg-plum-50/30">
-          <BackButton fallbackHref="/account/dashboard" label="Back to Dashboard" className="mb-3" />
+          <BackButton
+            fallbackHref="/account/dashboard"
+            label="Back to Dashboard"
+            className="mb-3"
+          />
           <h1 className="text-2xl font-bold text-plum-950">Profile Settings</h1>
           <p className="text-sm text-plum-600 mt-1">
             Update your personal information and contact details.
           </p>
         </div>
-        
+
         <div className="p-6 sm:p-8">
-          <ProfileForm 
+          <ProfileForm
             userId={(session.user as any).id}
             initialData={{
               firstName: customer?.profile?.firstName || "",

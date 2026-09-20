@@ -21,7 +21,9 @@ export function EnquiryForm({
   source?: string;
   compact?: boolean;
 }) {
-  const [status, setStatus] = React.useState<"idle" | "sending" | "sent">("idle");
+  const [status, setStatus] = React.useState<"idle" | "sending" | "sent">(
+    "idle",
+  );
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -172,7 +174,9 @@ function Field({
         {...props}
         className="h-12 w-full rounded-xl border border-plum-900/15 bg-ivory-50 px-3.5 text-plum-900 transition-colors placeholder:text-plum-400 focus:border-gold-500 focus:bg-white"
       />
-      {hint && <span className="mt-1 block text-xs text-ink-muted">{hint}</span>}
+      {hint && (
+        <span className="mt-1 block text-xs text-ink-muted">{hint}</span>
+      )}
     </label>
   );
 }

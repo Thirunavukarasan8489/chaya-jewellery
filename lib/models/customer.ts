@@ -44,7 +44,7 @@ const CustomerSchema = new mongoose.Schema(
       totalSpend: { type: Number, default: 0 },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // PERFORMANCE: both fields are queried on every order (checkout.actions.ts,

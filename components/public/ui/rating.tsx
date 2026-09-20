@@ -33,8 +33,7 @@ export function Rating({
       </span>
       {count !== undefined && (
         <span className="text-xs text-ink-muted tabular-nums">
-          {value.toFixed(1)}{" "}
-          <span className="text-plum-400">({count})</span>
+          {value.toFixed(1)} <span className="text-plum-400">({count})</span>
         </span>
       )}
       <span className="sr-only">

@@ -1,17 +1,24 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Image from 'next/image';
-import { useFormContext } from 'react-hook-form';
-import { UploadCloud, X, Trash2, Plus, Image as ImageIcon } from 'lucide-react';
-import { AdminInput } from '@/components/admin/ui/AdminInput';
-import { ProductFormValues } from '../ProductForm';
+import React from "react";
+import Image from "next/image";
+import { useFormContext } from "react-hook-form";
+import { UploadCloud, X, Trash2, Plus, Image as ImageIcon } from "lucide-react";
+import { AdminInput } from "@/components/admin/ui/AdminInput";
+import { ProductFormValues } from "../ProductForm";
 
 interface MediaUploadTabProps {
   isActive: boolean;
   coverFile: { file?: File; previewUrl: string; isExisting: boolean } | null;
-  setCoverFile: (val: { file?: File; previewUrl: string; isExisting: boolean } | null) => void;
-  galleryItems: { file?: File; previewUrl: string; id: string; isExisting: boolean }[];
+  setCoverFile: (
+    val: { file?: File; previewUrl: string; isExisting: boolean } | null,
+  ) => void;
+  galleryItems: {
+    file?: File;
+    previewUrl: string;
+    id: string;
+    isExisting: boolean;
+  }[];
   handleCoverUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleGalleryUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   removeGalleryImage: (index: number) => void;
@@ -24,21 +31,31 @@ export function MediaUploadTab({
   galleryItems,
   handleCoverUpload,
   handleGalleryUpload,
-  removeGalleryImage
+  removeGalleryImage,
 }: MediaUploadTabProps) {
-  const { register, setValue, formState: { errors } } = useFormContext<ProductFormValues>();
-  const galleryError = !Array.isArray(errors.gallery) ? (errors.gallery as any)?.message : undefined;
+  const {
+    register,
+    setValue,
+    formState: { errors },
+  } = useFormContext<ProductFormValues>();
+  const galleryError = !Array.isArray(errors.gallery)
+    ? (errors.gallery as any)?.message
+    : undefined;
 
   const handleRemoveCover = () => {
     if (coverFile && !coverFile.isExisting) {
       URL.revokeObjectURL(coverFile.previewUrl);
     }
     setCoverFile(null);
-    setValue('primaryImage', { url: '', altText: '' }, { shouldValidate: true });
+    setValue(
+      "primaryImage",
+      { url: "", altText: "" },
+      { shouldValidate: true },
+    );
   };
 
   return (
-    <div className={isActive ? 'space-y-6' : 'hidden'}>
+    <div className={isActive ? "space-y-6" : "hidden"}>
       <h2 className="text-lg font-semibold text-plum-900 dark:text-ivory-100 flex items-center gap-2 border-b border-gray-200 dark:border-plum-800 pb-3">
         <ImageIcon size={20} className="text-gold-500" />
         Cover Image & Feature Gallery
@@ -53,7 +70,13 @@ export function MediaUploadTab({
         {coverFile ? (
           <div className="space-y-3 max-w-md">
             <div className="relative w-48 h-48 rounded-xl border-2 border-emerald-500 overflow-hidden shadow-sm group">
-              <Image src={coverFile.previewUrl} alt="Cover Preview" fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
+              <Image
+                src={coverFile.previewUrl}
+                alt="Cover Preview"
+                fill
+                sizes="(max-width: 768px) 100vw, 33vw"
+                className="object-cover"
+              />
               <button
                 type="button"
                 onClick={handleRemoveCover}
@@ -69,7 +92,7 @@ export function MediaUploadTab({
             <AdminInput
               label="Cover Image Alt Text"
               placeholder="e.g. Untreated Burmese Ruby gemstone"
-              {...register('primaryImage.altText')}
+              {...register("primaryImage.altText")}
             />
           </div>
         ) : (
@@ -86,7 +109,9 @@ export function MediaUploadTab({
             <p className="text-sm font-medium text-plum-800 dark:text-plum-200">
               Click or drop cover image here
             </p>
-            <p className="text-xs text-plum-400 mt-1">High resolution PNG, JPG, WebP</p>
+            <p className="text-xs text-plum-400 mt-1">
+              High resolution PNG, JPG, WebP
+            </p>
           </div>
         )}
       </div>
@@ -98,9 +123,14 @@ export function MediaUploadTab({
             <label className="block text-sm font-semibold text-plum-800 dark:text-plum-200">
               Feature Images (Gallery Views, Angles, Certificates) *
             </label>
-            <p className="text-xs text-plum-500">Upload multiple angle photos and certificates &mdash; at least one is required</p>
+            <p className="text-xs text-plum-500">
+              Upload multiple angle photos and certificates &mdash; at least one
+              is required
+            </p>
             {galleryError && (
-              <p className="text-xs text-rose-600 dark:text-rose-400 mt-1">{galleryError}</p>
+              <p className="text-xs text-rose-600 dark:text-rose-400 mt-1">
+                {galleryError}
+              </p>
             )}
           </div>
         </div>
@@ -110,9 +140,17 @@ export function MediaUploadTab({
             <div key={item.id} className="space-y-2">
               <div className="relative aspect-square rounded-xl border border-gray-200 dark:border-plum-700 overflow-hidden group shadow-sm">
                 {item.previewUrl ? (
-                  <Image src={item.previewUrl} alt={`Gallery Preview ${idx + 1}`} fill sizes="(max-width: 768px) 50vw, 20vw" className="object-cover" />
+                  <Image
+                    src={item.previewUrl}
+                    alt={`Gallery Preview ${idx + 1}`}
+                    fill
+                    sizes="(max-width: 768px) 50vw, 20vw"
+                    className="object-cover"
+                  />
                 ) : (
-                  <div className="w-full h-full bg-gray-100 dark:bg-plum-900 flex items-center justify-center text-plum-400 text-xs text-center p-2">Invalid Image</div>
+                  <div className="w-full h-full bg-gray-100 dark:bg-plum-900 flex items-center justify-center text-plum-400 text-xs text-center p-2">
+                    Invalid Image
+                  </div>
                 )}
                 <button
                   type="button"

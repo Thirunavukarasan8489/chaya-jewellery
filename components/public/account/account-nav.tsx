@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -8,13 +9,13 @@ import {
   MapPin,
   User,
   ChevronRight,
-  LogOut,
 } from "lucide-react";
-import { signOut } from "next-auth/react";
+import { SignOutButton } from "@/components/public/auth/sign-out-button";
 
 interface AccountNavProps {
   email?: string | null;
   name?: string | null;
+  image?: string | null;
 }
 
 const navItems = [
@@ -24,12 +25,16 @@ const navItems = [
   { name: "Profile Settings", href: "/account/profile", icon: User },
 ];
 
-export default function AccountNav({ email, name }: AccountNavProps) {
+export default function AccountNav({ email, name, image }: AccountNavProps) {
   const pathname = usePathname();
 
   const isItemActive = (href: string) => {
     if (href === "/account/dashboard") {
-      return pathname === href || pathname === "/account";
+      return (
+        pathname === href ||
+        pathname === "/account" ||
+        pathname === "/dashboard"
+      );
     }
     return pathname === href || pathname.startsWith(`${href}/`);
   };
@@ -47,10 +52,21 @@ export default function AccountNav({ email, name }: AccountNavProps) {
     <aside className="w-full md:w-72 shrink-0 space-y-4">
       {/* Mobile User Summary & Scrollable Nav */}
       <div className="block md:hidden bg-white rounded-2xl shadow-sm border border-plum-100 p-4">
-        <div className="flex items-center justify-between pb-3 mb-3 border-b border-plum-100">
-          <div className="flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-plum-900 text-gold-400 font-semibold flex items-center justify-center text-sm shadow-inner">
-              {initials}
+        <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-plum-100">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="size-10 shrink-0 overflow-hidden rounded-xl bg-plum-900 text-gold-400 font-semibold flex items-center justify-center text-sm shadow-inner">
+              {image ? (
+                <Image
+                  src={image}
+                  alt={name || "Your profile"}
+                  width={40}
+                  height={40}
+                  unoptimized
+                  className="size-10 object-cover"
+                />
+              ) : (
+                initials
+              )}
             </div>
             <div className="min-w-0">
               <h2 className="text-base font-bold text-plum-950 truncate">
@@ -59,14 +75,10 @@ export default function AccountNav({ email, name }: AccountNavProps) {
               <p className="text-xs text-plum-500 truncate">{email}</p>
             </div>
           </div>
-          <button
-            onClick={() => signOut({ callbackUrl: "/" })}
-            className="p-2 text-plum-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
-            title="Sign Out"
-            aria-label="Sign Out"
-          >
-            <LogOut size={18} />
-          </button>
+          <SignOutButton
+            iconOnly
+            className="px-3 text-danger-600 hover:bg-danger-50"
+          />
         </div>
 
         {/* Scrollable Pills for Mobile */}
@@ -98,8 +110,19 @@ export default function AccountNav({ email, name }: AccountNavProps) {
       {/* Desktop Sidebar Card */}
       <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-plum-100 p-6">
         <div className="mb-6 pb-6 border-b border-plum-100 flex items-center gap-3.5">
-          <div className="size-12 rounded-2xl bg-gradient-to-br from-plum-900 to-plum-800 text-gold-400 font-display font-bold flex items-center justify-center text-lg shadow-md ring-2 ring-gold-400/20">
-            {initials}
+          <div className="size-12 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-plum-900 to-plum-800 text-gold-400 font-display font-bold flex items-center justify-center text-lg shadow-md ring-2 ring-gold-400/20">
+            {image ? (
+              <Image
+                src={image}
+                alt={name || "Your profile"}
+                width={48}
+                height={48}
+                unoptimized
+                className="size-12 object-cover"
+              />
+            ) : (
+              initials
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="text-lg font-display font-bold text-plum-950 truncate">
@@ -148,16 +171,7 @@ export default function AccountNav({ email, name }: AccountNavProps) {
         </nav>
 
         <div className="mt-8 pt-6 border-t border-plum-100">
-          <button
-            onClick={() => signOut({ callbackUrl: "/" })}
-            className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-colors group"
-          >
-            <LogOut
-              size={18}
-              className="text-red-400 group-hover:text-red-500 transition-colors"
-            />
-            <span>Sign Out</span>
-          </button>
+          <SignOutButton className="w-full justify-start text-danger-600 hover:bg-danger-50" />
         </div>
       </div>
     </aside>

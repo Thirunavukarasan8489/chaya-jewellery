@@ -9,7 +9,10 @@ export function PrimaryNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="hidden flex-1 justify-center lg:flex" suppressHydrationWarning>
+    <nav
+      className="hidden flex-1 justify-center lg:flex"
+      suppressHydrationWarning
+    >
       <ul className="flex items-center gap-1" suppressHydrationWarning>
         {primaryNav.map((item: any) => {
           const active =

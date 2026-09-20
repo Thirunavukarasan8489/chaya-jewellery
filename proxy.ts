@@ -1,6 +1,7 @@
 import { getToken } from "next-auth/jwt";
 import { NextResponse, type NextRequest } from "next/server";
-import { requireSecret } from "@/lib/env";
+import { getAuthSecret } from "@/lib/env";
+import { getSafeCallbackUrl } from "@/lib/auth-redirect";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function proxy(req: NextRequest) {
@@ -14,23 +15,29 @@ export async function proxy(req: NextRequest) {
     if (pathname === "/api/auth/callback/credentials") {
       const ip = getClientIp(req);
       if (!checkRateLimit(`login:${ip}`, 10, 5 * 60 * 1000)) {
-        return new NextResponse("Too many login attempts. Please try again in a few minutes.", {
-          status: 429,
-        });
+        return new NextResponse(
+          "Too many login attempts. Please try again in a few minutes.",
+          {
+            status: 429,
+          },
+        );
       }
     } else if (pathname === "/api/auth/register") {
       const ip = getClientIp(req);
       if (!checkRateLimit(`register:${ip}`, 5, 60 * 60 * 1000)) {
-        return new NextResponse("Too many registration attempts. Please try again later.", {
-          status: 429,
-        });
+        return new NextResponse(
+          "Too many registration attempts. Please try again later.",
+          {
+            status: 429,
+          },
+        );
       }
     }
   }
 
   const token = await getToken({
     req,
-    secret: requireSecret("NEXTAUTH_SECRET", "fallback-secret-for-development"),
+    secret: getAuthSecret(),
   });
 
   const isAuthRoute =
@@ -45,8 +52,6 @@ export async function proxy(req: NextRequest) {
     pathname === "/register" ||
     pathname === "/forgot-password" ||
     pathname.startsWith("/reset-password");
-
-
 
   // Protection logic for /admin routes
   if (isProtectedRoute) {
@@ -78,13 +83,28 @@ export async function proxy(req: NextRequest) {
 
   // Guest checkout is no longer allowed — /checkout now requires a signed-in
   // CUSTOMER, same as /account/*.
-  const isPublicProtectedRoute = pathname.startsWith("/account") || pathname.startsWith("/checkout");
+  const isPublicProtectedRoute =
+    pathname === "/dashboard" ||
+    pathname.startsWith("/account") ||
+    pathname.startsWith("/checkout");
 
   // Protection logic for /account and /checkout routes
   if (isPublicProtectedRoute) {
+    if (token && token.role !== "CUSTOMER") {
+      return NextResponse.redirect(new URL("/admin", req.url));
+    }
     if (!token || token.role !== "CUSTOMER") {
-      const callbackUrl = encodeURIComponent(pathname);
-      return NextResponse.redirect(new URL(`/login?callbackUrl=${callbackUrl}`, req.url));
+      const callbackUrl = encodeURIComponent(
+        `${pathname}${req.nextUrl.search}`,
+      );
+      return NextResponse.redirect(
+        new URL(
+          pathname === "/dashboard"
+            ? "/login"
+            : `/login?callbackUrl=${callbackUrl}`,
+          req.url,
+        ),
+      );
     }
   }
 
@@ -96,19 +116,26 @@ export async function proxy(req: NextRequest) {
   // login form to re-authenticate.
   if (token && !isAuthRoute && !isPublicAuthRoute) {
     try {
-      const verifyRes = await fetch(`${req.nextUrl.origin}/api/auth/verify?email=${encodeURIComponent(token.email as string)}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        cache: 'no-store'
-      });
+      const verifyRes = await fetch(
+        `${req.nextUrl.origin}/api/auth/verify?email=${encodeURIComponent(token.email as string)}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          cache: "no-store",
+        },
+      );
       if (!verifyRes.ok) {
         // User not found or inactive. Redirect to login AND clear the
         // stale session cookie — otherwise the browser keeps sending the
         // same invalid token on every subsequent request, and every route
         // it can reach re-triggers this same failure.
-        const loginPath = pathname.startsWith("/admin") ? "/admin/login" : "/login";
+        const loginPath = pathname.startsWith("/admin")
+          ? "/admin/login"
+          : "/login";
         const callbackUrl = encodeURIComponent(pathname);
-        const response = NextResponse.redirect(new URL(`${loginPath}?callbackUrl=${callbackUrl}`, req.url));
+        const response = NextResponse.redirect(
+          new URL(`${loginPath}?callbackUrl=${callbackUrl}`, req.url),
+        );
         response.cookies.delete("next-auth.session-token");
         response.cookies.delete("__Secure-next-auth.session-token");
         return response;
@@ -131,7 +158,12 @@ export async function proxy(req: NextRequest) {
   if (isPublicAuthRoute && token) {
     if (token.role === "CUSTOMER") {
       // Customers go to their portal
-      return NextResponse.redirect(new URL("/account/dashboard", req.url));
+      return NextResponse.redirect(
+        new URL(
+          getSafeCallbackUrl(req.nextUrl.searchParams.get("callbackUrl")),
+          req.url,
+        ),
+      );
     } else {
       // Admins shouldn't be at /login, send them to their dashboard
       return NextResponse.redirect(new URL("/admin", req.url));
@@ -147,6 +179,7 @@ export const config = {
   matcher: [
     "/admin/:path*",
     "/account/:path*",
+    "/dashboard",
     "/checkout/:path*",
     "/checkout",
     "/login",

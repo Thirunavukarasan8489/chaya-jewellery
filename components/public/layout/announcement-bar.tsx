@@ -1,5 +1,3 @@
-
-
 /**
  * CSS-only marquee. On a phone there is no room to rotate three messages in
  * place without either truncating them or reserving two lines, so they scroll.

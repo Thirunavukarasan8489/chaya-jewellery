@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Mail, ArrowLeft, Gem, CheckCircle2 } from 'lucide-react';
-import Link from 'next/link';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useState } from "react";
+import { Mail, ArrowLeft, Gem, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 const forgotPasswordSchema = z.object({
-  email: z.string().min(1, 'Email is required').email('Invalid email address'),
+  email: z.string().min(1, "Email is required").email("Invalid email address"),
 });
 
 type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
@@ -24,7 +24,7 @@ export default function ForgotPassword() {
   } = useForm<ForgotPasswordValues>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
-      email: '',
+      email: "",
     },
   });
 
@@ -36,8 +36,8 @@ export default function ForgotPassword() {
       // In a real app, you would POST to /api/auth/forgot-password
       setIsSubmitted(true);
     } catch (error) {
-      console.error('Password reset request failed', error);
-      setSubmitError('Failed to send reset link. Please try again.');
+      console.error("Password reset request failed", error);
+      setSubmitError("Failed to send reset link. Please try again.");
     }
   };
 
@@ -52,7 +52,9 @@ export default function ForgotPassword() {
           <h1 className="text-3xl font-display font-semibold text-plum-900 dark:text-ivory-100 tracking-tight">
             Chaya Jewellery
           </h1>
-          <p className="text-plum-500 dark:text-plum-400 mt-2 text-sm">Admin Password Reset</p>
+          <p className="text-plum-500 dark:text-plum-400 mt-2 text-sm">
+            Admin Password Reset
+          </p>
         </div>
 
         {/* Card */}
@@ -60,11 +62,17 @@ export default function ForgotPassword() {
           {isSubmitted ? (
             <div className="text-center space-y-4">
               <div className="mx-auto w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-none flex items-center justify-center mb-4">
-                <CheckCircle2 className="text-emerald-600 dark:text-emerald-400" size={24} />
+                <CheckCircle2
+                  className="text-emerald-600 dark:text-emerald-400"
+                  size={24}
+                />
               </div>
-              <h2 className="text-xl font-semibold text-plum-900 dark:text-ivory-100">Check your email</h2>
+              <h2 className="text-xl font-semibold text-plum-900 dark:text-ivory-100">
+                Check your email
+              </h2>
               <p className="text-plum-500 dark:text-plum-400 text-sm">
-                We have sent a password reset link to your email address. Please check your inbox.
+                We have sent a password reset link to your email address. Please
+                check your inbox.
               </p>
               <div className="pt-4">
                 <Link
@@ -77,11 +85,15 @@ export default function ForgotPassword() {
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
-
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-6"
+              noValidate
+            >
               <div className="text-center mb-2">
                 <p className="text-sm text-plum-500 dark:text-plum-400">
-                  Enter your email address and we&apos;ll send you a link to reset your password.
+                  Enter your email address and we&apos;ll send you a link to
+                  reset your password.
                 </p>
               </div>
 
@@ -93,7 +105,10 @@ export default function ForgotPassword() {
 
               {/* Email Input */}
               <div>
-                <label className="block text-sm font-medium text-plum-900 dark:text-ivory-100 mb-1.5" htmlFor="email">
+                <label
+                  className="block text-sm font-medium text-plum-900 dark:text-ivory-100 mb-1.5"
+                  htmlFor="email"
+                >
                   Email Address
                 </label>
                 <div className="relative">
@@ -104,17 +119,19 @@ export default function ForgotPassword() {
                     id="email"
                     type="email"
                     autoComplete="email"
-                    {...register('email')}
+                    {...register("email")}
                     className={`block w-full pl-10 pr-3 py-2.5 bg-white dark:bg-plum-950 border ${
                       errors.email
-                        ? 'border-rose-500 focus:ring-rose-500/30 focus:border-rose-500'
-                        : 'border-gray-300 dark:border-plum-700 focus:ring-plum-600/30 focus:border-plum-600'
+                        ? "border-rose-500 focus:ring-rose-500/30 focus:border-rose-500"
+                        : "border-gray-300 dark:border-plum-700 focus:ring-plum-600/30 focus:border-plum-600"
                     } rounded-lg text-plum-900 dark:text-ivory-100 placeholder-plum-400 focus:outline-none focus:ring-2 transition-colors text-sm`}
                     placeholder="admin@chayajewellery.com"
                   />
                 </div>
                 {errors.email && (
-                  <p className="mt-1 text-sm text-rose-500">{errors.email.message}</p>
+                  <p className="mt-1 text-sm text-rose-500">
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
 
@@ -126,14 +143,30 @@ export default function ForgotPassword() {
               >
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Sending...
                   </span>
                 ) : (
-                  'Send Reset Link'
+                  "Send Reset Link"
                 )}
               </button>
 

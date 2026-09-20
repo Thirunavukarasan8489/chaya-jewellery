@@ -29,7 +29,7 @@ broad sweep).
 1. **N+1 / redundant DB queries** — any loop issuing one DB query per iteration instead of a single
    batched query (`$in`, or a `bulkWrite`). Pay closest attention to the checkout/order-creation path
    (inventory reservation, customer lookup) since that's the one hot path every real user hits, and to
-   anything that runs *inside* an open DB transaction — extra round trips there extend lock-hold time
+   anything that runs _inside_ an open DB transaction — extra round trips there extend lock-hold time
    under concurrent load, which is a correctness/availability risk as much as a speed one, not just a
    latency number.
 2. **Missing `.lean()`** (or the equivalent read-only-query optimization for whatever ORM is in use) —
@@ -65,5 +65,5 @@ cards, matching the security-audit skill's format so the two read as one consist
 together. One table (Impact | Finding | Actual cost | Fix) grouped by High/Medium/Low, and a compact
 "verified fine" table for patterns that already checked out (e.g. a caching layer or batching helper
 that's already used correctly and consistently) — that's as much signal as the problems are. Every
-finding needs a concrete file:line and the *actual* cost in real terms (round trips, index-free scan,
+finding needs a concrete file:line and the _actual_ cost in real terms (round trips, index-free scan,
 uncapped payload size) — not a vague "this could be slow."

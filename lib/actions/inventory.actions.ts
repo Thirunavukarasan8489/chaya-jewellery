@@ -1,19 +1,19 @@
-'use server';
+"use server";
 
-import dbConnect from '@/lib/db';
-import { ProductVariant } from '@/lib/models/product-variant';
-import { StockHistory } from '@/lib/models/stock-history';
-import { getSession } from '@/lib/auth';
-import { logAuditAction } from '@/lib/actions/audit';
-import { revalidatePath, updateTag } from 'next/cache';
-import mongoose from 'mongoose';
-import { recalcProductStockStatus, adjustInventory } from '@/lib/inventory';
+import dbConnect from "@/lib/db";
+import { ProductVariant } from "@/lib/models/product-variant";
+import { StockHistory } from "@/lib/models/stock-history";
+import { getSession } from "@/lib/auth";
+import { logAuditAction } from "@/lib/actions/audit";
+import { revalidatePath, updateTag } from "next/cache";
+import mongoose from "mongoose";
+import { recalcProductStockStatus, adjustInventory } from "@/lib/inventory";
 
 async function checkAuth(allowedRoles: string[]) {
   const session = await getSession();
-  if (!session) throw new Error('Unauthorized');
+  if (!session) throw new Error("Unauthorized");
   if (!allowedRoles.includes(session.role as string)) {
-    throw new Error('Forbidden: Insufficient permissions');
+    throw new Error("Forbidden: Insufficient permissions");
   }
   return session;
 }
@@ -25,14 +25,14 @@ async function checkAuth(allowedRoles: string[]) {
 // variants.
 export async function getInventoryList() {
   try {
-    await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER', 'LEAD_MANAGER']);
+    await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER", "LEAD_MANAGER"]);
     await dbConnect();
 
     const variants = await ProductVariant.find()
       .populate({
-        path: 'productId',
-        select: 'name slug baseSku category',
-        populate: { path: 'category', select: 'name' },
+        path: "productId",
+        select: "name slug baseSku category",
+        populate: { path: "category", select: "name" },
       })
       .sort({ updatedAt: -1 })
       .lean();
@@ -46,11 +46,11 @@ export async function getInventoryList() {
         const available = Math.max(0, stock - reserved);
         const threshold = Number(v.lowStockThreshold) || 5;
 
-        let status = 'IN_STOCK';
+        let status = "IN_STOCK";
         if (available === 0) {
-          status = 'OUT_OF_STOCK';
+          status = "OUT_OF_STOCK";
         } else if (available <= threshold) {
-          status = 'LOW_STOCK';
+          status = "LOW_STOCK";
         }
 
         return {
@@ -59,9 +59,9 @@ export async function getInventoryList() {
           productName: product.name,
           name: v.name,
           slug: v.slug,
-          sku: v.sku || product.baseSku || 'N/A',
-          category: product.category?.name || 'Uncategorized',
-          categoryId: product.category?._id?.toString() || '',
+          sku: v.sku || product.baseSku || "N/A",
+          category: product.category?.name || "Uncategorized",
+          categoryId: product.category?._id?.toString() || "",
           stock,
           reserved,
           available,
@@ -84,7 +84,7 @@ export async function updateStockLevel(params: {
   reason?: string;
 }) {
   try {
-    const authSession = await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER']);
+    const authSession = await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER"]);
     await dbConnect();
 
     const session = await mongoose.startSession();
@@ -92,40 +92,53 @@ export async function updateStockLevel(params: {
 
     try {
       const variant = params.variantId
-        ? await ProductVariant.findOne({ _id: params.variantId, productId: params.productId }).session(session)
-        : await ProductVariant.findOne({ productId: params.productId }).session(session);
+        ? await ProductVariant.findOne({
+            _id: params.variantId,
+            productId: params.productId,
+          }).session(session)
+        : await ProductVariant.findOne({ productId: params.productId }).session(
+            session,
+          );
 
       if (!variant) {
-        throw new Error('Variant not found');
+        throw new Error("Variant not found");
       }
 
-      const { previousStock, newStock: variantNewStock } = await adjustInventory(
-        params.productId,
-        variant._id.toString(),
-        params.adjustment,
-        session
-      );
+      const { previousStock, newStock: variantNewStock } =
+        await adjustInventory(
+          params.productId,
+          variant._id.toString(),
+          params.adjustment,
+          session,
+        );
 
-      const reason = params.reason || 'Manual Adjustment';
+      const reason = params.reason || "Manual Adjustment";
 
       await StockHistory.create(
-        [{
-          productId: params.productId,
-          variantId: variant._id,
-          previousStock,
-          adjustment: params.adjustment,
-          newStock: variantNewStock,
-          reason,
-          createdBy: authSession.userId,
-        }],
-        { session }
+        [
+          {
+            productId: params.productId,
+            variantId: variant._id,
+            previousStock,
+            adjustment: params.adjustment,
+            newStock: variantNewStock,
+            reason,
+            createdBy: authSession.userId,
+          },
+        ],
+        { session },
       );
 
-      const { totalAvailable, stockStatus } = await recalcProductStockStatus(params.productId, session);
+      const { totalAvailable, stockStatus } = await recalcProductStockStatus(
+        params.productId,
+        session,
+      );
 
       const totalStock = await ProductVariant.aggregate([
-        { $match: { productId: new mongoose.Types.ObjectId(params.productId) } },
-        { $group: { _id: null, total: { $sum: '$stock' } } },
+        {
+          $match: { productId: new mongoose.Types.ObjectId(params.productId) },
+        },
+        { $group: { _id: null, total: { $sum: "$stock" } } },
       ]).session(session);
 
       await session.commitTransaction();
@@ -134,8 +147,8 @@ export async function updateStockLevel(params: {
       const newStock = totalStock[0]?.total || 0;
 
       await logAuditAction({
-        action: 'INVENTORY_STOCK_ADJUSTED',
-        entity: 'Product',
+        action: "INVENTORY_STOCK_ADJUSTED",
+        entity: "Product",
         entityId: params.productId,
         metadata: {
           variantId: params.variantId,
@@ -145,13 +158,18 @@ export async function updateStockLevel(params: {
         },
       });
 
-      revalidatePath('/admin/inventory');
-      revalidatePath('/admin/products');
+      revalidatePath("/admin/inventory");
+      revalidatePath("/admin/products");
       // A manual stock adjustment changes what the public product page shows
       // (in stock / low stock / sold out) — bust the same 'products' tag the
       // storefront's cached reads use, not just the admin views.
-      updateTag('products');
-      return { success: true, newStock, stockStatus, available: totalAvailable };
+      updateTag("products");
+      return {
+        success: true,
+        newStock,
+        stockStatus,
+        available: totalAvailable,
+      };
     } catch (txError: any) {
       await session.abortTransaction();
       session.endSession();
@@ -169,11 +187,12 @@ export async function getStockHistory(params: {
   pageSize?: number;
 }) {
   try {
-    await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER', 'LEAD_MANAGER']);
+    await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER", "LEAD_MANAGER"]);
     await dbConnect();
 
     const page = params.page && params.page > 0 ? params.page : 1;
-    const pageSize = params.pageSize && params.pageSize > 0 ? params.pageSize : 10;
+    const pageSize =
+      params.pageSize && params.pageSize > 0 ? params.pageSize : 10;
 
     const query: Record<string, unknown> = { productId: params.productId };
     if (params.variantId) query.variantId = params.variantId;
@@ -183,7 +202,7 @@ export async function getStockHistory(params: {
         .sort({ createdAt: -1 })
         .skip((page - 1) * pageSize)
         .limit(pageSize)
-        .populate('createdBy', 'name')
+        .populate("createdBy", "name")
         .lean(),
       StockHistory.countDocuments(query),
     ]);
@@ -196,8 +215,8 @@ export async function getStockHistory(params: {
         previousStock: e.previousStock,
         adjustment: e.adjustment,
         newStock: e.newStock,
-        reason: e.reason || '',
-        createdByName: e.createdBy?.name || 'Unknown',
+        reason: e.reason || "",
+        createdByName: e.createdBy?.name || "Unknown",
         createdAt: e.createdAt?.toISOString(),
       })),
       total,

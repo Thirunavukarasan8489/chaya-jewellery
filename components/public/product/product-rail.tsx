@@ -37,15 +37,23 @@ export function ProductRail({
     const track = trackRef.current;
     if (!track) return;
     const scrollLeft = track.scrollLeft;
-    const itemWidth = track.firstElementChild ? (track.firstElementChild as HTMLElement).offsetWidth + 12 : 200;
+    const itemWidth = track.firstElementChild
+      ? (track.firstElementChild as HTMLElement).offsetWidth + 12
+      : 200;
     const newIndex = Math.round(scrollLeft / itemWidth);
-    if (newIndex !== active && newIndex >= 0 && newIndex < displayProducts.length) {
+    if (
+      newIndex !== active &&
+      newIndex >= 0 &&
+      newIndex < displayProducts.length
+    ) {
       setActive(newIndex);
     }
   };
 
   return (
-    <div className={cn("relative w-full max-w-full overflow-hidden", className)}>
+    <div
+      className={cn("relative w-full max-w-full overflow-hidden", className)}
+    >
       {/* Mobile Swipeable Product Rail (Phone & Tablet) */}
       <ul
         ref={trackRef}
@@ -58,7 +66,11 @@ export function ProductRail({
             data-index={i}
             className="w-[46%] min-w-[10.5rem] shrink-0 snap-start"
           >
-            <ProductCard product={product} className="h-full" priority={priority && i < 2} />
+            <ProductCard
+              product={product}
+              className="h-full"
+              priority={priority && i < 2}
+            />
           </li>
         ))}
       </ul>
@@ -67,7 +79,11 @@ export function ProductRail({
       <ul className="hidden gap-5 lg:grid lg:grid-cols-4">
         {displayProducts.map((product, i) => (
           <li key={product.slug}>
-            <ProductCard product={product} className="h-full" priority={priority && i < 4} />
+            <ProductCard
+              product={product}
+              className="h-full"
+              priority={priority && i < 4}
+            />
           </li>
         ))}
       </ul>
@@ -86,7 +102,7 @@ export function ProductRail({
                 "h-2 rounded-none transition-all duration-300",
                 active === index
                   ? "w-6 bg-gold-500"
-                  : "w-2 bg-ivory-300 hover:bg-gold-300"
+                  : "w-2 bg-ivory-300 hover:bg-gold-300",
               )}
             />
           ))}

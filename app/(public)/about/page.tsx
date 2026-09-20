@@ -8,7 +8,12 @@ import { GemImage } from "@/components/public/ui/gem-image";
 import { PageHeader } from "@/components/public/ui/page-header";
 import { SectionHeading } from "@/components/public/ui/section-heading";
 
-const stats = [{ value: "50+", label: "Years of Trust" },{ value: "100%", label: "Certified Natural" },{ value: "10k+", label: "Happy Customers" },{ value: "5/5", label: "Google Reviews" }];
+const stats = [
+  { value: "50+", label: "Years of Trust" },
+  { value: "100%", label: "Certified Natural" },
+  { value: "10k+", label: "Happy Customers" },
+  { value: "5/5", label: "Google Reviews" },
+];
 
 export const metadata: Metadata = {
   title: "About Us",
@@ -44,14 +49,18 @@ export default async function AboutPage() {
       <section className="shell gutter py-12 sm:py-16">
         <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
           <div>
-            <SectionHeading eyebrow="Our story" title="From a counter in Mylapore" />
+            <SectionHeading
+              eyebrow="Our story"
+              title="From a counter in Mylapore"
+            />
             <div className="mt-5 space-y-4 text-[0.9375rem] leading-relaxed text-plum-800">
               <p>
-                Chaya Jewellery started in 2007 as a single counter in Mylapore, Chennai,
-                buying rough at source and cutting it in-house. The trade at the
-                time ran almost entirely on trust in the seller, and that trust
-                was frequently misplaced — the same stone could be quoted at
-                three wildly different prices in three shops on the same street.
+                Chaya Jewellery started in 2007 as a single counter in Mylapore,
+                Chennai, buying rough at source and cutting it in-house. The
+                trade at the time ran almost entirely on trust in the seller,
+                and that trust was frequently misplaced — the same stone could
+                be quoted at three wildly different prices in three shops on the
+                same street.
               </p>
               <p>
                 We decided early on to compete on verifiability rather than on
@@ -61,9 +70,9 @@ export default async function AboutPage() {
               </p>
               <p>
                 Today we work with cutters in Mogok, Ratnapura and Jaipur, ship
-                across India, and employ four full-time gemmologists whose job is
-                to answer questions honestly — including when the honest answer
-                loses us a sale.
+                across India, and employ four full-time gemmologists whose job
+                is to answer questions honestly — including when the honest
+                answer loses us a sale.
               </p>
             </div>
             <Link
@@ -77,12 +86,28 @@ export default async function AboutPage() {
 
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <div className="grid gap-3 sm:gap-4">
-              <GemImage color="#1f4fd8" seed={4} className="aspect-square rounded-2xl" />
-              <GemImage color="#e0a713" seed={9} className="aspect-4/5 rounded-2xl" />
+              <GemImage
+                color="#1f4fd8"
+                seed={4}
+                className="aspect-square rounded-2xl"
+              />
+              <GemImage
+                color="#e0a713"
+                seed={9}
+                className="aspect-4/5 rounded-2xl"
+              />
             </div>
             <div className="grid gap-3 pt-8 sm:gap-4">
-              <GemImage color="#c81e4a" seed={14} className="aspect-4/5 rounded-2xl" />
-              <GemImage color="#0f9c68" seed={19} className="aspect-square rounded-2xl" />
+              <GemImage
+                color="#c81e4a"
+                seed={14}
+                className="aspect-4/5 rounded-2xl"
+              />
+              <GemImage
+                color="#0f9c68"
+                seed={19}
+                className="aspect-square rounded-2xl"
+              />
             </div>
           </div>
         </div>

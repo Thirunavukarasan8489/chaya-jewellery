@@ -1,9 +1,9 @@
-import { getLeads } from '@/lib/actions/admin-leads';
-import LeadsTableClient from '@/components/admin/leads/LeadsTableClient';
-import { LeadType } from '@/lib/types';
-import { AdminButton } from '@/components/admin/ui/AdminButton';
+import { getLeads } from "@/lib/actions/admin-leads";
+import LeadsTableClient from "@/components/admin/leads/LeadsTableClient";
+import { LeadType } from "@/lib/types";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function LeadsPage() {
   const result = await getLeads();
@@ -13,12 +13,14 @@ export default async function LeadsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gold-800 dark:text-white">Lead Management</h1>
-          <p className="text-sm text-gold-500 mt-1">Manage and track customer enquiries</p>
+          <h1 className="text-2xl font-bold text-gold-800 dark:text-white">
+            Lead Management
+          </h1>
+          <p className="text-sm text-gold-500 mt-1">
+            Manage and track customer enquiries
+          </p>
         </div>
-        <AdminButton variant="secondary">
-          Add Lead
-        </AdminButton>
+        <AdminButton variant="secondary">Add Lead</AdminButton>
       </div>
 
       {result.success === false && (

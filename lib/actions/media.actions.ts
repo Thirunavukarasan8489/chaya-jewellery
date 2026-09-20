@@ -1,9 +1,9 @@
-'use server';
+"use server";
 
-import { v2 as cloudinary } from 'cloudinary';
-import { getSession } from '@/lib/auth';
+import { v2 as cloudinary } from "cloudinary";
+import { getSession } from "@/lib/auth";
 
-const CLOUDINARY_FOLDER = 'chayajewellery';
+const CLOUDINARY_FOLDER = "chayajewellery";
 
 /**
  * Configure Cloudinary
@@ -15,7 +15,7 @@ function configureCloudinary() {
 
   if (!cloudName || !apiKey || !apiSecret) {
     throw new Error(
-      'Cloudinary configuration is missing. Please check CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET.'
+      "Cloudinary configuration is missing. Please check CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET.",
     );
   }
 
@@ -35,19 +35,19 @@ async function checkAuth(allowedRoles: string[]) {
   const session = await getSession();
 
   if (!session) {
-    throw new Error('Unauthorized');
+    throw new Error("Unauthorized");
   }
 
-  const sessionRole = String(session.role || '')
-    .replace(/\s+/g, '_')
+  const sessionRole = String(session.role || "")
+    .replace(/\s+/g, "_")
     .toUpperCase();
 
   const normalizedRoles = allowedRoles.map((role) =>
-    role.replace(/\s+/g, '_').toUpperCase()
+    role.replace(/\s+/g, "_").toUpperCase(),
   );
 
   if (!normalizedRoles.includes(sessionRole)) {
-    throw new Error('Forbidden: Insufficient permissions');
+    throw new Error("Forbidden: Insufficient permissions");
   }
 
   return session;
@@ -57,7 +57,7 @@ async function checkAuth(allowedRoles: string[]) {
  * Normalize Cloudinary errors
  */
 function getErrorMessage(error: unknown): string {
-  if (error && typeof error === 'object') {
+  if (error && typeof error === "object") {
     const cloudinaryError = error as {
       message?: string;
       http_code?: number;
@@ -65,8 +65,9 @@ function getErrorMessage(error: unknown): string {
     };
 
     if (cloudinaryError.http_code) {
-      return `Cloudinary error ${cloudinaryError.http_code}: ${cloudinaryError.message || 'Unknown Cloudinary error'
-        }`;
+      return `Cloudinary error ${cloudinaryError.http_code}: ${
+        cloudinaryError.message || "Unknown Cloudinary error"
+      }`;
     }
 
     if (cloudinaryError.message) {
@@ -78,7 +79,7 @@ function getErrorMessage(error: unknown): string {
     return error.message;
   }
 
-  return 'An unexpected error occurred';
+  return "An unexpected error occurred";
 }
 
 /**
@@ -86,19 +87,16 @@ function getErrorMessage(error: unknown): string {
  */
 export async function uploadMedia(formData: FormData) {
   try {
-    const session = await checkAuth([
-      'SUPER_ADMIN',
-      'CONTENT_MANAGER',
-    ]);
+    const session = await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER"]);
 
-    const file = formData.get('file');
+    const file = formData.get("file");
 
     if (!(file instanceof File)) {
-      throw new Error('No valid file provided');
+      throw new Error("No valid file provided");
     }
 
     if (file.size <= 0) {
-      throw new Error('File is empty');
+      throw new Error("File is empty");
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -109,14 +107,14 @@ export async function uploadMedia(formData: FormData) {
       const uploadStream = cloudinaryClient.uploader.upload_stream(
         {
           folder: CLOUDINARY_FOLDER,
-          resource_type: 'auto',
+          resource_type: "auto",
           use_filename: true,
           unique_filename: true,
           overwrite: false,
         },
         (error, result) => {
           if (error) {
-            console.error('CLOUDINARY UPLOAD ERROR:', {
+            console.error("CLOUDINARY UPLOAD ERROR:", {
               message: error.message,
               http_code: error.http_code,
               name: error.name,
@@ -127,18 +125,16 @@ export async function uploadMedia(formData: FormData) {
           }
 
           if (!result) {
-            reject(
-              new Error('Cloudinary returned an empty upload response')
-            );
+            reject(new Error("Cloudinary returned an empty upload response"));
             return;
           }
 
           resolve(result);
-        }
+        },
       );
 
-      uploadStream.on('error', (error) => {
-        console.error('CLOUDINARY STREAM ERROR:', error);
+      uploadStream.on("error", (error) => {
+        console.error("CLOUDINARY STREAM ERROR:", error);
         reject(error);
       });
 
@@ -158,10 +154,10 @@ export async function uploadMedia(formData: FormData) {
         height: uploadResult.height,
         folder: CLOUDINARY_FOLDER,
         uploadedBy: session.name,
-      }
+      },
     };
   } catch (error) {
-    console.error('uploadMedia ERROR:', error);
+    console.error("uploadMedia ERROR:", error);
 
     return {
       success: false,
@@ -173,18 +169,15 @@ export async function uploadMedia(formData: FormData) {
 /**
  * Delete media from Cloudinary
  */
-async function deleteFromCloudinary(
-  publicId: string,
-  resourceType?: string
-) {
+async function deleteFromCloudinary(publicId: string, resourceType?: string) {
   const cloudinaryClient = configureCloudinary();
 
-  let type: 'image' | 'video' | 'raw' = 'image';
+  let type: "image" | "video" | "raw" = "image";
 
-  if (resourceType === 'video') {
-    type = 'video';
-  } else if (resourceType === 'raw') {
-    type = 'raw';
+  if (resourceType === "video") {
+    type = "video";
+  } else if (resourceType === "raw") {
+    type = "raw";
   }
 
   return cloudinaryClient.uploader.destroy(publicId, {
@@ -203,9 +196,9 @@ export async function deleteMediaByUrl(url: string) {
   // route-level middleware to keep it out of reach. Only ever called
   // server-side from product.actions.ts today, but a server action is a
   // real network endpoint regardless of who currently imports it.
-  await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER']);
+  await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER"]);
 
-  if (!url || url.includes('placehold.co')) {
+  if (!url || url.includes("placehold.co")) {
     return {
       success: true,
       skipped: true,
@@ -215,22 +208,19 @@ export async function deleteMediaByUrl(url: string) {
   try {
     // Extract public_id from Cloudinary URL if possible
     // A typical Cloudinary URL: https://res.cloudinary.com/<cloud_name>/image/upload/v1234567890/<folder>/<public_id>.<ext>
-    const urlParts = url.split('/');
+    const urlParts = url.split("/");
     const lastPart = urlParts[urlParts.length - 1];
     const folder = urlParts[urlParts.length - 2];
     if (folder === CLOUDINARY_FOLDER && lastPart) {
-      const publicId = `${folder}/${lastPart.split('.')[0]}`;
-      await deleteFromCloudinary(publicId, 'image');
+      const publicId = `${folder}/${lastPart.split(".")[0]}`;
+      await deleteFromCloudinary(publicId, "image");
     }
 
     return {
       success: true,
     };
   } catch (error) {
-    console.error(
-      `Failed to clean up orphaned media: ${url}`,
-      error
-    );
+    console.error(`Failed to clean up orphaned media: ${url}`, error);
 
     return {
       success: false,

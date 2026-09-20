@@ -94,7 +94,9 @@ export function CartView({ settings }: { settings: any }) {
               <div className="flex min-w-0 flex-1 flex-col">
                 <div className="flex items-start justify-between gap-3">
                   <h2 className="line-2 text-[0.875rem] leading-snug font-semibold text-plum-900 sm:text-base">
-                    <Link href={`/products/${line.slug}`}>{line.variantName}</Link>
+                    <Link href={`/products/${line.slug}`}>
+                      {line.variantName}
+                    </Link>
                   </h2>
                   <button
                     type="button"
@@ -107,7 +109,8 @@ export function CartView({ settings }: { settings: any }) {
                 </div>
 
                 <p className="mt-1 text-xs text-ink-muted tabular-nums">
-                  {formatINR(line.unitPrice)} per {(line.variantType || "").toLowerCase()}
+                  {formatINR(line.unitPrice)} per{" "}
+                  {(line.variantType || "").toLowerCase()}
                   {line.calculatePriceOnVariantValue && line.variantValue
                     ? ` × ${line.variantValue} ${(line.variantType || "").toLowerCase()}`
                     : ""}

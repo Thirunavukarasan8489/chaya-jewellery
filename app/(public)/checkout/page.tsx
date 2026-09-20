@@ -19,7 +19,9 @@ export default async function CheckoutPage() {
 
   if (session && session.user) {
     await dbConnect();
-    const customer = await Customer.findOne({ userId: (session.user as any).id }).lean();
+    const customer = await Customer.findOne({
+      userId: (session.user as any).id,
+    }).lean();
     if (customer) {
       customerData = JSON.parse(JSON.stringify(customer));
     }

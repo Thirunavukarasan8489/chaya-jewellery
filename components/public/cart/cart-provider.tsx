@@ -21,9 +21,13 @@ type CartContextValue = {
     calculatePriceOnVariantValue?: boolean,
     variantId?: string,
     sku?: string,
-    variantType?: string
+    variantType?: string,
   ) => void;
-  setQuantity: (productId: string, quantity: number, variantId?: string) => void;
+  setQuantity: (
+    productId: string,
+    quantity: number,
+    variantId?: string,
+  ) => void;
   remove: (productId: string, variantId?: string) => void;
   clear: () => void;
   lastAdded: CartLine | null;
@@ -104,7 +108,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       calculatePriceOnVariantValue?: boolean,
       variantId?: string,
       sku?: string,
-      variantType?: string
+      variantType?: string,
     ) => {
       const line: CartLine = {
         productId: product.id,
@@ -147,9 +151,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     (productId: string, quantity: number, variantId?: string) => {
       setLines((current) =>
         quantity <= 0
-          ? current.filter((l) => !(l.productId === productId && l.variantId === variantId))
+          ? current.filter(
+              (l) => !(l.productId === productId && l.variantId === variantId),
+            )
           : current.map((l) =>
-              l.productId === productId && l.variantId === variantId ? { ...l, quantity } : l,
+              l.productId === productId && l.variantId === variantId
+                ? { ...l, quantity }
+                : l,
             ),
       );
     },
@@ -157,7 +165,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   );
 
   const remove = React.useCallback((productId: string, variantId?: string) => {
-    setLines((current) => current.filter((l) => !(l.productId === productId && l.variantId === variantId)));
+    setLines((current) =>
+      current.filter(
+        (l) => !(l.productId === productId && l.variantId === variantId),
+      ),
+    );
   }, []);
 
   const clear = React.useCallback(() => setLines([]), []);

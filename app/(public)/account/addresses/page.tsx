@@ -21,9 +21,13 @@ export default async function AddressesPage() {
   let customer = await Customer.findOne({ userId }).lean();
 
   if (!customer && session.user.email) {
-    customer = await Customer.findOne({ "contact.email": session.user.email }).lean();
+    customer = await Customer.findOne({
+      "contact.email": session.user.email,
+    }).lean();
     if (customer && userId && !(customer as any).userId) {
-      await Customer.findByIdAndUpdate((customer as any)._id, { $set: { userId } });
+      await Customer.findByIdAndUpdate((customer as any)._id, {
+        $set: { userId },
+      });
     }
   }
 
@@ -44,7 +48,9 @@ export default async function AddressesPage() {
     customer = newCustomer.toObject();
   }
 
-  const addresses = customer?.addresses ? JSON.parse(JSON.stringify(customer.addresses)) : [];
+  const addresses = customer?.addresses
+    ? JSON.parse(JSON.stringify(customer.addresses))
+    : [];
 
   return <AddressManager addresses={addresses} />;
 }

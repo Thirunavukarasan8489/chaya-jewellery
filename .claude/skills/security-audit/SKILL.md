@@ -54,7 +54,7 @@ skill instead.
    entirely (`data: any` straight into a DB write).
 4. **Payment/webhook integrity** — for every payment provider webhook: does the code fail closed (throw)
    if the signing secret is unset, or does it fall back to a default/empty value that could make forged
-   signatures trivial? Is the comparison constant-time? Does it verify the *amount* paid against the
+   signatures trivial? Is the comparison constant-time? Does it verify the _amount_ paid against the
    order's canonical total, not just that some valid signature arrived? Is there replay protection?
 5. **Secrets & env handling** — grep the source (not just `.env.example`) for hardcoded secrets/keys,
    confirm `.gitignore` actually excludes local env files, and check whether any hardcoded fallback secret

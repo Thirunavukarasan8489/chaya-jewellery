@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Gem, Home, Search, ShoppingBag, User } from "lucide-react";
@@ -22,17 +21,18 @@ const tabs = [
  */
 export function BottomNav() {
   const nextPathname = usePathname();
-  const [mounted, setMounted] = useState(false);
   const { count, hydrated } = useCart();
   const { data: session } = useSession();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   // Determine current active path reliably across SSR and client hydration
-  const rawPath = nextPathname || (typeof window !== "undefined" ? window.location.pathname : "/") || "/";
-  const normalizedPath = rawPath.length > 1 && rawPath.endsWith("/") ? rawPath.slice(0, -1) : rawPath;
+  const rawPath =
+    nextPathname ||
+    (typeof window !== "undefined" ? window.location.pathname : "/") ||
+    "/";
+  const normalizedPath =
+    rawPath.length > 1 && rawPath.endsWith("/")
+      ? rawPath.slice(0, -1)
+      : rawPath;
 
   const isTabActive = (href: string, exact?: boolean) => {
     if (exact || href === "/") {
@@ -50,6 +50,7 @@ export function BottomNav() {
       return (
         normalizedPath === "/login" ||
         normalizedPath.startsWith("/login") ||
+        normalizedPath === "/dashboard" ||
         normalizedPath.startsWith("/account")
       );
     }
@@ -64,7 +65,7 @@ export function BottomNav() {
   };
 
   const activeIndex = tabs.findIndex(({ href, exact }) =>
-    isTabActive(href, exact)
+    isTabActive(href, exact),
   );
   const safeIndex = activeIndex !== -1 ? activeIndex : 0;
 
@@ -87,7 +88,9 @@ export function BottomNav() {
             aria-hidden
             className={cn(
               "pointer-events-none absolute inset-y-0 left-0 w-[20%] p-0.5 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
-              activeIndex === -1 ? "opacity-0 scale-90" : "opacity-100 scale-100"
+              activeIndex === -1
+                ? "opacity-0 scale-90"
+                : "opacity-100 scale-100",
             )}
             style={{
               transform: `translateX(${safeIndex * 100}%)`,
@@ -98,8 +101,10 @@ export function BottomNav() {
 
           {tabs.map(({ href, label, icon: Icon, exact }) => {
             const active = isTabActive(href, exact);
-            const targetHref = href === "/login" && session ? "/account/dashboard" : href;
-            const targetLabel = href === "/login" && session ? "Account" : label;
+            const targetHref =
+              href === "/login" && session ? "/account/dashboard" : href;
+            const targetLabel =
+              href === "/login" && session ? "Account" : label;
 
             return (
               <li key={href} className="relative z-10">
@@ -110,7 +115,7 @@ export function BottomNav() {
                     "group relative flex flex-col items-center justify-center rounded-full py-2 px-1 text-[0.625rem] font-medium tracking-wide transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-95",
                     active
                       ? "text-plum-950 font-bold"
-                      : "text-plum-200 hover:text-gold-200"
+                      : "text-plum-200 hover:text-gold-200",
                   )}
                 >
                   <span className="relative z-10 flex flex-col items-center gap-0.5">
@@ -122,7 +127,7 @@ export function BottomNav() {
                           "transition-transform duration-300",
                           active
                             ? "scale-110 -translate-y-0.5 text-plum-950"
-                            : "group-hover:scale-110 group-hover:text-gold-300 text-plum-200"
+                            : "group-hover:scale-110 group-hover:text-gold-300 text-plum-200",
                         )}
                       />
                       {href === "/cart" && hydrated && count > 0 && (
@@ -131,7 +136,7 @@ export function BottomNav() {
                             "absolute -top-1.5 -right-2.5 grid min-w-4.5 h-4.5 place-items-center rounded-full px-1 text-[0.5625rem] font-bold tabular-nums shadow-sm transition-all duration-300",
                             active
                               ? "bg-plum-950 text-gold-300 ring-1 ring-gold-400"
-                              : "bg-gold-400 text-plum-950 ring-2 ring-plum-950 animate-pulse"
+                              : "bg-gold-400 text-plum-950 ring-2 ring-plum-950 animate-pulse",
                           )}
                         >
                           {count > 9 ? "9+" : count}
@@ -141,7 +146,7 @@ export function BottomNav() {
                     <span
                       className={cn(
                         "leading-none transition-colors duration-200",
-                        active ? "text-plum-950 font-bold" : "text-plum-200"
+                        active ? "text-plum-950 font-bold" : "text-plum-200",
                       )}
                     >
                       {targetLabel}

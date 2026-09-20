@@ -42,8 +42,8 @@ export function CertificationTrustSection() {
               Made to last, backed on paper
             </h2>
             <p className="mt-4 max-w-lg text-sm leading-relaxed text-plum-700 sm:text-base">
-              Fine jewellery is a promise as much as a purchase. Every piece
-              we make is hallmarked, documented and checked by hand before it
+              Fine jewellery is a promise as much as a purchase. Every piece we
+              make is hallmarked, documented and checked by hand before it
               reaches you.
             </p>
 

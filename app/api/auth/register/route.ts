@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: parsed.error.issues[0]?.message || "Invalid input" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     const { firstName, lastName, email, password } = parsed.data;
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     if (existingUser) {
       return NextResponse.json(
         { error: "An account with this email already exists" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -57,13 +57,13 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       { success: true, message: "User registered successfully" },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error: any) {
     console.error("Registration Error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

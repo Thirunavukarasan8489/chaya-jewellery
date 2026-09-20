@@ -1,20 +1,22 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Lock, Eye, EyeOff, Gem, CheckCircle2 } from 'lucide-react';
-import Link from 'next/link';
+import { useState } from "react";
+import { Lock, Eye, EyeOff, Gem, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
-const resetPasswordSchema = z.object({
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string().min(6, 'Please confirm your password'),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const resetPasswordSchema = z
+  .object({
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(6, "Please confirm your password"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
 type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 
@@ -24,7 +26,6 @@ export default function ResetPassword() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-
   const {
     register,
     handleSubmit,
@@ -32,8 +33,8 @@ export default function ResetPassword() {
   } = useForm<ResetPasswordValues>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
-      password: '',
-      confirmPassword: '',
+      password: "",
+      confirmPassword: "",
     },
   });
 
@@ -45,8 +46,10 @@ export default function ResetPassword() {
       // In a real app, you would POST to /api/auth/reset-password with the token from the URL
       setIsSuccess(true);
     } catch (error) {
-      console.error('Password reset failed', error);
-      setSubmitError('Failed to reset password. The link might be invalid or expired.');
+      console.error("Password reset failed", error);
+      setSubmitError(
+        "Failed to reset password. The link might be invalid or expired.",
+      );
     }
   };
 
@@ -61,7 +64,9 @@ export default function ResetPassword() {
           <h1 className="text-3xl font-display font-semibold text-plum-900 dark:text-ivory-100 tracking-tight">
             Chaya Jewellery
           </h1>
-          <p className="text-plum-500 dark:text-plum-400 mt-2 text-sm">Create New Password</p>
+          <p className="text-plum-500 dark:text-plum-400 mt-2 text-sm">
+            Create New Password
+          </p>
         </div>
 
         {/* Card */}
@@ -69,11 +74,17 @@ export default function ResetPassword() {
           {isSuccess ? (
             <div className="text-center space-y-4">
               <div className="mx-auto w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-none flex items-center justify-center mb-4">
-                <CheckCircle2 className="text-emerald-600 dark:text-emerald-400" size={24} />
+                <CheckCircle2
+                  className="text-emerald-600 dark:text-emerald-400"
+                  size={24}
+                />
               </div>
-              <h2 className="text-xl font-semibold text-plum-900 dark:text-ivory-100">Password Reset Complete</h2>
+              <h2 className="text-xl font-semibold text-plum-900 dark:text-ivory-100">
+                Password Reset Complete
+              </h2>
               <p className="text-plum-500 dark:text-plum-400 text-sm">
-                Your password has been successfully updated. You can now use your new password to sign in.
+                Your password has been successfully updated. You can now use
+                your new password to sign in.
               </p>
               <div className="pt-4">
                 <Link
@@ -85,8 +96,11 @@ export default function ResetPassword() {
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
-
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-6"
+              noValidate
+            >
               <div className="text-center mb-2">
                 <p className="text-sm text-plum-500 dark:text-plum-400">
                   Please enter your new password below.
@@ -102,7 +116,10 @@ export default function ResetPassword() {
               <div className="space-y-4">
                 {/* New Password Input */}
                 <div>
-                  <label className="block text-sm font-medium text-plum-900 dark:text-ivory-100 mb-1.5" htmlFor="password">
+                  <label
+                    className="block text-sm font-medium text-plum-900 dark:text-ivory-100 mb-1.5"
+                    htmlFor="password"
+                  >
                     New Password
                   </label>
                   <div className="relative">
@@ -111,13 +128,13 @@ export default function ResetPassword() {
                     </div>
                     <input
                       id="password"
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       autoComplete="new-password"
-                      {...register('password')}
+                      {...register("password")}
                       className={`block w-full pl-10 pr-10 py-2.5 bg-white dark:bg-plum-950 border ${
                         errors.password
-                          ? 'border-rose-500 focus:ring-rose-500/30 focus:border-rose-500'
-                          : 'border-gray-300 dark:border-plum-700 focus:ring-plum-600/30 focus:border-plum-600'
+                          ? "border-rose-500 focus:ring-rose-500/30 focus:border-rose-500"
+                          : "border-gray-300 dark:border-plum-700 focus:ring-plum-600/30 focus:border-plum-600"
                       } rounded-lg text-plum-900 dark:text-ivory-100 placeholder-plum-400 focus:outline-none focus:ring-2 transition-colors text-sm`}
                       placeholder="••••••••"
                     />
@@ -125,7 +142,9 @@ export default function ResetPassword() {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute inset-y-0 right-0 pr-3 flex items-center text-plum-400 hover:text-plum-700 dark:hover:text-plum-200 transition-colors"
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                     >
                       {showPassword ? (
                         <EyeOff className="h-5 w-5" />
@@ -135,13 +154,18 @@ export default function ResetPassword() {
                     </button>
                   </div>
                   {errors.password && (
-                    <p className="mt-1 text-sm text-rose-500">{errors.password.message}</p>
+                    <p className="mt-1 text-sm text-rose-500">
+                      {errors.password.message}
+                    </p>
                   )}
                 </div>
 
                 {/* Confirm Password Input */}
                 <div>
-                  <label className="block text-sm font-medium text-plum-900 dark:text-ivory-100 mb-1.5" htmlFor="confirmPassword">
+                  <label
+                    className="block text-sm font-medium text-plum-900 dark:text-ivory-100 mb-1.5"
+                    htmlFor="confirmPassword"
+                  >
                     Confirm New Password
                   </label>
                   <div className="relative">
@@ -150,21 +174,25 @@ export default function ResetPassword() {
                     </div>
                     <input
                       id="confirmPassword"
-                      type={showConfirmPassword ? 'text' : 'password'}
+                      type={showConfirmPassword ? "text" : "password"}
                       autoComplete="new-password"
-                      {...register('confirmPassword')}
+                      {...register("confirmPassword")}
                       className={`block w-full pl-10 pr-10 py-2.5 bg-white dark:bg-plum-950 border ${
                         errors.confirmPassword
-                          ? 'border-rose-500 focus:ring-rose-500/30 focus:border-rose-500'
-                          : 'border-gray-300 dark:border-plum-700 focus:ring-plum-600/30 focus:border-plum-600'
+                          ? "border-rose-500 focus:ring-rose-500/30 focus:border-rose-500"
+                          : "border-gray-300 dark:border-plum-700 focus:ring-plum-600/30 focus:border-plum-600"
                       } rounded-lg text-plum-900 dark:text-ivory-100 placeholder-plum-400 focus:outline-none focus:ring-2 transition-colors text-sm`}
                       placeholder="••••••••"
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       className="absolute inset-y-0 right-0 pr-3 flex items-center text-plum-400 hover:text-plum-700 dark:hover:text-plum-200 transition-colors"
-                      aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                      aria-label={
+                        showConfirmPassword ? "Hide password" : "Show password"
+                      }
                     >
                       {showConfirmPassword ? (
                         <EyeOff className="h-5 w-5" />
@@ -174,7 +202,9 @@ export default function ResetPassword() {
                     </button>
                   </div>
                   {errors.confirmPassword && (
-                    <p className="mt-1 text-sm text-rose-500">{errors.confirmPassword.message}</p>
+                    <p className="mt-1 text-sm text-rose-500">
+                      {errors.confirmPassword.message}
+                    </p>
                   )}
                 </div>
               </div>
@@ -187,14 +217,30 @@ export default function ResetPassword() {
               >
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Updating...
                   </span>
                 ) : (
-                  'Update Password'
+                  "Update Password"
                 )}
               </button>
 

@@ -105,7 +105,10 @@ export function applyFilters(source: Product[], query: ProductQuery) {
 }
 
 export function activeFilterCount(query: ProductQuery) {
-  return [query.category, query.price, query.availability, query.purchase].filter(
-    Boolean,
-  ).length;
+  return [
+    query.category,
+    query.price,
+    query.availability,
+    query.purchase,
+  ].filter(Boolean).length;
 }

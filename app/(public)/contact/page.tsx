@@ -70,7 +70,10 @@ export default async function ContactPage(props: PageProps<"/contact">) {
             </ul>
 
             <a
-              href={whatsappLink(business, "Hi Chaya Jewellery, I have a question.")}
+              href={whatsappLink(
+                business,
+                "Hi Chaya Jewellery, I have a question.",
+              )}
               target="_blank"
               rel="noopener noreferrer"
               className={buttonStyles({

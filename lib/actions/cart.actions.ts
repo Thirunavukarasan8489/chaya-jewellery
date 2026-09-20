@@ -1,36 +1,36 @@
-'use server';
+"use server";
 
-import dbConnect from '@/lib/db';
-import { TemporaryCart } from '@/lib/models/cart';
-import { Product } from '@/lib/models/product';
-import { ProductVariant } from '@/lib/models/product-variant';
-import { CartLine } from '@/lib/types';
+import dbConnect from "@/lib/db";
+import { TemporaryCart } from "@/lib/models/cart";
+import { Product } from "@/lib/models/product";
+import { ProductVariant } from "@/lib/models/product-variant";
+import { CartLine } from "@/lib/types";
 
 export async function syncCart(sessionId: string, lines: CartLine[]) {
-  if (!sessionId) return { success: false, error: 'No session ID provided' };
+  if (!sessionId) return { success: false, error: "No session ID provided" };
 
   try {
     await dbConnect();
 
-    const items = lines.map(line => ({
+    const items = lines.map((line) => ({
       productId: line.productId,
       variantId: line.variantId,
       quantity: line.quantity,
       priceSnapshot: line.unitPrice,
       variantValue: line.variantValue,
-      calculatePriceOnVariantValue: line.calculatePriceOnVariantValue
+      calculatePriceOnVariantValue: line.calculatePriceOnVariantValue,
     }));
 
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     await TemporaryCart.findOneAndUpdate(
       { sessionId },
-      { 
+      {
         sessionId,
         items,
-        expiresAt
+        expiresAt,
       },
-      { upsert: true, returnDocument: 'after' }
+      { upsert: true, returnDocument: "after" },
     );
 
     return { success: true };
@@ -40,26 +40,30 @@ export async function syncCart(sessionId: string, lines: CartLine[]) {
 }
 
 export async function validateCart(sessionId: string) {
-  if (!sessionId) return { success: false, error: 'No session ID provided' };
+  if (!sessionId) return { success: false, error: "No session ID provided" };
 
   try {
     await dbConnect();
-    
+
     const cart = await TemporaryCart.findOne({ sessionId }).lean();
     if (!cart || !cart.items || cart.items.length === 0) {
-      return { success: false, error: 'Cart is empty or expired' };
+      return { success: false, error: "Cart is empty or expired" };
     }
 
     // PERFORMANCE: was one Product query plus one ProductVariant query per
     // cart line, serially awaited — a 3-8 item cart meant 6-16 round trips
     // right when a customer is trying to check out. Batch both up front.
-    const productIds = [...new Set(cart.items.map((item: any) => String(item.productId)))];
+    const productIds = [
+      ...new Set(cart.items.map((item: any) => String(item.productId))),
+    ];
     const [products, variants] = await Promise.all([
       Product.find({ _id: { $in: productIds } }).lean(),
       ProductVariant.find({ productId: { $in: productIds } }).lean(),
     ]);
 
-    const productById = new Map(products.map((p: any) => [p._id.toString(), p]));
+    const productById = new Map(
+      products.map((p: any) => [p._id.toString(), p]),
+    );
     const variantsByProduct = new Map<string, any[]>();
     for (const v of variants) {
       const key = v.productId.toString();
@@ -77,16 +81,19 @@ export async function validateCart(sessionId: string) {
         continue;
       }
 
-      if (product.status !== 'ACTIVE') {
+      if (product.status !== "ACTIVE") {
         validations.push(`${product.name} is no longer available.`);
         continue;
       }
 
-      const productVariants = variantsByProduct.get(String(item.productId)) || [];
+      const productVariants =
+        variantsByProduct.get(String(item.productId)) || [];
       let stock = 0;
       let reserved = 0;
       if (item.variantId) {
-        const variant = productVariants.find((v) => v._id.toString() === String(item.variantId));
+        const variant = productVariants.find(
+          (v) => v._id.toString() === String(item.variantId),
+        );
         if (variant) {
           stock = variant.stock || 0;
           reserved = variant.reservedQuantity || 0;
@@ -94,7 +101,10 @@ export async function validateCart(sessionId: string) {
       } else {
         // No specific variant selected — validate against the product's total stock.
         stock = productVariants.reduce((acc, v) => acc + (v.stock || 0), 0);
-        reserved = productVariants.reduce((acc, v) => acc + (v.reservedQuantity || 0), 0);
+        reserved = productVariants.reduce(
+          (acc, v) => acc + (v.reservedQuantity || 0),
+          0,
+        );
       }
 
       const available = Math.max(0, stock - reserved);
@@ -104,7 +114,7 @@ export async function validateCart(sessionId: string) {
     }
 
     if (validations.length > 0) {
-      return { success: false, error: validations.join(' ') };
+      return { success: false, error: validations.join(" ") };
     }
 
     return { success: true };

@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const HeroSectionSchema = new mongoose.Schema(
   {
@@ -21,7 +21,9 @@ const HeroSectionSchema = new mongoose.Schema(
     displayOrder: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-export const HeroSection = mongoose.models.HeroSection || mongoose.model('HeroSection', HeroSectionSchema);
+export const HeroSection =
+  mongoose.models.HeroSection ||
+  mongoose.model("HeroSection", HeroSectionSchema);

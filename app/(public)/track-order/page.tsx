@@ -51,7 +51,11 @@ export default async function TrackOrderPage() {
             <button
               type="submit"
               disabled
-              className={buttonStyles({ size: "lg", full: true, className: "mt-5" })}
+              className={buttonStyles({
+                size: "lg",
+                full: true,
+                className: "mt-5",
+              })}
             >
               <PackageSearch size={18} />
               Track order
@@ -66,7 +70,10 @@ export default async function TrackOrderPage() {
 
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <a
-              href={whatsappLink(business, "Hi Chaya Jewellery, I would like to track my order.")}
+              href={whatsappLink(
+                business,
+                "Hi Chaya Jewellery, I would like to track my order.",
+              )}
               target="_blank"
               rel="noopener noreferrer"
               className={buttonStyles({ variant: "whatsapp" })}

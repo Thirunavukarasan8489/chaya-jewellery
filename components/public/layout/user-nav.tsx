@@ -2,8 +2,16 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { User, LayoutDashboard, Package, MapPin, UserCog, LogOut, ShieldCheck } from "lucide-react";
-import { useSession, signOut } from "next-auth/react";
+import {
+  User,
+  LayoutDashboard,
+  Package,
+  MapPin,
+  UserCog,
+  ShieldCheck,
+} from "lucide-react";
+import { useSession } from "next-auth/react";
+import { SignOutButton } from "@/components/public/auth/sign-out-button";
 
 export function UserNav() {
   const { data: session, status } = useSession();
@@ -13,7 +21,10 @@ export function UserNav() {
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
@@ -54,7 +65,9 @@ export function UserNav() {
         aria-label="User Account Menu"
         aria-expanded={isOpen}
         className={`relative grid size-10 place-items-center rounded-none transition-colors ${
-          isOpen ? "bg-plum-900/10 text-plum-950" : "text-plum-800 hover:bg-plum-900/6"
+          isOpen
+            ? "bg-plum-900/10 text-plum-950"
+            : "text-plum-800 hover:bg-plum-900/6"
         }`}
       >
         <User size={20} strokeWidth={2} />
@@ -69,7 +82,8 @@ export function UserNav() {
           <div className="px-4 py-3 bg-plum-50/40 rounded-t-2xl">
             <div className="flex items-center justify-between gap-2">
               <p className="text-sm font-semibold text-plum-950 truncate">
-                {session.user?.name || (isAdmin ? "Administrator" : "My Account")}
+                {session.user?.name ||
+                  (isAdmin ? "Administrator" : "My Account")}
               </p>
               {isAdmin && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gold-100 text-gold-800 border border-gold-300 shrink-0 uppercase tracking-wider">
@@ -79,7 +93,9 @@ export function UserNav() {
               )}
             </div>
             {session.user?.email && (
-              <p className="text-xs text-plum-500 truncate mt-0.5">{session.user.email}</p>
+              <p className="text-xs text-plum-500 truncate mt-0.5">
+                {session.user.email}
+              </p>
             )}
           </div>
 
@@ -92,7 +108,11 @@ export function UserNav() {
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-2.5 px-4 py-2 text-sm font-medium text-plum-800 hover:bg-plum-50 hover:text-plum-950 transition-colors"
                 >
-                  <LayoutDashboard size={16} strokeWidth={2} className="text-gold-600" />
+                  <LayoutDashboard
+                    size={16}
+                    strokeWidth={2}
+                    className="text-gold-600"
+                  />
                   Admin Dashboard
                 </Link>
                 <Link
@@ -100,7 +120,11 @@ export function UserNav() {
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-2.5 px-4 py-2 text-sm font-medium text-plum-800 hover:bg-plum-50 hover:text-plum-950 transition-colors"
                 >
-                  <Package size={16} strokeWidth={2} className="text-plum-500" />
+                  <Package
+                    size={16}
+                    strokeWidth={2}
+                    className="text-plum-500"
+                  />
                   Manage Orders
                 </Link>
               </>
@@ -111,7 +135,11 @@ export function UserNav() {
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-2.5 px-4 py-2 text-sm text-plum-700 hover:bg-plum-50 hover:text-plum-900 transition-colors"
                 >
-                  <LayoutDashboard size={16} strokeWidth={2} className="text-gold-600" />
+                  <LayoutDashboard
+                    size={16}
+                    strokeWidth={2}
+                    className="text-gold-600"
+                  />
                   Dashboard
                 </Link>
                 <Link
@@ -119,7 +147,11 @@ export function UserNav() {
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-2.5 px-4 py-2 text-sm text-plum-700 hover:bg-plum-50 hover:text-plum-900 transition-colors"
                 >
-                  <Package size={16} strokeWidth={2} className="text-plum-500" />
+                  <Package
+                    size={16}
+                    strokeWidth={2}
+                    className="text-plum-500"
+                  />
                   Orders
                 </Link>
                 <Link
@@ -135,7 +167,11 @@ export function UserNav() {
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-2.5 px-4 py-2 text-sm text-plum-700 hover:bg-plum-50 hover:text-plum-900 transition-colors"
                 >
-                  <UserCog size={16} strokeWidth={2} className="text-plum-500" />
+                  <UserCog
+                    size={16}
+                    strokeWidth={2}
+                    className="text-plum-500"
+                  />
                   Profile Settings
                 </Link>
               </>
@@ -144,16 +180,7 @@ export function UserNav() {
 
           {/* Footer Action */}
           <div className="py-1">
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                signOut({ callbackUrl: "/" });
-              }}
-              className="flex w-full items-center gap-2.5 text-left px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
-            >
-              <LogOut size={16} strokeWidth={2} />
-              Sign Out
-            </button>
+            <SignOutButton className="w-full justify-start text-danger-600 hover:bg-danger-50" />
             {isAdmin && (
               <p className="px-4 pb-1 text-[11px] text-plum-400">
                 Sign out to log in as a customer

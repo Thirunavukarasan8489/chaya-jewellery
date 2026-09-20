@@ -35,7 +35,11 @@ function sweep(now: number) {
  * rate, false if it should be rejected. `key` should already include
  * whatever scoping you want (e.g. `${ip}:${route}`).
  */
-export function checkRateLimit(key: string, limit: number, windowMs: number): boolean {
+export function checkRateLimit(
+  key: string,
+  limit: number,
+  windowMs: number,
+): boolean {
   const now = Date.now();
   sweep(now);
 
@@ -57,9 +61,9 @@ export function checkRateLimit(key: string, limit: number, windowMs: number): bo
  * constant so requests without any forwarded-for header still get bucketed
  * together rather than throwing. */
 export function getClientIp(req: Request): string {
-  const forwardedFor = req.headers.get('x-forwarded-for');
-  if (forwardedFor) return forwardedFor.split(',')[0].trim();
-  const realIp = req.headers.get('x-real-ip');
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  if (forwardedFor) return forwardedFor.split(",")[0].trim();
+  const realIp = req.headers.get("x-real-ip");
   if (realIp) return realIp;
-  return 'unknown';
+  return "unknown";
 }

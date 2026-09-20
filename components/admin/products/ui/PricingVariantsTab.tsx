@@ -31,7 +31,9 @@ export function PricingVariantsTab({
     formState: { errors },
   } = useFormContext<ProductFormValues>();
 
-  const variantsError = !Array.isArray(errors.variants) ? (errors.variants as any)?.message : undefined;
+  const variantsError = !Array.isArray(errors.variants)
+    ? (errors.variants as any)?.message
+    : undefined;
 
   const {
     fields: variantFields,
@@ -144,7 +146,8 @@ export function PricingVariantsTab({
         <div className="border border-gray-200 dark:border-plum-700 rounded-xl overflow-hidden">
           {existingVariants.length === 0 ? (
             <div className="p-6 text-center text-sm text-rose-600 dark:text-rose-400">
-              No variants yet for this product &mdash; add at least one before saving.
+              No variants yet for this product &mdash; add at least one before
+              saving.
             </div>
           ) : (
             <table className="w-full text-sm text-left">
@@ -418,7 +421,9 @@ export function PricingVariantsTab({
           Add Another Option / Size
         </AdminButton>
         {variantsError && (
-          <p className="text-xs text-rose-600 dark:text-rose-400">{variantsError}</p>
+          <p className="text-xs text-rose-600 dark:text-rose-400">
+            {variantsError}
+          </p>
         )}
       </div>
 

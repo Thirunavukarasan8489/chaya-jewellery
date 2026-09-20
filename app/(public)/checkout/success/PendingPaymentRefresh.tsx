@@ -13,13 +13,7 @@ import { useCart } from "@/components/public/cart/cart-provider";
  */
 export function PendingPaymentRefresh() {
   const router = useRouter();
-  const { clear } = useCart();
   const attempts = useRef(0);
-
-  useEffect(() => {
-    // Clear cart lines once checkout successfully lands on success
-    clear();
-  }, [clear]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -41,6 +35,11 @@ export function SuccessCartClearer() {
 
   useEffect(() => {
     clear();
+    try {
+      sessionStorage.removeItem("chayajewellery.checkout.v1");
+    } catch {
+      /* Optional browser storage. */
+    }
   }, [clear]);
 
   return null;

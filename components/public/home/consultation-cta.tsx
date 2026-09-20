@@ -13,7 +13,11 @@ const WhatsappIcon = () => (
   </svg>
 );
 
-export function ConsultationCta({ business = NAV_DATA.business }: { business?: any }) {
+export function ConsultationCta({
+  business = NAV_DATA.business,
+}: {
+  business?: any;
+}) {
   return (
     <section className="shell gutter py-4">
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-gold-500 via-gold-400 to-gold-600 p-6 sm:p-10 lg:p-14">
@@ -31,15 +35,16 @@ export function ConsultationCta({ business = NAV_DATA.business }: { business?: a
               Not sure which piece is right for you?
             </h2>
             <p className="mt-3 text-[0.9375rem] leading-relaxed text-plum-900/80">
-              Tell us your budget and the occasion. A jewellery consultant
-              will come back within a few hours — and will happily tell you when
-              a simpler piece is the better buy.
+              Tell us your budget and the occasion. A jewellery consultant will
+              come back within a few hours — and will happily tell you when a
+              simpler piece is the better buy.
             </p>
           </div>
 
           <div className="mt-7 flex flex-col gap-3 lg:mt-0 lg:w-64 lg:shrink-0">
             <a
-              href={whatsappLink(business,
+              href={whatsappLink(
+                business,
                 "Hi Chaya Jewellery, I would like a free jewellery consultation.",
               )}
               target="_blank"

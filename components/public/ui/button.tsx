@@ -2,12 +2,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 type Variant =
-  | "primary"
-  | "dark"
-  | "outline"
-  | "ghost"
-  | "emerald"
-  | "whatsapp";
+  "primary" | "dark" | "outline" | "ghost" | "emerald" | "whatsapp";
 type Size = "sm" | "md" | "lg";
 
 const variants: Record<Variant, string> = {

@@ -42,7 +42,7 @@ description and are now superseded).
   prepared to touch every call site.
 - **`gold-*`** — brand Gold family. Exact anchors: Soft Gold `#F4D58A`
   (300 — hover/light accent; the brand kit explicitly wants hover states
-  to *lighten* toward gold, not darken, matching the site's existing
+  to _lighten_ toward gold, not darken, matching the site's existing
   gold-foil `shine-sweep` hover treatment) and Champagne Gold `#D9A441`
   (500, primary accent — icons/borders/highlights). 50–200/400/600–950
   are interpolated.
@@ -83,6 +83,7 @@ description and are now superseded).
 ## 2026-09-12 rebrand: "A1 Gems" (gemstone retailer) → "Chaya Jewellery" (jewellery retailer)
 
 **Done:**
+
 - Repainted every `@theme` color token in `app/globals.css` to the brand
   Purple/Gold palette above, plus every hardcoded hex that mirrored the
   old token values: `AdminCharts.tsx` chart colors, `promo-banners.tsx`
@@ -102,6 +103,7 @@ description and are now superseded).
   purple tokens actually reach the page.
 
 **Deliberately not touched:**
+
 - `MONGODB_URI` in `.env.local` — the real Atlas cluster hostname and
   credentials (`a1gems.s8z0dii.mongodb.net`, user `a1gemsindia_db_user`)
   are live infrastructure, not display branding. Renaming the actual
@@ -138,6 +140,7 @@ seed demo data rather than build purely for the empty state — see
 every insert is guarded by a lookup, nothing duplicates).
 
 **Data-layer changes (not just visual):**
+
 - `lib/models/product.ts` — added `featured`/`bestseller` boolean fields.
   These were already read by `getFeaturedProducts()`/`getBestsellers()` in
   `lib/services/product-service.ts` but never existed on the schema or
@@ -165,6 +168,7 @@ every insert is guarded by a lookup, nothing duplicates).
   new jewellery categories in Shop by Category.
 
 **New homepage sections:**
+
 - `trust-marquee.tsx` — infinite scrolling trust-message ribbon under the
   hero, using the `--animate-marquee` keyframe that already existed in
   `globals.css` but was unused anywhere.
@@ -180,6 +184,7 @@ every insert is guarded by a lookup, nothing duplicates).
 
 **Retired gemstone-specific content (homepage + shared components only,
 per the "full redesign" choice):**
+
 - `certification-trust-section.tsx` — was a GIA/IGI/GRS gemstone lab
   certificate section, including a static image of an actual gemstone
   lab report (`public/images/grsss-bg-img-040324.png`, now unused —
@@ -201,6 +206,7 @@ per the "full redesign" choice):**
   above (needs the user's input on product taxonomy).
 
 **Demo content seeded (clearly placeholder, flag before launch):**
+
 - 6 categories (Rings, Necklaces, Earrings, Bangles & Bracelets, Pendants,
   Mangalsutra) and 18 products/variants with realistic INR pricing —
   prices are in **plain rupees**, not paise, matching the actual runtime
@@ -239,8 +245,9 @@ CTA pairs can all be left blank. `image` itself was already optional
 **`hero-slider.tsx` rework:** the banner image is now the full-bleed
 background of the whole slide (`fill` + `object-cover`, no more
 `size-72` square card). What renders on top is entirely conditional:
+
 - No badge/title/subtitle and no buttons → no text overlay, no scrim, and
-  the *entire slide* becomes a link to `ctaHref` (a plain, fully-clickable
+  the _entire slide_ becomes a link to `ctaHref` (a plain, fully-clickable
   banner image — the common case for a designer-provided creative).
 - Any of badge/title/subtitle present → renders that overlay (with the
   gradient scrim for legibility), same visual style as before.
@@ -368,7 +375,8 @@ replace-image flow only ever cleared the `image` field in Mongo —
 nothing deleted the old file from Cloudinary, so every replaced or
 removed hero image became a permanently orphaned (billed) asset.
 **Fix, in `lib/actions/cms.actions.ts`:**
-- `updateHeroSection` now reads the section's *current* `image` before
+
+- `updateHeroSection` now reads the section's _current_ `image` before
   applying the update, and — only after the DB write succeeds, and only
   if the image actually changed — deletes the old Cloudinary asset via
   `deleteMediaByUrl()` (already existed in `media.actions.ts`, previously
@@ -380,7 +388,7 @@ removed hero image became a permanently orphaned (billed) asset.
   clicks Remove, then cancels/navigates away without saving, never
   touches Cloudinary at all. Deletion is deferred to the server action,
   after the new state is actually persisted; if you touch this flow
-  again, keep that ordering — deleting the old image *before* confirming
+  again, keep that ordering — deleting the old image _before_ confirming
   the new one is saved would leave a live banner pointing at nothing if
   anything failed in between.
 - `deleteMediaByUrl` only ever deletes assets whose URL folder segment
@@ -406,7 +414,7 @@ existing longer page and add the new sections alongside — user chose
 "match exactly."
 
 **Color recalibration** — see the "Brand color system" section above for
-the resulting token values; this is the *third* color pass on this repo
+the resulting token values; this is the _third_ color pass on this repo
 (gemstone-era → first Chaya purple/gold guess → this exact brand-kit
 version), so if you're reading old context/commits, don't trust
 previously-stated hex values without checking `app/globals.css` first.
@@ -421,6 +429,7 @@ emerald/sapphire/topaz entries are literal gem hues and were left alone;
 only the plum/gold-derived entries changed).
 
 **Homepage rebuilt to this order** (`app/(public)/page.tsx`):
+
 1. `HeroSlider` — unchanged, per scope.
 2. `FeaturedCategories` — rewritten from square image cards to a
    circular-icon row (scroll-snap on mobile, wrapped/centered from `lg:`)
@@ -433,7 +442,7 @@ only the plum/gold-derived entries changed).
    otherwise.
 4. Bestsellers rail — kept, reworded heading to match the mockup's copy.
 5. `CraftedForGenerations` (new) — editorial image+text split. Replaces
-   `certification-trust-section.tsx` *on the homepage only* — that file
+   `certification-trust-section.tsx` _on the homepage only_ — that file
    still exists with its BIS/IGI/925/COA trust-badge content, just no
    longer imported by `page.tsx`; it's a candidate to reuse on `/about`
    or elsewhere later, not deleted.
@@ -544,7 +553,7 @@ across the whole codebase (`grep -c revalidateTag lib/actions/*.ts`) only
 ever called `revalidatePath('/admin/...')` — zero calls to
 `revalidateTag`/`updateTag`, anywhere, before this fix. `revalidatePath`
 tells Next "re-render this route on next request," but the `unstable_cache`
-data calls *inside* that re-render are a separate cache layer keyed by
+data calls _inside_ that re-render are a separate cache layer keyed by
 their own tag + revalidate window — without busting that tag too, the
 route recomputes but still reads the stale cached data until its own 60s
 window naturally lapses. So admin saves were never technically broken,
@@ -562,7 +571,7 @@ see old data while a background refresh runs) — wrong for "the admin
 should see their own change immediately." The bundled docs
 (`node_modules/next/dist/docs/01-app/03-api-reference/04-functions/updateTag.md`)
 point to the actual right tool: **`updateTag(tag)`**, new in this
-version, single-argument, callable *only* from Server Actions, built
+version, single-argument, callable _only_ from Server Actions, built
 specifically for read-your-own-writes — "the next request will wait to
 fetch fresh data rather than serving stale content." Every action touched
 here is invoked directly from an admin form as a Server Action, so
@@ -573,6 +582,7 @@ codebase unless the caller is a Route Handler or webhook, where
 **Fix — added `updateTag(...)` calls matching each service's existing
 tag, right after the existing `revalidatePath` calls (kept, they still
 serve the admin-side pages):**
+
 - `lib/actions/product.actions.ts` — `updateTag('products')` in
   `createProduct`, `updateProduct`, `deleteProduct`, `createVariant`,
   `updateVariant`, `deleteVariant` (all 6 mutating functions).
@@ -633,6 +643,7 @@ both pages, not something this session added or fixed.
 **Deliberately used the site's own tokens/components instead of copying
 the admin page's raw values** — this was "apply this design," not
 "duplicate this markup byte-for-byte":
+
 - Real `<Logo />` component for the mobile branding block, not the admin
   page's generic gem-icon placeholder.
 - `buttonStyles({ size: "lg", full: true })` (gold, shine-sweep, the same
@@ -707,13 +718,14 @@ docs-plausible. Also confirmed the webhook route 400s on both a missing
 and an invalid `x-webhook-signature` (fails closed).
 
 **New:**
+
 - `lib/services/cashfree.ts` — `createCashfreeOrder()` (raw `fetch`, no
   SDK dependency — Cashfree's Orders API is simple enough that adding a
   server-side SDK package felt like unnecessary dependency risk, see the
   2026-09-14 nodemailer/next-auth ERESOLVE entry above for why that risk
   is not hypothetical on this project) and
   `verifyCashfreeWebhookSignature()` (`base64(HMAC-SHA256(secretKey,
-  timestamp + rawBody))`, constant-time compare). Sandbox vs production
+timestamp + rawBody))`, constant-time compare). Sandbox vs production
   base URL is derived from whether `CASHFREE_APP_ID` starts with `"TEST"`
   (Cashfree's own convention) rather than a separate env flag that could
   be left pointing the wrong way after a key rotation. API version pinned
@@ -723,14 +735,14 @@ and an invalid `x-webhook-signature` (fails closed).
   closed — `503` if `CASHFREE_SECRET_KEY` is unset, matching the fail-
   closed fix the Razorpay webhook had received previously), then on
   `PAYMENT_SUCCESS_WEBHOOK` checks `data.payment.payment_status ===
-  "SUCCESS"` **and** that `data.order.order_amount` matches `order.total`
+"SUCCESS"` **and** that `data.order.order_amount` matches `order.total`
   (same amount-integrity rule the old Razorpay webhook had — a valid
   signature only proves the event came from Cashfree, not that the paid
   amount matches this specific order) before marking the order
   `CONFIRMED` and calling `finalizeInventory` inside a transaction, same
   pattern as before. `PAYMENT_FAILED_WEBHOOK`/`PAYMENT_USER_DROPPED_WEBHOOK`
   mark `paymentStatus: 'FAILED'` but deliberately leave `orderStatus:
-  'PAYMENT_PENDING'` alone — the existing `release-inventory` cron
+'PAYMENT_PENDING'` alone — the existing `release-inventory` cron
   filters only on `orderStatus`, so it still sweeps and frees the stock
   after 30 minutes without this route needing to duplicate that logic.
 - **`Order.findOne({ orderNumber })` is the webhook's lookup** — no new
@@ -778,11 +790,12 @@ and an invalid `x-webhook-signature` (fails closed).
 **Deleted (superseded, not left as dead code — these are internet-
 reachable route files and an unused dependency, a different risk profile
 than unused UI components elsewhere in this codebase):**
+
 - `app/api/webhooks/razorpay/route.ts` — broken as described above, and
   Razorpay was never configured with real keys or webhooks in any actual
   Razorpay dashboard.
 - `app/api/webhooks/payment/route.ts` and `lib/services/payment.ts` —
-  were *already* marked "DEAD CODE, candidate for deletion" by a prior
+  were _already_ marked "DEAD CODE, candidate for deletion" by a prior
   pass (unfinished generic gateway stub, `verifyWebhookSignature` always
   returned `true`); squarely in scope now, so cleaned up rather than
   left cluttering the same problem space as the real integration.
@@ -817,7 +830,7 @@ Real, order-breaking bug, not related to the Cashfree work above (same
 day, separate issue): **any checkout where the customer's phone number
 had no existing `Customer` record, or an existing one with zero saved
 addresses, failed outright** — `placeOrder` (`checkout.actions.ts`)
-threw a Mongoose validation error and rolled back the *entire*
+threw a Mongoose validation error and rolled back the _entire_
 transaction (order included, not just the customer update), because
 step 4 pushed `data.shippingAddress` straight into `customer.addresses`.
 
@@ -826,18 +839,18 @@ Root cause: two different address shapes that look similar but aren't.
 `apartment`/`pincode` and has no `name`/`phone` at all — fine for
 `Order.shippingAddress`/`billingAddress`, which are schemaless
 `type: Object` fields. But `Customer.addresses` (`lib/models/customer.ts`)
-is a *strict* sub-schema requiring `name`, `phone`, `street1`, `zip` —
+is a _strict_ sub-schema requiring `name`, `phone`, `street1`, `zip` —
 confirmed by reproducing the exact reported error message against the
 real schema before touching any code, not just reasoning about it
 (`CheckoutClient.tsx` itself already knew the correct shape — it reads
-`customer.addresses[0].street1`/`.zip` correctly when *pre-filling* the
-form for a returning customer; only the *write* side going into
+`customer.addresses[0].street1`/`.zip` correctly when _pre-filling_ the
+form for a returning customer; only the _write_ side going into
 `Customer.addresses` was wrong).
 
 **Fix:** `placeOrder` now builds a separate `customerAddress` object
 mapped to what the `Customer.addresses` sub-schema actually requires
 (`name`/`phone` from the order's own `customerName`/`phone`, `street1`
-from `.street`, `zip` from `.pincode`, etc.) and uses *that* wherever an
+from `.street`, `zip` from `.pincode`, etc.) and uses _that_ wherever an
 address gets pushed onto `customer.addresses` — the `Order` document's
 own `shippingAddress`/`billingAddress` fields are untouched (still the
 original free-form shape every admin/account order view already reads).
@@ -873,7 +886,7 @@ Cashfree sandbox for the most recent order and got back `409
 order_already_exists` — meaning **Cashfree already had that order_id
 registered**, which only happens if the user's own earlier attempt had
 already successfully created the Cashfree order server-side. So the
-failure had to be *after* that point — client-side, in the SDK hand-off,
+failure had to be _after_ that point — client-side, in the SDK hand-off,
 not in any of the code reviewed/tested when the integration was built.
 
 **Root cause:** the exact same class of bug as the 2026-09-15
@@ -889,6 +902,7 @@ which is exactly why it needed the database/API reproduction above
 instead of being obvious from a stack trace.
 
 **Fix:**
+
 - `next.config.ts` — replaced every leftover Razorpay-only CSP entry
   (`script-src`, `img-src`, `connect-src`, `frame-src`) with
   `https://*.cashfree.com`. Used the wildcard rather than enumerating
@@ -899,7 +913,7 @@ instead of being obvious from a stack trace.
   verify each subdomain against a real checkout attempt first, the same
   way the script URL was confirmed here.
 - `CheckoutClient.tsx`'s catch block now does `console.error("Checkout
-  failed:", error)` before the toast. **This should have existed from
+failed:", error)` before the toast. **This should have existed from
   the start** — the bare `catch { }` this replaced is why this bug took
   a database query and a replayed API call to find instead of five
   seconds of reading the browser console. Don't reintroduce a
@@ -908,7 +922,7 @@ instead of being obvious from a stack trace.
 **Lesson for next time a third-party client-side SDK is added to this
 project:** grep the actual installed package for hardcoded URLs
 (`grep -oE "https?://[^\"' ]+"` on its dist file) and add them to
-`next.config.ts`'s CSP in the *same change* that adds the SDK — don't
+`next.config.ts`'s CSP in the _same change_ that adds the SDK — don't
 treat it as a follow-up. This is now the second time in one project a
 new third-party script silently broke on CSP with no helpful error
 message.
@@ -925,6 +939,7 @@ remaining in `PAYMENT PENDING` status on the dashboard despite successful
 payment completion.
 
 **Root cause:**
+
 - `app/(public)/account/dashboard/page.tsx` and `app/(public)/account/orders/page.tsx`
   had queries that fell back loosely to phone number or unconstrained customer
   lookups when email or user IDs were ambiguous. Because guest orders or multiple
@@ -935,6 +950,7 @@ payment completion.
   order stayed in `PENDING` until a manual sync.
 
 **Fix:**
+
 - **Strict identity scoping:** `dashboard/page.tsx` and `orders/page.tsx` now
   strictly filter orders by authenticated user identity only:
   `{ userId: new mongoose.Types.ObjectId(userId) }` and `{ email: userEmail }`.
@@ -960,6 +976,7 @@ storefront navbar navigated to the admin login/portal instead of providing
 customer-facing access.
 
 **Fix:**
+
 - `components/public/layout/user-nav.tsx`: Replaced direct link with a smart,
   accessible dropdown when a session exists:
   - Displays authenticated user's name.
@@ -980,6 +997,7 @@ navigation was missing, and requested adding responsive Back buttons across
 all website pages.
 
 **Fix:**
+
 - `app/(public)/products/[slug]/page.tsx`: `<Breadcrumbs />` was commented out
   in JSX. Restored the full breadcrumb hierarchy:
   `Home` > `Products` > `Category` (e.g. Rings, Necklaces) > `Product Name`.
@@ -1003,6 +1021,7 @@ User provided `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `.env.local`
 and requested Google OAuth login/registration support for customers.
 
 **Data-layer & Auth changes:**
+
 - `lib/models/user.ts`: Made `password` optional (`required: false`) on
   `UserSchema` so Google OAuth users can be created without validation errors.
   Added `googleId`, `image`, and `provider: { type: String, default: "credentials" }`.
@@ -1029,6 +1048,7 @@ and requested Google OAuth login/registration support for customers.
   `http://localhost:3000/api/auth/callback/google` (and production equivalent).
 
 **UI Components:**
+
 - `components/public/auth/google-sign-in-button.tsx` (new): Reusable Google
   button with official multi-color SVG icon, loading spinner state during redirect,
   responsive styling matching brand theme, and `callbackUrl` awareness.

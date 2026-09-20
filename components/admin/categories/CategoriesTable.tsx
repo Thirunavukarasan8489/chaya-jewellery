@@ -1,37 +1,42 @@
 "use client";
 
-import { useState, useMemo } from 'react';
-import DataTable from '@/components/admin/ui/DataTable';
-import StatusBadge from '@/components/admin/ui/StatusBadge';
-import { Eye, Edit, Filter } from 'lucide-react';
-import Link from 'next/link';
-import { deleteCategory } from '@/lib/actions/category.actions';
-import DeleteConfirmButton from '@/components/admin/ui/DeleteConfirmButton';
-import { CldImage } from '@/components/shared/CldImage';
-import { variantTypeLabel } from '@/lib/utils';
+import { useState, useMemo } from "react";
+import DataTable from "@/components/admin/ui/DataTable";
+import StatusBadge from "@/components/admin/ui/StatusBadge";
+import { Eye, Edit, Filter } from "lucide-react";
+import Link from "next/link";
+import { deleteCategory } from "@/lib/actions/category.actions";
+import DeleteConfirmButton from "@/components/admin/ui/DeleteConfirmButton";
+import { CldImage } from "@/components/shared/CldImage";
+import { variantTypeLabel } from "@/lib/utils";
 
 type CategoryRow = {
   _id: string;
   name: string;
   slug: string;
-  status?: 'ACTIVE' | 'DRAFT';
+  status?: "ACTIVE" | "DRAFT";
   image?: string;
   variantType?: string;
   productCount?: number;
   calculatePriceOnVariantValue?: boolean;
 };
 
-const VARIANT_TYPES = ['CARAT', 'SIZE', 'WEIGHT', 'NONE'];
+const VARIANT_TYPES = ["CARAT", "SIZE", "WEIGHT", "NONE"];
 
-export default function CategoriesTable({ categories }: { categories: CategoryRow[] }) {
+export default function CategoriesTable({
+  categories,
+}: {
+  categories: CategoryRow[];
+}) {
   const [filterOpen, setFilterOpen] = useState(false);
-  const [statusFilter, setStatusFilter] = useState('');
-  const [variantTypeFilter, setVariantTypeFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState("");
+  const [variantTypeFilter, setVariantTypeFilter] = useState("");
 
   const filteredCategories = useMemo(() => {
     return categories.filter((c) => {
-      if (statusFilter && (c.status ?? 'DRAFT') !== statusFilter) return false;
-      if (variantTypeFilter && (c.variantType ?? 'NONE') !== variantTypeFilter) return false;
+      if (statusFilter && (c.status ?? "DRAFT") !== statusFilter) return false;
+      if (variantTypeFilter && (c.variantType ?? "NONE") !== variantTypeFilter)
+        return false;
       return true;
     });
   }, [categories, statusFilter, variantTypeFilter]);
@@ -40,7 +45,7 @@ export default function CategoriesTable({ categories }: { categories: CategoryRo
     <div className="relative">
       <button
         onClick={() => setFilterOpen(!filterOpen)}
-        className={`p-2 border rounded-lg transition-colors flex items-center gap-2 ${filterOpen || statusFilter || variantTypeFilter ? 'bg-gold-50 border-gold-300 text-gold-700' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+        className={`p-2 border rounded-lg transition-colors flex items-center gap-2 ${filterOpen || statusFilter || variantTypeFilter ? "bg-gold-50 border-gold-300 text-gold-700" : "border-gray-200 text-gray-700 hover:bg-gray-50"}`}
       >
         <Filter size={18} />
         {(statusFilter || variantTypeFilter) && (
@@ -54,8 +59,8 @@ export default function CategoriesTable({ categories }: { categories: CategoryRo
             <h4 className="font-semibold text-sm">Filter Categories</h4>
             <button
               onClick={() => {
-                setStatusFilter('');
-                setVariantTypeFilter('');
+                setStatusFilter("");
+                setVariantTypeFilter("");
               }}
               className="text-xs text-red-500 hover:underline"
             >
@@ -77,7 +82,9 @@ export default function CategoriesTable({ categories }: { categories: CategoryRo
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-gray-500">Variant Type</label>
+            <label className="text-xs font-medium text-gray-500">
+              Variant Type
+            </label>
             <select
               value={variantTypeFilter}
               onChange={(e) => setVariantTypeFilter(e.target.value)}
@@ -85,7 +92,9 @@ export default function CategoriesTable({ categories }: { categories: CategoryRo
             >
               <option value="">All Variant Types</option>
               {VARIANT_TYPES.map((t) => (
-                <option key={t} value={t}>{variantTypeLabel(t)}</option>
+                <option key={t} value={t}>
+                  {variantTypeLabel(t)}
+                </option>
               ))}
             </select>
           </div>
@@ -96,7 +105,7 @@ export default function CategoriesTable({ categories }: { categories: CategoryRo
 
   const columns = [
     {
-      header: 'Cover Image',
+      header: "Cover Image",
       cell: (item: CategoryRow) => (
         <div className="w-10 h-10 bg-gold-100 dark:bg-gold-800 rounded-md overflow-hidden flex-shrink-0 border border-gold-200 dark:border-gold-700">
           {item.image ? (
@@ -108,50 +117,65 @@ export default function CategoriesTable({ categories }: { categories: CategoryRo
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gold-400 text-xs">No img</div>
+            <div className="w-full h-full flex items-center justify-center text-gold-400 text-xs">
+              No img
+            </div>
           )}
         </div>
       ),
     },
     {
-      header: 'Category Name',
+      header: "Category Name",
       cell: (item: CategoryRow) => (
         <div>
-          <p className="font-medium text-gold-800 dark:text-gold-200">{item.name}</p>
-          <p className="text-xs text-gold-500 dark:text-gold-400">/{item.slug}</p>
+          <p className="font-medium text-gold-800 dark:text-gold-200">
+            {item.name}
+          </p>
+          <p className="text-xs text-gold-500 dark:text-gold-400">
+            /{item.slug}
+          </p>
         </div>
       ),
     },
     {
-      header: 'Variant Type',
+      header: "Variant Type",
       cell: (item: CategoryRow) => (
-        <span className="text-gold-700 dark:text-gold-300">{variantTypeLabel(item.variantType)}</span>
+        <span className="text-gold-700 dark:text-gold-300">
+          {variantTypeLabel(item.variantType)}
+        </span>
       ),
     },
     {
-      header: 'Total Products',
+      header: "Total Products",
       cell: (item: CategoryRow) => (
-        <span className="text-gold-700 dark:text-gold-300">{item.productCount ?? 0}</span>
+        <span className="text-gold-700 dark:text-gold-300">
+          {item.productCount ?? 0}
+        </span>
       ),
     },
     {
-      header: 'Price by Variant Value',
+      header: "Price by Variant Value",
       cell: (item: CategoryRow) => (
         <StatusBadge
-          label={item.calculatePriceOnVariantValue ? 'Yes' : 'No'}
-          variant={item.calculatePriceOnVariantValue ? 'success' : 'neutral'}
+          label={item.calculatePriceOnVariantValue ? "Yes" : "No"}
+          variant={item.calculatePriceOnVariantValue ? "success" : "neutral"}
         />
       ),
     },
     {
-      header: 'Status',
+      header: "Status",
       cell: (item: CategoryRow) => {
-        const isActive = item.status === 'ACTIVE';
-        return <StatusBadge label={isActive ? 'Active' : 'Draft'} variant={isActive ? 'success' : 'neutral'} />;
+        const isActive = item.status === "ACTIVE";
+        return (
+          <StatusBadge
+            label={isActive ? "Active" : "Draft"}
+            variant={isActive ? "success" : "neutral"}
+          />
+        );
       },
     },
     {
-      header: 'Actions',
+      header: "Actions",
       cell: (item: CategoryRow) => (
         <div className="flex items-center gap-2">
           <Link
@@ -176,5 +200,12 @@ export default function CategoriesTable({ categories }: { categories: CategoryRo
     },
   ];
 
-  return <DataTable title="All Categories" columns={columns} data={filteredCategories} renderFilter={renderFilter} />;
+  return (
+    <DataTable
+      title="All Categories"
+      columns={columns}
+      data={filteredCategories}
+      renderFilter={renderFilter}
+    />
+  );
 }

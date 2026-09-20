@@ -1,9 +1,18 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Search, Download, FileText, FileSpreadsheet, ChevronLeft, ChevronRight, ChevronDown, Filter } from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { useEffect, useState } from "react";
+import {
+  Search,
+  Download,
+  FileText,
+  FileSpreadsheet,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Filter,
+} from "lucide-react";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -31,12 +40,19 @@ interface DataTableProps<T> {
   getSearchText?: (row: T) => string;
 }
 
-export default function DataTable<T>({ columns, data, title = "Data", selectable = false, renderFilter, getSearchText }: DataTableProps<T>) {
+export default function DataTable<T>({
+  columns,
+  data,
+  title = "Data",
+  selectable = false,
+  renderFilter,
+  getSearchText,
+}: DataTableProps<T>) {
   // searchInput is the controlled input value (updates every keystroke);
   // searchTerm is what actually drives filtering, debounced so large tables
   // don't re-filter/re-render on every keystroke ("quick filter").
-  const [searchInput, setSearchInput] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchInput, setSearchInput] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [exportOpen, setExportOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -52,21 +68,24 @@ export default function DataTable<T>({ columns, data, title = "Data", selectable
   // Filter data based on search term (generic string matching across row
   // values, or the caller-supplied getSearchText when nested fields need to
   // be reachable too — see the prop doc above).
-  const filteredData = data.filter(row => {
+  const filteredData = data.filter((row) => {
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
     if (getSearchText) {
       return getSearchText(row).toLowerCase().includes(term);
     }
-    return Object.values(row as any).some(val =>
-      String(val).toLowerCase().includes(term)
+    return Object.values(row as any).some((val) =>
+      String(val).toLowerCase().includes(term),
     );
   });
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
-  
+
   // Pagination
-  const paginatedData = filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -81,11 +100,12 @@ export default function DataTable<T>({ columns, data, title = "Data", selectable
 
   return (
     <div className="bg-white dark:bg-plum-900 border border-gray-200 dark:border-plum-800 shadow-xs rounded-xl overflow-hidden">
-      
       {/* Table Toolbar */}
       <div className="p-5 border-b border-gray-200 dark:border-plum-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-plum-900">
-        <h3 className="text-lg font-semibold text-plum-900 dark:text-ivory-100 tracking-tight">{title}</h3>
-        
+        <h3 className="text-lg font-semibold text-plum-900 dark:text-ivory-100 tracking-tight">
+          {title}
+        </h3>
+
         <div className="flex items-center gap-3">
           {/* Search */}
           <div className="relative">
@@ -102,7 +122,9 @@ export default function DataTable<T>({ columns, data, title = "Data", selectable
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-plum-600 dark:text-plum-400 hidden sm:inline">Show:</span>
+            <span className="text-sm text-plum-600 dark:text-plum-400 hidden sm:inline">
+              Show:
+            </span>
             <select
               value={pageSize}
               onChange={handlePageSizeChange}
@@ -116,7 +138,9 @@ export default function DataTable<T>({ columns, data, title = "Data", selectable
           </div>
 
           {/* Filter Component or Button */}
-          {renderFilter ? renderFilter() : (
+          {renderFilter ? (
+            renderFilter()
+          ) : (
             <button className="p-2 border border-gray-200 dark:border-plum-700 text-plum-700 dark:text-plum-300 rounded-lg hover:bg-gray-50 dark:hover:bg-plum-800 transition-colors">
               <Filter size={18} />
             </button>
@@ -124,7 +148,7 @@ export default function DataTable<T>({ columns, data, title = "Data", selectable
 
           {/* Export Dropdown */}
           <div className="relative">
-            <button 
+            <button
               onClick={() => setExportOpen(!exportOpen)}
               className="flex items-center gap-2 px-3 py-2 border border-gray-200 dark:border-plum-700 text-plum-800 dark:text-plum-200 rounded-lg hover:bg-gray-50 dark:hover:bg-plum-800 text-sm font-medium transition-colors"
             >
@@ -139,10 +163,18 @@ export default function DataTable<T>({ columns, data, title = "Data", selectable
                   <FileText size={16} className="text-plum-400" /> CSV
                 </button>
                 <button className="w-full text-left px-4 py-2 text-sm text-plum-800 dark:text-ivory-100 hover:bg-gray-50 dark:hover:bg-plum-800 flex items-center gap-2">
-                  <FileSpreadsheet size={16} className="text-emerald-600 dark:text-emerald-400" /> Excel
+                  <FileSpreadsheet
+                    size={16}
+                    className="text-emerald-600 dark:text-emerald-400"
+                  />{" "}
+                  Excel
                 </button>
                 <button className="w-full text-left px-4 py-2 text-sm text-plum-800 dark:text-ivory-100 hover:bg-gray-50 dark:hover:bg-plum-800 flex items-center gap-2">
-                  <FileText size={16} className="text-rose-500 dark:text-rose-400" /> PDF
+                  <FileText
+                    size={16}
+                    className="text-rose-500 dark:text-rose-400"
+                  />{" "}
+                  PDF
                 </button>
               </div>
             )}
@@ -157,11 +189,17 @@ export default function DataTable<T>({ columns, data, title = "Data", selectable
             <tr className="bg-gray-50 dark:bg-plum-950/80 border-b border-gray-200 dark:border-plum-800">
               {selectable && (
                 <th className="px-5 py-3 w-12">
-                  <input type="checkbox" className="rounded border-gray-300 text-plum-800 focus:ring-plum-600 dark:border-plum-700 dark:bg-plum-950" />
+                  <input
+                    type="checkbox"
+                    className="rounded border-gray-300 text-plum-800 focus:ring-plum-600 dark:border-plum-700 dark:bg-plum-950"
+                  />
                 </th>
               )}
               {columns.map((col, i) => (
-                <th key={i} className="px-5 py-3 text-xs font-semibold text-plum-600 dark:text-plum-300 uppercase tracking-wider">
+                <th
+                  key={i}
+                  className="px-5 py-3 text-xs font-semibold text-plum-600 dark:text-plum-300 uppercase tracking-wider"
+                >
                   {col.header}
                 </th>
               ))}
@@ -170,21 +208,37 @@ export default function DataTable<T>({ columns, data, title = "Data", selectable
           <tbody className="divide-y divide-gray-100 dark:divide-plum-800">
             {paginatedData.length === 0 ? (
               <tr>
-                <td colSpan={columns.length + 1} className="px-5 py-8 text-center text-gold-500 dark:text-gold-400">
+                <td
+                  colSpan={columns.length + 1}
+                  className="px-5 py-8 text-center text-gold-500 dark:text-gold-400"
+                >
                   No data found.
                 </td>
               </tr>
             ) : (
               paginatedData.map((row, i) => (
-                <tr key={i} className="hover:bg-gold-50/50 dark:hover:bg-gold-900/30 transition-colors group">
+                <tr
+                  key={i}
+                  className="hover:bg-gold-50/50 dark:hover:bg-gold-900/30 transition-colors group"
+                >
                   {selectable && (
                     <td className="px-5 py-4.5 whitespace-nowrap">
-                      <input type="checkbox" className="rounded border-gold-300 text-gold-600 focus:ring-gold-500/50 dark:border-gold-700 dark:bg-gold-900" />
+                      <input
+                        type="checkbox"
+                        className="rounded border-gold-300 text-gold-600 focus:ring-gold-500/50 dark:border-gold-700 dark:bg-gold-900"
+                      />
                     </td>
                   )}
                   {columns.map((col, j) => (
-                    <td key={j} className="px-5 py-4.5 whitespace-nowrap text-sm text-gold-800 dark:text-gold-200">
-                      {col.cell ? col.cell(row) : col.accessorKey ? String(row[col.accessorKey]) : null}
+                    <td
+                      key={j}
+                      className="px-5 py-4.5 whitespace-nowrap text-sm text-gold-800 dark:text-gold-200"
+                    >
+                      {col.cell
+                        ? col.cell(row)
+                        : col.accessorKey
+                          ? String(row[col.accessorKey])
+                          : null}
                     </td>
                   ))}
                 </tr>
@@ -197,19 +251,33 @@ export default function DataTable<T>({ columns, data, title = "Data", selectable
       {/* Pagination Footer */}
       <div className="px-5 py-4 border-t border-gold-200 dark:border-gold-900 flex items-center justify-between bg-gold-50/30 dark:bg-gold-950">
         <p className="text-sm text-gold-500 dark:text-gold-400">
-          Showing <span className="font-medium text-gold-700 dark:text-gold-200">{Math.min((currentPage - 1) * pageSize + 1, filteredData.length)}</span> to <span className="font-medium text-gold-700 dark:text-gold-200">{Math.min(currentPage * pageSize, filteredData.length)}</span> of <span className="font-medium text-gold-700 dark:text-gold-200">{filteredData.length}</span> results
+          Showing{" "}
+          <span className="font-medium text-gold-700 dark:text-gold-200">
+            {Math.min((currentPage - 1) * pageSize + 1, filteredData.length)}
+          </span>{" "}
+          to{" "}
+          <span className="font-medium text-gold-700 dark:text-gold-200">
+            {Math.min(currentPage * pageSize, filteredData.length)}
+          </span>{" "}
+          of{" "}
+          <span className="font-medium text-gold-700 dark:text-gold-200">
+            {filteredData.length}
+          </span>{" "}
+          results
         </p>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gold-500 dark:text-gold-400 mr-2">Page {currentPage} of {totalPages}</span>
+          <span className="text-sm text-gold-500 dark:text-gold-400 mr-2">
+            Page {currentPage} of {totalPages}
+          </span>
           <div className="flex gap-1.5">
-            <button 
+            <button
               disabled={currentPage === 1}
               onClick={() => handlePageChange(currentPage - 1)}
               className="p-1.5 border border-gold-200 dark:border-gold-800 rounded-lg text-gold-500 dark:text-gold-400 hover:bg-gold-100 dark:hover:bg-gold-900 transition-colors disabled:opacity-50 disabled:pointer-events-none"
             >
               <ChevronLeft size={18} />
             </button>
-            <button 
+            <button
               disabled={currentPage === totalPages}
               onClick={() => handlePageChange(currentPage + 1)}
               className="p-1.5 border border-gold-200 dark:border-gold-800 rounded-lg text-gold-500 dark:text-gold-400 hover:bg-gold-100 dark:hover:bg-gold-900 transition-colors disabled:opacity-50 disabled:pointer-events-none"

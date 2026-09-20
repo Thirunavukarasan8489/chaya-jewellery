@@ -12,7 +12,8 @@ import { categoryTerms } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Search",
-  description: "Search the Chaya Jewellery catalogue by stone, origin, carat or SKU.",
+  description:
+    "Search the Chaya Jewellery catalogue by stone, origin, carat or SKU.",
 };
 
 const suggestions = ["Unheated", "Ceylon", "Bracelet", "Rudraksha", "Emerald"];
@@ -22,7 +23,7 @@ export default async function SearchPage(props: PageProps<"/search">) {
   const term = query.q?.trim() ?? "";
   const products = await getProducts();
   const results = term ? applyFilters(products, query) : [];
-  
+
   const categories = !term ? await getCategories() : [];
   const bestsellers = !term ? await getBestsellers() : [];
 

@@ -1,11 +1,14 @@
-import mongoose from 'mongoose';
-import { Product } from './models/product';
-import { ProductVariant } from './models/product-variant';
+import mongoose from "mongoose";
+import { Product } from "./models/product";
+import { ProductVariant } from "./models/product-variant";
 
 /**
  * Calculates the available inventory based on stock minus reserved quantity.
  */
-export function calculateAvailability(stockQuantity: number, reservedQuantity: number): number {
+export function calculateAvailability(
+  stockQuantity: number,
+  reservedQuantity: number,
+): number {
   return Math.max(0, stockQuantity - reservedQuantity);
 }
 
@@ -15,7 +18,10 @@ export function calculateAvailability(stockQuantity: number, reservedQuantity: n
  * session as any variant stock/reservation change so the status stays
  * consistent with the variants it summarizes.
  */
-export async function recalcProductStockStatus(productId: string, session: mongoose.ClientSession) {
+export async function recalcProductStockStatus(
+  productId: string,
+  session: mongoose.ClientSession,
+) {
   const variants = await ProductVariant.find({ productId }).session(session);
 
   let totalAvailable = 0;
@@ -32,19 +38,22 @@ export async function recalcProductStockStatus(productId: string, session: mongo
 
   if (lowestThreshold === Infinity) lowestThreshold = 5;
 
-  let stockStatus: 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK' = 'IN_STOCK';
+  let stockStatus: "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK" = "IN_STOCK";
   if (totalAvailable === 0) {
-    stockStatus = 'OUT_OF_STOCK';
+    stockStatus = "OUT_OF_STOCK";
   } else if (totalAvailable <= lowestThreshold) {
-    stockStatus = 'LOW_STOCK';
+    stockStatus = "LOW_STOCK";
   }
 
-  const totalReserved = variants.reduce((sum, v) => sum + (Number(v.reservedQuantity) || 0), 0);
+  const totalReserved = variants.reduce(
+    (sum, v) => sum + (Number(v.reservedQuantity) || 0),
+    0,
+  );
 
   await Product.findByIdAndUpdate(
     productId,
     { stockStatus, reservedQuantity: totalReserved },
-    { session }
+    { session },
   );
 
   return { totalAvailable, stockStatus };
@@ -55,10 +64,15 @@ export async function recalcProductStockStatus(productId: string, session: mongo
  * product's only variant when no variantId is supplied (single-SKU products
  * still store their stock on exactly one ProductVariant document).
  */
-async function resolveVariant(productId: string, variantId: string | undefined, session: mongoose.ClientSession) {
+async function resolveVariant(
+  productId: string,
+  variantId: string | undefined,
+  session: mongoose.ClientSession,
+) {
   if (variantId) {
-    const variant = await ProductVariant.findOne({ _id: variantId, productId }).session(session);
-    if (variant) return variant;
+    return ProductVariant.findOne({ _id: variantId, productId }).session(
+      session,
+    );
   }
   return ProductVariant.findOne({ productId }).session(session);
 }
@@ -67,24 +81,56 @@ async function resolveVariant(productId: string, variantId: string | undefined, 
  * Reserves inventory for a product variant during checkout.
  * MUST be called within a MongoDB transaction session.
  */
-export async function reserveInventory(productId: string, variantId: string, quantity: number, session: mongoose.ClientSession) {
+export async function reserveInventory(
+  productId: string,
+  variantId: string,
+  quantity: number,
+  session: mongoose.ClientSession,
+) {
+  if (!Number.isInteger(quantity) || quantity <= 0)
+    throw new Error("Invalid item quantity.");
   const product = await Product.findById(productId).session(session);
   if (!product) {
     throw new Error(`Product with ID ${productId} not found`);
   }
+  if (product.status !== "ACTIVE" || product.purchaseType === "ENQUIRE_ONLY") {
+    throw new Error(`${product.name} is no longer available for purchase.`);
+  }
 
   const variant = await resolveVariant(productId, variantId, session);
   if (!variant) {
-    throw new Error(`Variant ${variantId} not found for product ${product.name}`);
+    throw new Error(
+      `Variant ${variantId} not found for product ${product.name}`,
+    );
   }
 
-  const available = calculateAvailability(variant.stock, variant.reservedQuantity || 0);
+  const available = calculateAvailability(
+    variant.stock,
+    variant.reservedQuantity || 0,
+  );
   if (available < quantity) {
-    throw new Error(`Insufficient stock for ${product.name}. Available: ${available}, Requested: ${quantity}`);
+    throw new Error(
+      `Insufficient stock for ${product.name}. Available: ${available}, Requested: ${quantity}`,
+    );
   }
 
-  variant.reservedQuantity = (variant.reservedQuantity || 0) + quantity;
-  await variant.save({ session });
+  if (variant.purchaseType === "ENQUIRE_ONLY")
+    throw new Error(`${product.name} is available by enquiry only.`);
+  const reserved = await ProductVariant.findOneAndUpdate(
+    {
+      _id: variant._id,
+      productId,
+      $expr: {
+        $gte: [
+          { $subtract: ["$stock", { $ifNull: ["$reservedQuantity", 0] }] },
+          quantity,
+        ],
+      },
+    },
+    { $inc: { reservedQuantity: quantity } },
+    { session, returnDocument: "after" },
+  );
+  if (!reserved) throw new Error(`Insufficient stock for ${product.name}.`);
 
   await recalcProductStockStatus(productId, session);
   return product;
@@ -94,7 +140,12 @@ export async function reserveInventory(productId: string, variantId: string, qua
  * Releases reserved inventory (e.g., if checkout fails, order cancelled, or cart expires).
  * MUST be called within a MongoDB transaction session.
  */
-export async function releaseInventory(productId: string, variantId: string, quantity: number, session: mongoose.ClientSession) {
+export async function releaseInventory(
+  productId: string,
+  variantId: string,
+  quantity: number,
+  session: mongoose.ClientSession,
+) {
   const product = await Product.findById(productId).session(session);
   if (!product) {
     throw new Error(`Product with ID ${productId} not found`);
@@ -102,10 +153,15 @@ export async function releaseInventory(productId: string, variantId: string, qua
 
   const variant = await resolveVariant(productId, variantId, session);
   if (!variant) {
-    throw new Error(`Variant ${variantId} not found for product ${product.name}`);
+    throw new Error(
+      `Variant ${variantId} not found for product ${product.name}`,
+    );
   }
 
-  variant.reservedQuantity = Math.max(0, (variant.reservedQuantity || 0) - quantity);
+  variant.reservedQuantity = Math.max(
+    0,
+    (variant.reservedQuantity || 0) - quantity,
+  );
   await variant.save({ session });
 
   await recalcProductStockStatus(productId, session);
@@ -117,7 +173,12 @@ export async function releaseInventory(productId: string, variantId: string, qua
  * Decrements stock and clears the reservation.
  * MUST be called within a MongoDB transaction session.
  */
-export async function finalizeInventory(productId: string, variantId: string, quantity: number, session: mongoose.ClientSession) {
+export async function finalizeInventory(
+  productId: string,
+  variantId: string,
+  quantity: number,
+  session: mongoose.ClientSession,
+) {
   const product = await Product.findById(productId).session(session);
   if (!product) {
     throw new Error(`Product with ID ${productId} not found`);
@@ -125,11 +186,18 @@ export async function finalizeInventory(productId: string, variantId: string, qu
 
   const variant = await resolveVariant(productId, variantId, session);
   if (!variant) {
-    throw new Error(`Variant ${variantId} not found for product ${product.name}`);
+    throw new Error(
+      `Variant ${variantId} not found for product ${product.name}`,
+    );
   }
 
-  variant.stock = Math.max(0, (variant.stock || 0) - quantity);
-  variant.reservedQuantity = Math.max(0, (variant.reservedQuantity || 0) - quantity);
+  if (variant.stock < quantity || (variant.reservedQuantity || 0) < quantity) {
+    throw new Error(
+      `The stock reservation for ${product.name} is unavailable. Please review this payment.`,
+    );
+  }
+  variant.stock -= quantity;
+  variant.reservedQuantity -= quantity;
   await variant.save({ session });
 
   await recalcProductStockStatus(productId, session);
@@ -142,7 +210,12 @@ export async function finalizeInventory(productId: string, variantId: string, qu
  * finalizeInventory, the delta here can be positive or negative.
  * MUST be called within a MongoDB transaction session.
  */
-export async function adjustInventory(productId: string, variantId: string, delta: number, session: mongoose.ClientSession) {
+export async function adjustInventory(
+  productId: string,
+  variantId: string,
+  delta: number,
+  session: mongoose.ClientSession,
+) {
   const product = await Product.findById(productId).session(session);
   if (!product) {
     throw new Error(`Product with ID ${productId} not found`);
@@ -150,7 +223,9 @@ export async function adjustInventory(productId: string, variantId: string, delt
 
   const variant = await resolveVariant(productId, variantId, session);
   if (!variant) {
-    throw new Error(`Variant ${variantId} not found for product ${product.name}`);
+    throw new Error(
+      `Variant ${variantId} not found for product ${product.name}`,
+    );
   }
 
   const previousStock = Number(variant.stock) || 0;
@@ -167,7 +242,12 @@ export async function adjustInventory(productId: string, variantId: string, delt
  * Increments stock.
  * MUST be called within a MongoDB transaction session.
  */
-export async function restockInventory(productId: string, variantId: string, quantity: number, session: mongoose.ClientSession) {
+export async function restockInventory(
+  productId: string,
+  variantId: string,
+  quantity: number,
+  session: mongoose.ClientSession,
+) {
   const product = await Product.findById(productId).session(session);
   if (!product) {
     throw new Error(`Product with ID ${productId} not found`);
@@ -175,7 +255,9 @@ export async function restockInventory(productId: string, variantId: string, qua
 
   const variant = await resolveVariant(productId, variantId, session);
   if (!variant) {
-    throw new Error(`Variant ${variantId} not found for product ${product.name}`);
+    throw new Error(
+      `Variant ${variantId} not found for product ${product.name}`,
+    );
   }
 
   variant.stock = (variant.stock || 0) + quantity;

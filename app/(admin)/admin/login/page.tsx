@@ -78,15 +78,15 @@ export default function AdminLogin() {
     <div className="min-h-screen w-full flex flex-col lg:flex-row bg-ivory-100 dark:bg-plum-950 selection:bg-plum-200 selection:text-plum-900">
       {/* Brand panel — desktop only */}
       <div className="hidden lg:flex lg:w-[44%] xl:w-2/5 relative overflow-hidden bg-plum-950 text-ivory-100 flex-col justify-between p-0 shrink-0">
-      <div className="absolute inset-0">
-        <Image
-          src="/images/login-page.png"
-          alt="Chaya Jewellery"
-          width={941}
-          height={1672}
-          className="h-full w-full object-cover object-center"
-        />
-          </div>
+        <div className="absolute inset-0">
+          <Image
+            src="/images/login-page.png"
+            alt="Chaya Jewellery"
+            width={941}
+            height={1672}
+            className="h-full w-full object-cover object-center"
+          />
+        </div>
         {/* Decorative facet pattern */}
         {/* <div
           className="absolute inset-0 opacity-[0.07]"

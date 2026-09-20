@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const PolicySchema = new mongoose.Schema(
   {
@@ -8,7 +8,8 @@ const PolicySchema = new mongoose.Schema(
     lastUpdated: { type: Date, default: Date.now },
     isActive: { type: Boolean, default: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-export const Policy = mongoose.models.Policy || mongoose.model('Policy', PolicySchema);
+export const Policy =
+  mongoose.models.Policy || mongoose.model("Policy", PolicySchema);

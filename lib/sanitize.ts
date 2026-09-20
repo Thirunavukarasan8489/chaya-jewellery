@@ -1,4 +1,4 @@
-import sanitizeHtml from 'sanitize-html';
+import sanitizeHtml from "sanitize-html";
 
 /**
  * Sanitizes admin-authored rich-text HTML (product descriptions, policy
@@ -16,17 +16,34 @@ import sanitizeHtml from 'sanitize-html';
  * lists, link) — nothing the editor can't produce is let through.
  */
 export function sanitizeRichText(html: string | undefined | null): string {
-  if (!html) return '';
+  if (!html) return "";
   return sanitizeHtml(html, {
-    allowedTags: ['h1', 'h2', 'h3', 'p', 'br', 'strong', 'em', 'u', 's', 'ol', 'ul', 'li', 'a'],
+    allowedTags: [
+      "h1",
+      "h2",
+      "h3",
+      "p",
+      "br",
+      "strong",
+      "em",
+      "u",
+      "s",
+      "ol",
+      "ul",
+      "li",
+      "a",
+    ],
     allowedAttributes: {
-      a: ['href'],
+      a: ["href"],
     },
-    allowedSchemes: ['http', 'https', 'mailto', 'tel'],
+    allowedSchemes: ["http", "https", "mailto", "tel"],
     // Force safe defaults on every link Quill can produce, rather than
     // trusting target/rel values that were never in the allowlist anyway.
     transformTags: {
-      a: sanitizeHtml.simpleTransform('a', { target: '_blank', rel: 'noopener noreferrer' }),
+      a: sanitizeHtml.simpleTransform("a", {
+        target: "_blank",
+        rel: "noopener noreferrer",
+      }),
     },
   });
 }

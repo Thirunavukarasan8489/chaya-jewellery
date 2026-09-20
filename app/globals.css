@@ -95,8 +95,12 @@
   /* ---- Aliases used across the UI --------------------------------------- */
   --color-canvas: var(--color-ivory-50); /* Pure White — main background */
   --color-surface: #ffffff;
-  --color-surface-sunken: var(--color-ivory-200); /* Petal Mist — product/category panels */
-  --color-premium-bg: var(--color-plum-950); /* Deep Plum — luxury dark sections */
+  --color-surface-sunken: var(
+    --color-ivory-200
+  ); /* Petal Mist — product/category panels */
+  --color-premium-bg: var(
+    --color-plum-950
+  ); /* Deep Plum — luxury dark sections */
   --color-ink: #1c1720; /* Ink */
   --color-ink-soft: #756b76; /* Muted */
   --color-ink-muted: #96909a;
@@ -132,9 +136,12 @@
 
   /* ---- Elevation — warm purple-tinted shadows, never grey ---------------- */
   --shadow-xs: 0 1px 2px 0 rgb(22 0 29 / 0.06);
-  --shadow-sm: 0 1px 3px 0 rgb(22 0 29 / 0.08), 0 1px 2px -1px rgb(22 0 29 / 0.06);
-  --shadow-md: 0 4px 14px -4px rgb(22 0 29 / 0.14), 0 2px 6px -2px rgb(22 0 29 / 0.07);
-  --shadow-lg: 0 12px 32px -8px rgb(22 0 29 / 0.18), 0 4px 10px -4px rgb(22 0 29 / 0.08);
+  --shadow-sm:
+    0 1px 3px 0 rgb(22 0 29 / 0.08), 0 1px 2px -1px rgb(22 0 29 / 0.06);
+  --shadow-md:
+    0 4px 14px -4px rgb(22 0 29 / 0.14), 0 2px 6px -2px rgb(22 0 29 / 0.07);
+  --shadow-lg:
+    0 12px 32px -8px rgb(22 0 29 / 0.18), 0 4px 10px -4px rgb(22 0 29 / 0.08);
   --shadow-gold: 0 6px 20px -6px rgb(217 164 65 / 0.45);
 
   /* ---- Motion ----------------------------------------------------------- */
@@ -268,7 +275,6 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-
     *,
     *::before,
     *::after {
@@ -343,12 +349,14 @@
 
 /* The gold foil treatment used on section eyebrows and the wordmark. */
 @utility text-foil {
-  background-image: linear-gradient(100deg,
-      var(--color-gold-600) 0%,
-      var(--color-gold-300) 30%,
-      var(--color-gold-100) 45%,
-      var(--color-gold-300) 60%,
-      var(--color-gold-600) 100%);
+  background-image: linear-gradient(
+    100deg,
+    var(--color-gold-600) 0%,
+    var(--color-gold-300) 30%,
+    var(--color-gold-100) 45%,
+    var(--color-gold-300) 60%,
+    var(--color-gold-600) 100%
+  );
   background-size: 220% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -389,10 +397,12 @@
 
 /* Loading placeholder for images and skeletons. */
 @utility skeleton {
-  background-image: linear-gradient(100deg,
-      var(--color-ivory-200) 20%,
-      var(--color-ivory-300) 40%,
-      var(--color-ivory-200) 60%);
+  background-image: linear-gradient(
+    100deg,
+    var(--color-ivory-200) 20%,
+    var(--color-ivory-300) 40%,
+    var(--color-ivory-200) 60%
+  );
   background-size: 220% 100%;
   animation: var(--animate-shimmer);
 }
@@ -445,10 +455,18 @@
   margin-bottom: 0.75rem;
 }
 
-.rich-text h1 { font-size: 1.5rem; }
-.rich-text h2 { font-size: 1.25rem; }
-.rich-text h3 { font-size: 1.125rem; }
-.rich-text h4 { font-size: 1rem; }
+.rich-text h1 {
+  font-size: 1.5rem;
+}
+.rich-text h2 {
+  font-size: 1.25rem;
+}
+.rich-text h3 {
+  font-size: 1.125rem;
+}
+.rich-text h4 {
+  font-size: 1rem;
+}
 
 .rich-text ul {
   list-style-type: disc;
@@ -539,4 +557,4 @@
   border-top: 1px solid var(--color-hairline);
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
-}
+}

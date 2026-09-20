@@ -27,7 +27,9 @@ export function EnquireModal({
   const [isOpen, setIsOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const productNameText = variantName ? `${productName} - ${variantName}` : productName;
+  const productNameText = variantName
+    ? `${productName} - ${variantName}`
+    : productName;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -47,16 +49,16 @@ export function EnquireModal({
     };
 
     const promise = createLead(data);
-    
+
     toast.promise(promise, {
-      loading: 'Sending enquiry...',
+      loading: "Sending enquiry...",
       success: (result) => {
         if (!result.success) {
           throw new Error(result.error);
         }
-        return 'Enquiry sent successfully! We will contact you soon.';
+        return "Enquiry sent successfully! We will contact you soon.";
       },
-      error: (err) => err.message || 'Failed to send enquiry',
+      error: (err) => err.message || "Failed to send enquiry",
     });
 
     try {
@@ -95,18 +97,21 @@ export function EnquireModal({
             >
               <X size={20} />
             </button>
-            
+
             <h2 className="text-xl font-semibold text-plum-900">
               Enquire about {productNameText}
             </h2>
             <p className="mt-2 text-sm text-plum-700">
-              Fill out the form below and our gemstone experts will get back to you shortly.
+              Fill out the form below and our gemstone experts will get back to
+              you shortly.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-plum-900">Name *</label>
+                  <label className="text-sm font-medium text-plum-900">
+                    Name *
+                  </label>
                   <input
                     name="customerName"
                     required
@@ -114,7 +119,9 @@ export function EnquireModal({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-plum-900">Phone *</label>
+                  <label className="text-sm font-medium text-plum-900">
+                    Phone *
+                  </label>
                   <input
                     name="phone"
                     required
@@ -126,7 +133,9 @@ export function EnquireModal({
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-plum-900">Email</label>
+                  <label className="text-sm font-medium text-plum-900">
+                    Email
+                  </label>
                   <input
                     name="email"
                     type="email"
@@ -134,7 +143,9 @@ export function EnquireModal({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-plum-900">Location (City)</label>
+                  <label className="text-sm font-medium text-plum-900">
+                    Location (City)
+                  </label>
                   <input
                     name="location"
                     className="w-full rounded-lg border border-plum-200 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-gold-500 focus:ring-1 focus:ring-gold-500"
@@ -143,7 +154,9 @@ export function EnquireModal({
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-medium text-plum-900">Message *</label>
+                <label className="text-sm font-medium text-plum-900">
+                  Message *
+                </label>
                 <textarea
                   name="message"
                   required

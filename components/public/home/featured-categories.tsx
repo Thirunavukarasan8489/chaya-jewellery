@@ -10,7 +10,10 @@ export async function FeaturedCategories() {
   const categories = await getCategories();
 
   return (
-    <section id="shop-by-category" className="shell gutter py-10 sm:py-16 lg:py-20">
+    <section
+      id="shop-by-category"
+      className="shell gutter py-10 sm:py-16 lg:py-20"
+    >
       <SectionHeading
         eyebrow="Category"
         title="Shop by Category"

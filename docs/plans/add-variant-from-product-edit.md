@@ -27,21 +27,21 @@ File: `lib/actions/product.actions.ts`, placed near `updateVariant`/`deleteVaria
 ```ts
 export async function createVariant(productId: string, data: any) {
   try {
-    await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER']);
+    await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER"]);
     await dbConnect();
 
     const product = await Product.findById(productId).lean();
-    if (!product) throw new Error('Product not found');
+    if (!product) throw new Error("Product not found");
 
     const category = await Category.findById(product.category).lean();
 
     const existingCount = await ProductVariant.countDocuments({ productId });
 
-    const catShort = generateShortname(category?.name || 'Uncategorized');
+    const catShort = generateShortname(category?.name || "Uncategorized");
     const prodShort = generateShortname(product.name);
     const baseSkuPrefix = `A1-${catShort}-${prodShort}`;
-    const skuVariantType = category?.variantType || 'NONE';
-    const indexStr = String(existingCount + 1).padStart(3, '0');
+    const skuVariantType = category?.variantType || "NONE";
+    const indexStr = String(existingCount + 1).padStart(3, "0");
 
     const name = buildVariantName({
       priceOnValue: !!category?.calculatePriceOnVariantValue,
@@ -57,13 +57,15 @@ export async function createVariant(productId: string, data: any) {
     let variant: any;
     try {
       const created = await ProductVariant.create(
-        [{
-          ...data,
-          productId,
-          categoryId: category?._id,
-          name,
-          sku: data.sku || `${baseSkuPrefix}-${skuVariantType}-${indexStr}`,
-        }],
+        [
+          {
+            ...data,
+            productId,
+            categoryId: category?._id,
+            name,
+            sku: data.sku || `${baseSkuPrefix}-${skuVariantType}-${indexStr}`,
+          },
+        ],
         { session },
       );
       variant = created[0];
@@ -71,7 +73,11 @@ export async function createVariant(productId: string, data: any) {
       if (existingCount >= 1) {
         // Second+ variant: this product is no longer single-SKU, so the
         // storefront's variant selector needs to turn on.
-        await Product.findByIdAndUpdate(productId, { hasVariants: true }, { session });
+        await Product.findByIdAndUpdate(
+          productId,
+          { hasVariants: true },
+          { session },
+        );
       }
 
       await recalcProductStockStatus(productId, session); // from lib/inventory.ts
@@ -84,14 +90,14 @@ export async function createVariant(productId: string, data: any) {
     }
 
     await logAuditAction({
-      action: 'PRODUCT_VARIANT_CREATED',
-      entity: 'Product',
+      action: "PRODUCT_VARIANT_CREATED",
+      entity: "Product",
       entityId: productId,
       metadata: { variantId: variant._id.toString() },
     });
 
-    revalidatePath('/admin/products');
-    revalidatePath('/admin/productvarients');
+    revalidatePath("/admin/products");
+    revalidatePath("/admin/productvarients");
     return { success: true, data: JSON.parse(JSON.stringify(variant)) };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -100,6 +106,7 @@ export async function createVariant(productId: string, data: any) {
 ```
 
 Notes:
+
 - Import `recalcProductStockStatus` from `@/lib/inventory` (already exported,
   already takes a `mongoose.ClientSession` — no new stock-math needed).
 - `buildVariantName` and `generateShortname` already exist in this file.
@@ -131,7 +138,9 @@ File: `app/(admin)/admin/productvarients/create/page.tsx` (new)
 ```tsx
 export default async function CreateVariantPage({
   searchParams,
-}: { searchParams: Promise<{ productId?: string }> }) {
+}: {
+  searchParams: Promise<{ productId?: string }>;
+}) {
   const { productId } = await searchParams;
   if (!productId) return notFound();
 
@@ -175,7 +184,7 @@ the new variant automatically when the admin navigates back.
 ## Out of scope / follow-ups
 
 - No bulk "add N variants" affordance on the edit-mode screen — that
-  already exists for product *creation* only (`PricingVariantsTab`'s
+  already exists for product _creation_ only (`PricingVariantsTab`'s
   non-`productId` branch); adding one variant at a time via the full
   `VariantForm` matches how editing already works.
 - SKU numbering is best-effort (`existingCount + 1`), same as the rest of

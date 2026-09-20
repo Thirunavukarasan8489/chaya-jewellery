@@ -13,6 +13,7 @@ import { Logo } from "@/components/public/layout/logo";
 import { buttonStyles } from "@/components/public/ui/button";
 import { BackButton } from "@/components/public/ui/back-button";
 import { GoogleSignInButton } from "@/components/public/auth/google-sign-in-button";
+import { getSafeCallbackUrl } from "@/lib/auth-redirect";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
@@ -27,7 +28,7 @@ function LoginForm() {
   const [loginError, setLoginError] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl");
+  const callbackUrl = getSafeCallbackUrl(searchParams.get("callbackUrl"));
   const oauthError = searchParams.get("error");
 
   const {
@@ -48,25 +49,25 @@ function LoginForm() {
         password: data.password,
       });
 
-      if (result?.error) {
+      if (!result?.ok || result.error) {
         setLoginError("Invalid email or password. Please try again.");
         return;
       }
 
-      // Honour ?callbackUrl= (set by the proxy when an unauthenticated
-      // visitor is redirected here from a protected /account/* or /checkout
-      // route) so signing in lands back where they were headed. Only ever
-      // follow a same-site relative path. With no callbackUrl, customers
-      // land on the cart, not the dashboard — most logins here happen
-      // mid-shop (e.g. "sign in to check out"), not as a standalone
-      // destination.
-      router.push(callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/cart");
+      router.push(callbackUrl);
+      router.refresh();
     } catch {
       setLoginError("An unexpected error occurred. Please try again.");
     }
   };
 
-  const activeError = loginError || (oauthError ? "Google sign-in was interrupted or failed. Please try again." : null);
+  const activeError =
+    loginError ||
+    (oauthError === "AccessDenied"
+      ? "This Google account could not be signed in. Try email and password, or contact us for help."
+      : oauthError
+        ? "Google sign-in was interrupted or failed. Please try again."
+        : null);
 
   return (
     <div className="flex min-h-[calc(100vh-100px)] w-full flex-col bg-ivory-100 selection:bg-plum-200 selection:text-plum-900 lg:flex-row">
@@ -107,7 +108,7 @@ function LoginForm() {
           <div className="rounded-2xl border border-ivory-300 bg-white p-6 shadow-lg sm:p-8 space-y-6">
             {/* Google OAuth Login */}
             <GoogleSignInButton
-              callbackUrl={callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/cart"}
+              callbackUrl={callbackUrl}
               label="Continue with Google"
             />
 
@@ -122,9 +123,16 @@ function LoginForm() {
               </div>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-6"
+              noValidate
+            >
               {activeError && (
-                <div className="rounded-lg border border-danger-100 bg-danger-50 p-3 text-sm text-danger-700">
+                <div
+                  role="alert"
+                  className="rounded-lg border border-danger-100 bg-danger-50 p-3 text-sm text-danger-700"
+                >
                   {activeError}
                 </div>
               )}
@@ -132,7 +140,10 @@ function LoginForm() {
               <div className="space-y-4">
                 {/* Email */}
                 <div>
-                  <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-plum-900">
+                  <label
+                    htmlFor="email"
+                    className="mb-1.5 block text-sm font-medium text-plum-900"
+                  >
                     Email Address
                   </label>
                   <div className="relative">
@@ -153,14 +164,19 @@ function LoginForm() {
                     />
                   </div>
                   {errors.email && (
-                    <p className="mt-1 text-sm text-danger-600">{errors.email.message}</p>
+                    <p className="mt-1 text-sm text-danger-600">
+                      {errors.email.message}
+                    </p>
                   )}
                 </div>
 
                 {/* Password */}
                 <div>
                   <div className="mb-1.5 flex items-center justify-between">
-                    <label htmlFor="password" className="block text-sm font-medium text-plum-900">
+                    <label
+                      htmlFor="password"
+                      className="block text-sm font-medium text-plum-900"
+                    >
                       Password
                     </label>
                     <Link
@@ -190,13 +206,21 @@ function LoginForm() {
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
                       className="absolute inset-y-0 right-0 flex items-center pr-3 text-plum-400 hover:text-plum-700"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                     >
-                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
                     </button>
                   </div>
                   {errors.password && (
-                    <p className="mt-1 text-sm text-danger-600">{errors.password.message}</p>
+                    <p className="mt-1 text-sm text-danger-600">
+                      {errors.password.message}
+                    </p>
                   )}
                 </div>
               </div>
@@ -209,7 +233,10 @@ function LoginForm() {
                   {...register("rememberMe")}
                   className="h-4 w-4 rounded border-ivory-300 text-gold-600 focus:ring-gold-400/40"
                 />
-                <label htmlFor="rememberMe" className="ml-2 block text-sm text-ink-soft">
+                <label
+                  htmlFor="rememberMe"
+                  className="ml-2 block text-sm text-ink-soft"
+                >
                   Keep me signed in
                 </label>
               </div>
@@ -218,12 +245,27 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={buttonStyles({ size: "lg", full: true, className: "font-semibold" })}
+                className={buttonStyles({
+                  size: "lg",
+                  full: true,
+                  className: "font-semibold",
+                })}
               >
                 {isSubmitting ? (
                   <>
-                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <svg
+                      className="h-4 w-4 animate-spin"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
                       <path
                         className="opacity-75"
                         fill="currentColor"
@@ -245,11 +287,7 @@ function LoginForm() {
           <p className="mt-6 text-center text-sm text-ink-soft">
             Don&apos;t have an account?{" "}
             <Link
-              href={
-                callbackUrl && callbackUrl.startsWith("/")
-                  ? `/register?callbackUrl=${encodeURIComponent(callbackUrl)}`
-                  : "/register"
-              }
+              href={`/register?callbackUrl=${encodeURIComponent(callbackUrl)}`}
               className="font-semibold text-gold-700 hover:text-gold-600"
             >
               Create one

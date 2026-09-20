@@ -22,7 +22,12 @@ export default function ProfileForm({
   initialData,
 }: {
   userId: string;
-  initialData: { firstName: string; lastName: string; email: string; phone: string };
+  initialData: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+  };
 }) {
   const [isSaving, setIsSaving] = useState(false);
 
@@ -60,7 +65,10 @@ export default function ProfileForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label htmlFor="firstName" className="block text-sm font-semibold leading-6 text-plum-900">
+          <label
+            htmlFor="firstName"
+            className="block text-sm font-semibold leading-6 text-plum-900"
+          >
             First Name
           </label>
           <div className="relative mt-2">
@@ -72,15 +80,24 @@ export default function ProfileForm({
               type="text"
               {...register("firstName")}
               className={`block w-full rounded-xl border-0 py-3 pl-10 text-plum-900 shadow-sm ring-1 ring-inset ${
-                errors.firstName ? "ring-red-300 focus:ring-red-500" : "ring-plum-200 focus:ring-gold-500"
+                errors.firstName
+                  ? "ring-red-300 focus:ring-red-500"
+                  : "ring-plum-200 focus:ring-gold-500"
               } placeholder:text-plum-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 transition-shadow`}
             />
           </div>
-          {errors.firstName && <p className="mt-2 text-sm text-red-600">{errors.firstName.message}</p>}
+          {errors.firstName && (
+            <p className="mt-2 text-sm text-red-600">
+              {errors.firstName.message}
+            </p>
+          )}
         </div>
 
         <div>
-          <label htmlFor="lastName" className="block text-sm font-semibold leading-6 text-plum-900">
+          <label
+            htmlFor="lastName"
+            className="block text-sm font-semibold leading-6 text-plum-900"
+          >
             Last Name
           </label>
           <div className="relative mt-2">
@@ -92,17 +109,26 @@ export default function ProfileForm({
               type="text"
               {...register("lastName")}
               className={`block w-full rounded-xl border-0 py-3 pl-10 text-plum-900 shadow-sm ring-1 ring-inset ${
-                errors.lastName ? "ring-red-300 focus:ring-red-500" : "ring-plum-200 focus:ring-gold-500"
+                errors.lastName
+                  ? "ring-red-300 focus:ring-red-500"
+                  : "ring-plum-200 focus:ring-gold-500"
               } placeholder:text-plum-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 transition-shadow`}
             />
           </div>
-          {errors.lastName && <p className="mt-2 text-sm text-red-600">{errors.lastName.message}</p>}
+          {errors.lastName && (
+            <p className="mt-2 text-sm text-red-600">
+              {errors.lastName.message}
+            </p>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label htmlFor="email" className="block text-sm font-semibold leading-6 text-plum-900">
+          <label
+            htmlFor="email"
+            className="block text-sm font-semibold leading-6 text-plum-900"
+          >
             Email Address
           </label>
           <div className="relative mt-2">
@@ -117,11 +143,16 @@ export default function ProfileForm({
               className="block w-full rounded-xl border-0 py-3 pl-10 text-plum-500 bg-plum-50 shadow-sm ring-1 ring-inset ring-plum-200 sm:text-sm sm:leading-6 cursor-not-allowed"
             />
           </div>
-          <p className="mt-2 text-xs text-plum-500">Email address cannot be changed currently.</p>
+          <p className="mt-2 text-xs text-plum-500">
+            Email address cannot be changed currently.
+          </p>
         </div>
 
         <div>
-          <label htmlFor="phone" className="block text-sm font-semibold leading-6 text-plum-900">
+          <label
+            htmlFor="phone"
+            className="block text-sm font-semibold leading-6 text-plum-900"
+          >
             Phone Number
           </label>
           <div className="relative mt-2">
@@ -133,12 +164,16 @@ export default function ProfileForm({
               type="text"
               {...register("phone")}
               className={`block w-full rounded-xl border-0 py-3 pl-10 text-plum-900 shadow-sm ring-1 ring-inset ${
-                errors.phone ? "ring-red-300 focus:ring-red-500" : "ring-plum-200 focus:ring-gold-500"
+                errors.phone
+                  ? "ring-red-300 focus:ring-red-500"
+                  : "ring-plum-200 focus:ring-gold-500"
               } placeholder:text-plum-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 transition-shadow`}
               placeholder="+91 98765 43210"
             />
           </div>
-          {errors.phone && <p className="mt-2 text-sm text-red-600">{errors.phone.message}</p>}
+          {errors.phone && (
+            <p className="mt-2 text-sm text-red-600">{errors.phone.message}</p>
+          )}
         </div>
       </div>
 

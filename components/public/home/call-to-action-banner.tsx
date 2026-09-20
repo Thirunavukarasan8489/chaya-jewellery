@@ -3,7 +3,6 @@ import Image from "next/image";
 import { Reveal } from "@/components/public/ui/reveal";
 
 export async function CallToActionBanner() {
-
   return (
     <section className="shell gutter py-4">
       <div className="grid gap-1">

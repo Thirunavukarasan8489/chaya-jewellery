@@ -19,9 +19,7 @@ export async function generateMetadata(
   return { title: policy.title, description: policy.summary };
 }
 
-export default async function PolicyPage(
-  props: PageProps<"/policies/[slug]">,
-) {
+export default async function PolicyPage(props: PageProps<"/policies/[slug]">) {
   const { slug } = await props.params;
   const policy = await getPolicyBySlug(slug);
   if (!policy) notFound();
@@ -37,9 +35,14 @@ export default async function PolicyPage(
 
       <div className="shell gutter py-10 sm:py-14">
         <div className="mx-auto max-w-2xl">
-          <p className="text-xs text-ink-muted">Last updated {policy.updated}</p>
+          <p className="text-xs text-ink-muted">
+            Last updated {policy.updated}
+          </p>
 
-          <div className="mt-8 prose prose-plum max-w-none" dangerouslySetInnerHTML={{ __html: policy.content }} />
+          <div
+            className="mt-8 prose prose-plum max-w-none"
+            dangerouslySetInnerHTML={{ __html: policy.content }}
+          />
 
           <nav className="mt-12 border-t border-ivory-300 pt-6">
             <h2 className="text-[0.6875rem] font-semibold tracking-[0.14em] text-ink-muted uppercase">

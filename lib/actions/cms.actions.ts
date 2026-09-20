@@ -1,20 +1,20 @@
-'use server';
+"use server";
 
-import dbConnect from '@/lib/db';
-import { HeroSection } from '@/lib/models/hero-section';
-import { getSession } from '@/lib/auth';
-import { revalidatePath, updateTag, unstable_cache } from 'next/cache';
-import { HeroSectionSchema } from '@/lib/validations/hero-section.schema';
-import { deleteMediaByUrl } from '@/lib/actions/media.actions';
+import dbConnect from "@/lib/db";
+import { HeroSection } from "@/lib/models/hero-section";
+import { getSession } from "@/lib/auth";
+import { revalidatePath, updateTag, unstable_cache } from "next/cache";
+import { HeroSectionSchema } from "@/lib/validations/hero-section.schema";
+import { deleteMediaByUrl } from "@/lib/actions/media.actions";
 
 // Helper to check auth
 async function checkAuth(allowedRoles: string[]) {
   const session = await getSession();
-  if (!session) throw new Error('Unauthorized');
-  
-  const normRoles = allowedRoles.map(r => r.replace(' ', '_').toUpperCase());
+  if (!session) throw new Error("Unauthorized");
+
+  const normRoles = allowedRoles.map((r) => r.replace(" ", "_").toUpperCase());
   if (!normRoles.includes(session.role as string)) {
-    throw new Error('Forbidden: Insufficient permissions');
+    throw new Error("Forbidden: Insufficient permissions");
   }
   return session;
 }
@@ -30,8 +30,8 @@ const getCachedHeroSections = unstable_cache(
     const sections = await HeroSection.find().sort({ displayOrder: 1 }).lean();
     return JSON.parse(JSON.stringify(sections));
   },
-  ['public-hero-sections-v1'],
-  { revalidate: 60, tags: ['content'] },
+  ["public-hero-sections-v1"],
+  { revalidate: 60, tags: ["content"] },
 );
 
 export async function getHeroSections() {
@@ -47,7 +47,7 @@ export async function getHeroSectionById(id: string) {
   try {
     await dbConnect();
     const section = await HeroSection.findById(id).lean();
-    if (!section) return { success: false, error: 'Section not found' };
+    if (!section) return { success: false, error: "Section not found" };
     return { success: true, data: JSON.parse(JSON.stringify(section)) };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -56,13 +56,16 @@ export async function getHeroSectionById(id: string) {
 
 export async function createHeroSection(data: any) {
   try {
-    await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER']);
+    await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER"]);
 
     // SECURITY: unlike every sibling CMS/product/order action, this used to
     // take `data: any` straight into Mongoose with no schema check.
     const parsed = HeroSectionSchema.safeParse(data);
     if (!parsed.success) {
-      return { success: false, error: parsed.error.issues[0]?.message || 'Invalid input' };
+      return {
+        success: false,
+        error: parsed.error.issues[0]?.message || "Invalid input",
+      };
     }
     data = parsed.data;
 
@@ -70,23 +73,30 @@ export async function createHeroSection(data: any) {
 
     // Auto-increment displayOrder if not provided or prevent duplicate
     if (data.displayOrder === undefined || data.displayOrder === null) {
-      const lastSection = await HeroSection.findOne().sort({ displayOrder: -1 });
+      const lastSection = await HeroSection.findOne().sort({
+        displayOrder: -1,
+      });
       data.displayOrder = lastSection ? lastSection.displayOrder + 1 : 0;
     } else {
-      const existing = await HeroSection.findOne({ displayOrder: data.displayOrder });
+      const existing = await HeroSection.findOne({
+        displayOrder: data.displayOrder,
+      });
       if (existing) {
-        return { success: false, error: `Display order ${data.displayOrder} is already in use by another hero section.` };
+        return {
+          success: false,
+          error: `Display order ${data.displayOrder} is already in use by another hero section.`,
+        };
       }
     }
 
     const section = await HeroSection.create(data);
 
-    revalidatePath('/');
-    revalidatePath('/admin/website/hero-section');
+    revalidatePath("/");
+    revalidatePath("/admin/website/hero-section");
     // getCachedHeroSections() is tagged 'content' — revalidatePath('/') alone
     // recomputes the homepage, but its unstable_cache data call still
     // returns the stale cached list until this tag is explicitly busted.
-    updateTag('content');
+    updateTag("content");
     return { success: true, data: JSON.parse(JSON.stringify(section)) };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -95,23 +105,36 @@ export async function createHeroSection(data: any) {
 
 export async function updateHeroSection(id: string, data: any) {
   try {
-    await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER']);
+    await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER"]);
 
     // Partial: updateHeroSection is also used for single-field toggles
     // (see toggleHeroSectionActive below), so only the fields actually
     // present need to be valid.
     const parsed = HeroSectionSchema.partial().safeParse(data);
     if (!parsed.success) {
-      return { success: false, error: parsed.error.issues[0]?.message || 'Invalid input' };
+      return {
+        success: false,
+        error: parsed.error.issues[0]?.message || "Invalid input",
+      };
     }
     data = parsed.data;
 
     await dbConnect();
 
-    if (data.displayOrder !== undefined && data.displayOrder !== null && data.displayOrder !== '') {
-      const existing = await HeroSection.findOne({ displayOrder: data.displayOrder, _id: { $ne: id } });
+    if (
+      data.displayOrder !== undefined &&
+      data.displayOrder !== null &&
+      data.displayOrder !== ""
+    ) {
+      const existing = await HeroSection.findOne({
+        displayOrder: data.displayOrder,
+        _id: { $ne: id },
+      });
       if (existing) {
-        return { success: false, error: `Display order ${data.displayOrder} is already in use by another hero section.` };
+        return {
+          success: false,
+          error: `Display order ${data.displayOrder} is already in use by another hero section.`,
+        };
       }
     }
 
@@ -119,12 +142,16 @@ export async function updateHeroSection(id: string, data: any) {
     // replaced image can be cleaned up from Cloudinary afterwards — do this
     // before writing, not just diff against the returned doc, since
     // findByIdAndUpdate only ever gives us the post-update state.
-    const previous = await HeroSection.findById(id).select('image').lean() as { image?: string } | null;
+    const previous = (await HeroSection.findById(id)
+      .select("image")
+      .lean()) as { image?: string } | null;
 
-    const section = await HeroSection.findByIdAndUpdate(id, data, { returnDocument: 'after' }).lean();
+    const section = await HeroSection.findByIdAndUpdate(id, data, {
+      returnDocument: "after",
+    }).lean();
 
     if (
-      typeof data.image === 'string' &&
+      typeof data.image === "string" &&
       data.image &&
       previous?.image &&
       previous.image !== data.image
@@ -132,14 +159,17 @@ export async function updateHeroSection(id: string, data: any) {
       // Best-effort: the DB update already succeeded, so a Cloudinary
       // hiccup here shouldn't surface as a failed save to the admin.
       deleteMediaByUrl(previous.image).catch((error) =>
-        console.error('Failed to delete replaced hero image from Cloudinary:', error),
+        console.error(
+          "Failed to delete replaced hero image from Cloudinary:",
+          error,
+        ),
       );
     }
 
-    revalidatePath('/');
-    revalidatePath('/admin/website/hero-section');
+    revalidatePath("/");
+    revalidatePath("/admin/website/hero-section");
     revalidatePath(`/admin/website/hero-section/${id}`);
-    updateTag('content');
+    updateTag("content");
     return { success: true, data: JSON.parse(JSON.stringify(section)) };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -148,20 +178,25 @@ export async function updateHeroSection(id: string, data: any) {
 
 export async function deleteHeroSection(id: string) {
   try {
-    await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER']);
+    await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER"]);
     await dbConnect();
 
-    const section = await HeroSection.findByIdAndDelete(id).lean() as { image?: string } | null;
+    const section = (await HeroSection.findByIdAndDelete(id).lean()) as {
+      image?: string;
+    } | null;
 
     if (section?.image) {
       deleteMediaByUrl(section.image).catch((error) =>
-        console.error('Failed to delete removed hero image from Cloudinary:', error),
+        console.error(
+          "Failed to delete removed hero image from Cloudinary:",
+          error,
+        ),
       );
     }
 
-    revalidatePath('/');
-    revalidatePath('/admin/website/hero-section');
-    updateTag('content');
+    revalidatePath("/");
+    revalidatePath("/admin/website/hero-section");
+    updateTag("content");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -172,9 +207,11 @@ export async function toggleHeroSectionActive(id: string, isActive: boolean) {
   return updateHeroSection(id, { isActive });
 }
 
-export async function reorderHeroSections(updates: { id: string, displayOrder: number }[]) {
+export async function reorderHeroSections(
+  updates: { id: string; displayOrder: number }[],
+) {
   try {
-    await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER']);
+    await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER"]);
     await dbConnect();
 
     // Perform bulk write to update all displayOrders efficiently
@@ -187,9 +224,9 @@ export async function reorderHeroSections(updates: { id: string, displayOrder: n
 
     await HeroSection.bulkWrite(bulkOps);
 
-    revalidatePath('/');
-    revalidatePath('/admin/website/hero-section');
-    updateTag('content');
+    revalidatePath("/");
+    revalidatePath("/admin/website/hero-section");
+    updateTag("content");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };

@@ -23,7 +23,7 @@ export function ProductGallery({
 }) {
   const [active, setActive] = React.useState(0);
   const trackRef = React.useRef<HTMLUListElement>(null);
-  
+
   const hasImages = images && images.length > 0;
   const numSlides = hasImages ? images.length : Math.max(1, count || 1);
   const slides = Array.from({ length: numSlides }, (_, i) => i);
@@ -77,7 +77,10 @@ export function ProductGallery({
               // delivery transforms, matching product-card.tsx's thumbnails.
               <CldImage
                 src={images[i].url}
-                alt={images[i].altText || `${name} — view ${i + 1} of ${slides.length}`}
+                alt={
+                  images[i].altText ||
+                  `${name} — view ${i + 1} of ${slides.length}`
+                }
                 width={800}
                 height={800}
                 priority={i === 0}
@@ -125,7 +128,9 @@ export function ProductGallery({
                   aria-label={`View image ${i + 1}`}
                   className={cn(
                     "block w-full overflow-hidden rounded-lg ring-2 transition-[--tw-ring-color] duration-200",
-                    active === i ? "ring-gold-500" : "ring-transparent hover:ring-plum-300",
+                    active === i
+                      ? "ring-gold-500"
+                      : "ring-transparent hover:ring-plum-300",
                   )}
                 >
                   {hasImages ? (

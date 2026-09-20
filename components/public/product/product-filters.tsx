@@ -259,7 +259,13 @@ export function FilterBar({
 }
 
 /** Always-visible facet list for wide screens. */
-export function FilterSidebar({ lockCategory, categories }: { lockCategory?: string, categories: any[] }) {
+export function FilterSidebar({
+  lockCategory,
+  categories,
+}: {
+  lockCategory?: string;
+  categories: any[];
+}) {
   const { query, count, setParam, clearAll } = useFilterState(lockCategory);
 
   return (

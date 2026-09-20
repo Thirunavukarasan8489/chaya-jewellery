@@ -1,9 +1,9 @@
-import { notFound } from 'next/navigation';
-import { getProductById } from '@/lib/actions/product.actions';
-import { getCategoryById } from '@/lib/actions/category.actions';
-import VariantForm from '@/components/admin/products/VariantForm';
+import { notFound } from "next/navigation";
+import { getProductById } from "@/lib/actions/product.actions";
+import { getCategoryById } from "@/lib/actions/category.actions";
+import VariantForm from "@/components/admin/products/VariantForm";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function CreateProductVariantPage(props: {
   searchParams: Promise<{ productId?: string }>;
@@ -16,7 +16,10 @@ export default async function CreateProductVariantPage(props: {
   if (!productRes.success || !productRes.data) notFound();
 
   const product = productRes.data;
-  const categoryId = typeof product.category === 'object' ? product.category?._id : product.category;
+  const categoryId =
+    typeof product.category === "object"
+      ? product.category?._id
+      : product.category;
   const categoryRes = categoryId ? await getCategoryById(categoryId) : null;
   const category = categoryRes?.success ? categoryRes.data : null;
 

@@ -7,13 +7,15 @@ import { redirect } from "next/navigation";
 
 export default async function AdminUsersPage() {
   const session = await getServerSession(authOptions);
-  
+
   if ((session?.user as any)?.role !== "SUPER_ADMIN") {
     redirect("/admin");
   }
 
   await connectDB();
-  const users = await User.find({ role: { $ne: "CUSTOMER" } }).sort({ createdAt: -1 }).lean();
+  const users = await User.find({ role: { $ne: "CUSTOMER" } })
+    .sort({ createdAt: -1 })
+    .lean();
 
   return (
     <div className="space-y-6">
@@ -53,22 +55,28 @@ export default async function AdminUsersPage() {
                   <td className="whitespace-nowrap px-6 py-4 font-medium text-plum-950">
                     {user.name}
                   </td>
+                  <td className="whitespace-nowrap px-6 py-4">{user.email}</td>
                   <td className="whitespace-nowrap px-6 py-4">
-                    {user.email}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <span className={`inline-flex rounded-none px-2.5 py-0.5 text-xs font-medium ${
-                      user.role === 'SUPER_ADMIN' ? 'bg-purple-100 text-purple-800' :
-                      user.role === 'CONTENT_MANAGER' ? 'bg-blue-100 text-blue-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {user.role.replace('_', ' ')}
+                    <span
+                      className={`inline-flex rounded-none px-2.5 py-0.5 text-xs font-medium ${
+                        user.role === "SUPER_ADMIN"
+                          ? "bg-purple-100 text-purple-800"
+                          : user.role === "CONTENT_MANAGER"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-green-100 text-green-800"
+                      }`}
+                    >
+                      {user.role.replace("_", " ")}
                     </span>
                   </td>
                   <td className="whitespace-nowrap px-6 py-4">
-                     <span className={`inline-flex rounded-none px-2.5 py-0.5 text-xs font-medium ${
-                      user.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-                    }`}>
+                    <span
+                      className={`inline-flex rounded-none px-2.5 py-0.5 text-xs font-medium ${
+                        user.status === "ACTIVE"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
                       {user.status}
                     </span>
                   </td>
@@ -79,10 +87,13 @@ export default async function AdminUsersPage() {
                   </td>
                 </tr>
               ))}
-              
+
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-plum-500">
+                  <td
+                    colSpan={5}
+                    className="px-6 py-8 text-center text-plum-500"
+                  >
                     No admin users found.
                   </td>
                 </tr>

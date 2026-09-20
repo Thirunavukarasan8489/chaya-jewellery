@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React from 'react';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import React from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { Calendar as CalendarIcon } from "lucide-react";
 
 interface AdminDatePickerProps {
   label?: string;
@@ -25,11 +25,11 @@ export function AdminDatePicker({
   selected,
   onChange,
   error,
-  placeholder = 'Select date',
+  placeholder = "Select date",
   minDate,
   maxDate,
   showTimeSelect,
-  dateFormat = 'dd/MM/yyyy',
+  dateFormat = "dd/MM/yyyy",
   isClearable,
   disabled,
   id,
@@ -37,7 +37,10 @@ export function AdminDatePicker({
   return (
     <div className="w-full space-y-1.5">
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium text-gold-700 dark:text-gold-300">
+        <label
+          htmlFor={id}
+          className="block text-sm font-medium text-gold-700 dark:text-gold-300"
+        >
           {label}
         </label>
       )}
@@ -58,8 +61,8 @@ export function AdminDatePicker({
           disabled={disabled}
           className={`w-full pl-9 pr-3 py-2.5 bg-white dark:bg-gold-900 border rounded-lg text-sm text-gold-800 dark:text-gold-100 placeholder-gold-400 focus:outline-none focus:ring-2 focus:ring-gold-500/20 focus:border-gold-500 transition-colors ${
             error
-              ? 'border-red-500 ring-1 ring-red-500'
-              : 'border-gold-200 dark:border-gold-700 hover:border-gold-300 dark:hover:border-gold-600'
+              ? "border-red-500 ring-1 ring-red-500"
+              : "border-gold-200 dark:border-gold-700 hover:border-gold-300 dark:hover:border-gold-600"
           }`}
         />
       </div>

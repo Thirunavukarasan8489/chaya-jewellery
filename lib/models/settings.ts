@@ -14,7 +14,7 @@ const SettingsSchema = new mongoose.Schema(
       twitter: { type: String, default: "" },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const Settings =

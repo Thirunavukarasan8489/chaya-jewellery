@@ -14,7 +14,9 @@ export async function SiteHeader() {
   const business = NAV_DATA.business;
   return (
     <header className="sticky top-0 z-50">
-      <AnnouncementBar text={"Free insured shipping across India on orders above ₹50,000"} />
+      <AnnouncementBar
+        text={"Free insured shipping across India on orders above ₹50,000"}
+      />
 
       <div className="border-b border-ivory-300 bg-ivory-100/85 backdrop-blur-md">
         <div className="shell gutter flex h-15 items-center gap-2 lg:h-18 lg:gap-8">

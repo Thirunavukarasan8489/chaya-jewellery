@@ -4,13 +4,20 @@ import { buttonStyles } from "@/components/public/ui/button";
 import { GemImage } from "@/components/public/ui/gem-image";
 import { OrnamentalBg } from "@/components/public/ui/ornamental-bg";
 
-
-
 import { categoryTerms, NAV_DATA, whatsappLink } from "@/lib/utils";
 
-const tilt = ["-rotate-4 lg:-translate-y-2", "rotate-0 -translate-y-6", "rotate-4 lg:-translate-y-1"];
+const tilt = [
+  "-rotate-4 lg:-translate-y-2",
+  "rotate-0 -translate-y-6",
+  "rotate-4 lg:-translate-y-1",
+];
 
-const stats = [{ value: "50+", label: "Years of Trust" },{ value: "100%", label: "Certified Natural" },{ value: "10k+", label: "Happy Customers" },{ value: "5/5", label: "Google Reviews" }];
+const stats = [
+  { value: "50+", label: "Years of Trust" },
+  { value: "100%", label: "Certified Natural" },
+  { value: "10k+", label: "Happy Customers" },
+  { value: "5/5", label: "Google Reviews" },
+];
 export async function Hero({ categories }: { categories: any[] }) {
   const business = NAV_DATA.business;
   return (
@@ -21,9 +28,7 @@ export async function Hero({ categories }: { categories: any[] }) {
         <div className="animate-rise">
           <p className="inline-flex items-center gap-2 rounded-none border border-gold-500/30 bg-gold-500/10 px-3.5 py-1.5 text-[0.6875rem] font-semibold tracking-[0.14em] uppercase">
             <BadgeCheck size={14} className="text-gold-400" />
-            <span className="text-foil">
-              GIA · IGI · GRS · SSEF
-            </span>
+            <span className="text-foil">GIA · IGI · GRS · SSEF</span>
           </p>
 
           <h1 className="mt-6 text-[2.5rem] leading-[1.06] font-semibold sm:text-6xl lg:text-[4.25rem]">
@@ -47,7 +52,8 @@ export async function Hero({ categories }: { categories: any[] }) {
               <ArrowRight size={18} />
             </Link>
             <a
-              href={whatsappLink(business, 
+              href={whatsappLink(
+                business,
                 "Hi Chaya Jewellery, I would like a free gemmologist consultation.",
               )}
               target="_blank"

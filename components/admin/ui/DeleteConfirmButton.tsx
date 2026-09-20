@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Trash2, AlertTriangle } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Trash2, AlertTriangle } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface DeleteConfirmButtonProps {
   entityId: string;
@@ -11,7 +11,11 @@ interface DeleteConfirmButtonProps {
   deleteAction: (id: string) => Promise<{ success: boolean; error?: string }>;
 }
 
-export default function DeleteConfirmButton({ entityId, entityName, deleteAction }: DeleteConfirmButtonProps) {
+export default function DeleteConfirmButton({
+  entityId,
+  entityName,
+  deleteAction,
+}: DeleteConfirmButtonProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -24,10 +28,10 @@ export default function DeleteConfirmButton({ entityId, entityName, deleteAction
         toast.success(`"${entityName}" deleted successfully`);
         router.refresh();
       } else {
-        toast.error(result.error || 'Failed to delete item');
+        toast.error(result.error || "Failed to delete item");
       }
     } catch {
-      toast.error('An unexpected error occurred');
+      toast.error("An unexpected error occurred");
     } finally {
       setIsDeleting(false);
       setIsOpen(false);
@@ -53,14 +57,20 @@ export default function DeleteConfirmButton({ entityId, entityName, deleteAction
                   <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-500" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gold-900 dark:text-white">Delete Item</h3>
-                  <p className="text-sm text-gold-500 dark:text-gold-400">Are you sure you want to delete this?</p>
+                  <h3 className="text-lg font-bold text-gold-900 dark:text-white">
+                    Delete Item
+                  </h3>
+                  <p className="text-sm text-gold-500 dark:text-gold-400">
+                    Are you sure you want to delete this?
+                  </p>
                 </div>
               </div>
-              
+
               <div className="bg-gold-50 dark:bg-gold-800/50 p-4 rounded-lg mb-6 border border-gold-100 dark:border-gold-700/50">
                 <p className="text-sm text-gold-700 dark:text-gold-300">
-                  You are about to delete <span className="font-bold">{entityName}</span>. This action cannot be undone.
+                  You are about to delete{" "}
+                  <span className="font-bold">{entityName}</span>. This action
+                  cannot be undone.
                 </p>
               </div>
 
@@ -77,7 +87,7 @@ export default function DeleteConfirmButton({ entityId, entityName, deleteAction
                   disabled={isDeleting}
                   className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  {isDeleting ? 'Deleting...' : 'Delete'}
+                  {isDeleting ? "Deleting..." : "Delete"}
                 </button>
               </div>
             </div>

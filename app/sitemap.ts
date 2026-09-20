@@ -46,11 +46,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
 
-    return [
-      ...staticRoutes,
-      ...categoryRoutes,
-      ...productRoutes,
-    ];
+    return [...staticRoutes, ...categoryRoutes, ...productRoutes];
   } catch (error) {
     console.error("Sitemap generation failed:", error);
     return staticRoutes;

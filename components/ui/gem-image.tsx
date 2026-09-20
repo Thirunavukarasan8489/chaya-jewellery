@@ -47,8 +47,18 @@ export function GemImage({
   });
 
   const sparkles = [
-    { x: 18 + ((seed * 17) % 20), y: 66 + ((seed * 11) % 18), size: 11, delay: "0s" },
-    { x: 68 + ((seed * 19) % 18), y: 20 + ((seed * 9) % 18), size: 8, delay: ".9s" },
+    {
+      x: 18 + ((seed * 17) % 20),
+      y: 66 + ((seed * 11) % 18),
+      size: 11,
+      delay: "0s",
+    },
+    {
+      x: 68 + ((seed * 19) % 18),
+      y: 20 + ((seed * 9) % 18),
+      size: 8,
+      delay: ".9s",
+    },
   ];
 
   return (

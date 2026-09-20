@@ -17,7 +17,8 @@ export default async function BusinessCustomersPage() {
             Business Customers
           </h1>
           <p className="text-sm text-plum-600 mt-1">
-            View and manage B2B and Wholesale customer profiles — {customers.length} customers
+            View and manage B2B and Wholesale customer profiles —{" "}
+            {customers.length} customers
           </p>
         </div>
       </div>

@@ -23,7 +23,7 @@ const UserSchema = new mongoose.Schema(
     image: { type: String },
     provider: { type: String, default: "credentials" },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const User = mongoose.models.User || mongoose.model("User", UserSchema);

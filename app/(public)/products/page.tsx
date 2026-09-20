@@ -23,7 +23,7 @@ export default async function ProductsPage(props: PageProps<"/products">) {
   const query = toQuery(await props.searchParams);
   const [products, categories] = await Promise.all([
     getProducts(),
-    getCategories()
+    getCategories(),
   ]);
   const results = flattenVariants(applyFilters(products, query));
 

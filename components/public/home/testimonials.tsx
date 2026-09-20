@@ -22,9 +22,15 @@ export function Testimonials({ items }: { items?: any[] }) {
     const track = trackRef.current;
     if (!track) return;
     const scrollLeft = track.scrollLeft;
-    const itemWidth = track.firstElementChild ? (track.firstElementChild as HTMLElement).offsetWidth + 12 : 260;
+    const itemWidth = track.firstElementChild
+      ? (track.firstElementChild as HTMLElement).offsetWidth + 12
+      : 260;
     const newIndex = Math.round(scrollLeft / itemWidth);
-    if (newIndex !== active && newIndex >= 0 && newIndex < testimonials.length) {
+    if (
+      newIndex !== active &&
+      newIndex >= 0 &&
+      newIndex < testimonials.length
+    ) {
       setActive(newIndex);
     }
   };
@@ -65,9 +71,14 @@ export function Testimonials({ items }: { items?: any[] }) {
                 </blockquote>
                 <figcaption className="mt-5 border-t border-ivory-200 pt-4">
                   <Rating value={t.rating} className="mb-2" />
-                  <p className="text-sm font-semibold text-plum-950">{t.customerName}</p>
+                  <p className="text-sm font-semibold text-plum-950">
+                    {t.customerName}
+                  </p>
                   <p className="mt-0.5 text-xs text-plum-600 font-medium">
-                    {t.location}{t.productReference?.name ? ` · purchased ${t.productReference.name}` : ''}
+                    {t.location}
+                    {t.productReference?.name
+                      ? ` · purchased ${t.productReference.name}`
+                      : ""}
                   </p>
                 </figcaption>
               </figure>
@@ -89,7 +100,7 @@ export function Testimonials({ items }: { items?: any[] }) {
                   "h-2 rounded-none transition-all duration-300",
                   active === index
                     ? "w-6 bg-gold-500"
-                    : "w-2 bg-ivory-300 hover:bg-gold-300"
+                    : "w-2 bg-ivory-300 hover:bg-gold-300",
                 )}
               />
             ))}

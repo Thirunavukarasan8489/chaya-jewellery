@@ -1,15 +1,23 @@
-'use server';
+"use server";
 
-import { z } from 'zod';
-import dbConnect from '@/lib/db';
-import { NewsletterSubscriber } from '@/lib/models/newsletter-subscriber';
+import { z } from "zod";
+import dbConnect from "@/lib/db";
+import { NewsletterSubscriber } from "@/lib/models/newsletter-subscriber";
 
-const EmailSchema = z.string().trim().toLowerCase().email('Enter a valid email address.').max(200);
+const EmailSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .email("Enter a valid email address.")
+  .max(200);
 
 export async function subscribeToNewsletter(email: string) {
   const parsed = EmailSchema.safeParse(email);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message || 'Enter a valid email address.' };
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message || "Enter a valid email address.",
+    };
   }
 
   try {
@@ -23,7 +31,7 @@ export async function subscribeToNewsletter(email: string) {
     );
     return { success: true };
   } catch (error) {
-    console.error('subscribeToNewsletter error:', error);
-    return { success: false, error: 'Something went wrong. Please try again.' };
+    console.error("subscribeToNewsletter error:", error);
+    return { success: false, error: "Something went wrong. Please try again." };
   }
 }

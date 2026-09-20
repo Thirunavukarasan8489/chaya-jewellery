@@ -1,8 +1,8 @@
-'use server';
+"use server";
 
-import connectDB from '@/lib/db';
-import { AuditLog } from '@/lib/models/audit';
-import { getSession } from '@/lib/auth';
+import connectDB from "@/lib/db";
+import { AuditLog } from "@/lib/models/audit";
+import { getSession } from "@/lib/auth";
 
 export async function logAuditAction(params: {
   action: string;
@@ -15,8 +15,8 @@ export async function logAuditAction(params: {
     const session = await getSession();
 
     if (!session || !session.userId) {
-      console.warn('Attempted to log action without a valid session');
-      return { success: false, error: 'Unauthorized' };
+      console.warn("Attempted to log action without a valid session");
+      return { success: false, error: "Unauthorized" };
     }
 
     const log = new AuditLog({
@@ -30,9 +30,9 @@ export async function logAuditAction(params: {
     await log.save();
     return { success: true };
   } catch (error) {
-    console.error('Error logging audit action:', error);
+    console.error("Error logging audit action:", error);
     // Don't throw here to prevent breaking the main transaction flow just because logging failed.
-    return { success: false, error: 'Failed to log action' };
+    return { success: false, error: "Failed to log action" };
   }
 }
 
@@ -41,14 +41,14 @@ export async function getAuditLogs(page = 1, limit = 20) {
     await connectDB();
     const session = await getSession();
 
-    if (!session || session.role !== 'SUPER_ADMIN') {
-      return { success: false, error: 'Unauthorized' };
+    if (!session || session.role !== "SUPER_ADMIN") {
+      return { success: false, error: "Unauthorized" };
     }
 
     const skip = (page - 1) * limit;
 
     const logs = await AuditLog.find()
-      .populate('performedBy', 'name email role')
+      .populate("performedBy", "name email role")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -60,12 +60,14 @@ export async function getAuditLogs(page = 1, limit = 20) {
     const serializedLogs = logs.map((log: any) => ({
       ...log,
       _id: log._id.toString(),
-      performedBy: log.performedBy ? {
-        ...log.performedBy,
-        _id: log.performedBy._id.toString()
-      } : null,
+      performedBy: log.performedBy
+        ? {
+            ...log.performedBy,
+            _id: log.performedBy._id.toString(),
+          }
+        : null,
       createdAt: log.createdAt?.toISOString(),
-      updatedAt: log.updatedAt?.toISOString()
+      updatedAt: log.updatedAt?.toISOString(),
     }));
 
     return {
@@ -76,12 +78,12 @@ export async function getAuditLogs(page = 1, limit = 20) {
           total: totalCount,
           pages: Math.ceil(totalCount / limit),
           page,
-          limit
-        }
-      }
+          limit,
+        },
+      },
     };
   } catch (error) {
-    console.error('Error fetching audit logs:', error);
-    return { success: false, error: 'Failed to fetch audit logs' };
+    console.error("Error fetching audit logs:", error);
+    return { success: false, error: "Failed to fetch audit logs" };
   }
 }

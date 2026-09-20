@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import Script from 'next/script';
+import Script from "next/script";
 
 export function GoogleAnalytics({ gaId }: { gaId?: string }) {
   if (!gaId) return null;

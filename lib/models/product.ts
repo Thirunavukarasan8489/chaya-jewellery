@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const ProductSchema = new mongoose.Schema(
   {
@@ -6,16 +6,18 @@ const ProductSchema = new mongoose.Schema(
     name: { type: String, required: true },
     slug: { type: String, required: true, unique: true },
     baseSku: { type: String },
-    category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
+    category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
     shortDescription: { type: String },
     description: { type: String },
 
     // Pricing & Inventory
-    discountRules: [{
-      minQty: { type: Number, required: true },
-      maxQty: { type: Number, required: true },
-      discountPercentage: { type: Number, required: true }
-    }],
+    discountRules: [
+      {
+        minQty: { type: Number, required: true },
+        maxQty: { type: Number, required: true },
+        discountPercentage: { type: Number, required: true },
+      },
+    ],
 
     // Variants live in the standalone ProductVariant collection, referenced by
     // productId. hasVariants just toggles whether the storefront shows the
@@ -24,8 +26,12 @@ const ProductSchema = new mongoose.Schema(
 
     // Inventory
     reservedQuantity: { type: Number, required: true, default: 0 },
-    stockStatus: { type: String, enum: ['IN_STOCK', 'LOW_STOCK', 'OUT_OF_STOCK'], default: 'IN_STOCK' },
-    status: { type: String, enum: ['ACTIVE', 'DRAFT'], default: 'DRAFT' },
+    stockStatus: {
+      type: String,
+      enum: ["IN_STOCK", "LOW_STOCK", "OUT_OF_STOCK"],
+      default: "IN_STOCK",
+    },
+    status: { type: String, enum: ["ACTIVE", "DRAFT"], default: "DRAFT" },
 
     // Homepage curation — surfaced by getFeaturedProducts()/getBestsellers()
     // in lib/services/product-service.ts. Not yet exposed in the admin
@@ -37,20 +43,22 @@ const ProductSchema = new mongoose.Schema(
     // Purchase Config
     purchaseType: {
       type: String,
-      enum: ['ENQUIRE_ONLY', 'BUY_ONLY', 'BUY_ENQUIRE'],
-      required: true
+      enum: ["ENQUIRE_ONLY", "BUY_ONLY", "BUY_ENQUIRE"],
+      required: true,
     },
     whatsappEnabled: { type: Boolean, default: false },
 
     // Images
     primaryImage: {
       url: { type: String },
-      altText: { type: String }
+      altText: { type: String },
     }, // Cloudinary URL + Alt Text
-    gallery: [{
-      url: { type: String },
-      altText: { type: String }
-    }],
+    gallery: [
+      {
+        url: { type: String },
+        altText: { type: String },
+      },
+    ],
 
     // SEO
     metaTitle: { type: String },
@@ -58,7 +66,7 @@ const ProductSchema = new mongoose.Schema(
     keywords: [{ type: String }],
     ogImage: { type: String },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 ProductSchema.index({ status: 1, stockStatus: 1 });
@@ -68,4 +76,5 @@ ProductSchema.index({ category: 1 });
 // Mongo had to filter via the index above then sort the results in memory.
 ProductSchema.index({ status: 1, createdAt: -1 });
 
-export const Product = mongoose.models.Product || mongoose.model('Product', ProductSchema);
+export const Product =
+  mongoose.models.Product || mongoose.model("Product", ProductSchema);

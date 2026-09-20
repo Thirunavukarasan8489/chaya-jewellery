@@ -74,7 +74,7 @@ export function HowItWorks() {
           <a
             href={whatsappLink(
               null,
-              "Hi Chaya Jewellery, I would like to speak with a jewellery consultant."
+              "Hi Chaya Jewellery, I would like to speak with a jewellery consultant.",
             )}
             target="_blank"
             rel="noopener noreferrer"

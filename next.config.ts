@@ -21,7 +21,7 @@ import type { NextConfig } from "next";
 // (component stack reconstruction) — blocking it broke `npm run dev`
 // entirely. Production React never calls eval(), so 'unsafe-eval' is
 // scoped to development only, keeping the production CSP tighter.
-const isDev = process.env.NODE_ENV !== 'production';
+const isDev = process.env.NODE_ENV !== "production";
 
 const csp = [
   "default-src 'self'",
@@ -36,30 +36,33 @@ const csp = [
   // broken-image icon even though the file itself uploads fine.
   // previews used by every admin upload form (category/product/variant/hero
   // images) before the file is actually uploaded to Cloudinary.
-  "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://*.cashfree.com",
+  "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://*.cashfree.com https://lh3.googleusercontent.com",
   "font-src 'self' data:",
   "connect-src 'self' https://*.cashfree.com https://www.google-analytics.com https://analytics.google.com",
   "frame-src 'self' https://*.cashfree.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self' https://*.cashfree.com",
-].join('; ');
+].join("; ");
 
 const securityHeaders = [
-  { key: 'Content-Security-Policy', value: csp },
+  { key: "Content-Security-Policy", value: csp },
   // frame-ancestors above is the modern equivalent; X-Frame-Options stays
   // as a fallback for older browsers that don't honor CSP frame-ancestors.
-  { key: 'X-Frame-Options', value: 'DENY' },
-  { key: 'X-Content-Type-Options', value: 'nosniff' },
-  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=63072000; includeSubDomains; preload",
+  },
 ];
 
 const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: '/:path*',
+        source: "/:path*",
         headers: securityHeaders,
       },
     ];
@@ -85,11 +88,15 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
     ],
   },
   experimental: {
     serverActions: {
-      bodySizeLimit: '10mb',
+      bodySizeLimit: "10mb",
     },
   },
 };

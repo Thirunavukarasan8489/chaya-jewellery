@@ -1,42 +1,49 @@
-'use server';
+"use server";
 
-import dbConnect from '@/lib/db';
-import { Product } from '@/lib/models/product';
-import { ProductVariant } from '@/lib/models/product-variant';
-import { Category } from '@/lib/models/category';
-import { Lead } from '@/lib/models/lead';
-import { Order } from '@/lib/models/order';
-import { getSession } from '@/lib/auth';
-import { logAuditAction } from '@/lib/actions/audit';
-import { deleteMediaByUrl } from '@/lib/actions/media.actions';
-import { ProductSchema } from '@/lib/validations/product.schema';
-import { revalidatePath, updateTag } from 'next/cache';
-import mongoose from 'mongoose';
-import { variantTypeLabel } from '@/lib/utils';
-import { sanitizeRichText } from '@/lib/sanitize';
-import { recalcProductStockStatus } from '@/lib/inventory';
+import dbConnect from "@/lib/db";
+import { Product } from "@/lib/models/product";
+import { ProductVariant } from "@/lib/models/product-variant";
+import { Category } from "@/lib/models/category";
+import { Lead } from "@/lib/models/lead";
+import { Order } from "@/lib/models/order";
+import { getSession } from "@/lib/auth";
+import { logAuditAction } from "@/lib/actions/audit";
+import { deleteMediaByUrl } from "@/lib/actions/media.actions";
+import { ProductSchema } from "@/lib/validations/product.schema";
+import { revalidatePath, updateTag } from "next/cache";
+import mongoose from "mongoose";
+import { variantTypeLabel } from "@/lib/utils";
+import { sanitizeRichText } from "@/lib/sanitize";
+import { recalcProductStockStatus } from "@/lib/inventory";
 
 async function checkAuth(allowedRoles: string[]) {
   const session = await getSession();
-  if (!session) throw new Error('Unauthorized');
+  if (!session) throw new Error("Unauthorized");
   if (!allowedRoles.includes(session.role as string)) {
-    throw new Error('Forbidden: Insufficient permissions');
+    throw new Error("Forbidden: Insufficient permissions");
   }
   return session;
 }
 
 function generateShortname(name: string, length = 3) {
-  if (!name) return 'UNK';
-  return name.replace(/[^A-Za-z0-9]/g, '').substring(0, length).toUpperCase();
+  if (!name) return "UNK";
+  return name
+    .replace(/[^A-Za-z0-9]/g, "")
+    .substring(0, length)
+    .toUpperCase();
 }
 
 // Generate guaranteed unique slug from product name
-export async function generateUniqueProductSlug(name: string, excludeId?: string): Promise<string> {
-  const baseSlug = name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)+/g, '') || 'product';
+export async function generateUniqueProductSlug(
+  name: string,
+  excludeId?: string,
+): Promise<string> {
+  const baseSlug =
+    name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "") || "product";
 
   let slug = baseSlug;
   let counter = 1;
@@ -46,7 +53,7 @@ export async function generateUniqueProductSlug(name: string, excludeId?: string
     if (excludeId) {
       query._id = { $ne: excludeId };
     }
-    const exists = await Product.findOne(query).select('_id').lean();
+    const exists = await Product.findOne(query).select("_id").lean();
     if (!exists) {
       return slug;
     }
@@ -73,7 +80,14 @@ function buildVariantName(opts: {
   productName: string;
   optionIndex: number;
 }) {
-  const { priceOnValue, variantType, variantValue, enteredName, productName, optionIndex } = opts;
+  const {
+    priceOnValue,
+    variantType,
+    variantValue,
+    enteredName,
+    productName,
+    optionIndex,
+  } = opts;
   if (priceOnValue) {
     const value = Number(variantValue) || 0;
     if (value > 0) {
@@ -81,8 +95,13 @@ function buildVariantName(opts: {
     }
     return `${productName} Option ${optionIndex}`;
   }
-  const name = enteredName && String(enteredName).trim() ? String(enteredName).trim() : null;
-  return name ? `${name} ${productName}` : `${productName} Option ${optionIndex}`;
+  const name =
+    enteredName && String(enteredName).trim()
+      ? String(enteredName).trim()
+      : null;
+  return name
+    ? `${name} ${productName}`
+    : `${productName} Option ${optionIndex}`;
 }
 
 /**
@@ -90,11 +109,17 @@ function buildVariantName(opts: {
  * itself is delegated to buildVariantName() above.
  * SKU always uses the category's variantType, since it identifies what kind of variant this product line uses regardless of pricing mode.
  */
-function formatVariants(variants: any[], productName: string, category: any, baseSkuPrefix: string, productSlug: string) {
+function formatVariants(
+  variants: any[],
+  productName: string,
+  category: any,
+  baseSkuPrefix: string,
+  productSlug: string,
+) {
   let totalStock = 0;
   let isLowStock = false;
   const priceOnValue = !!category?.calculatePriceOnVariantValue;
-  const skuVariantType = category?.variantType || 'NONE';
+  const skuVariantType = category?.variantType || "NONE";
 
   const formatted = variants.map((v: any, idx: number) => {
     v.name = buildVariantName({
@@ -107,15 +132,15 @@ function formatVariants(variants: any[], productName: string, category: any, bas
     });
 
     if (!v.sku) {
-      const indexStr = String(idx + 1).padStart(3, '0');
+      const indexStr = String(idx + 1).padStart(3, "0");
       v.sku = `${baseSkuPrefix}-${skuVariantType}-${indexStr}`;
     }
 
     const varSlugSuffix = v.name
       .toLowerCase()
       .trim()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)+/g, '');
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
     v.slug = `${productSlug}-${varSlugSuffix}`;
 
     const vStock = Number(v.stock) || 0;
@@ -127,34 +152,42 @@ function formatVariants(variants: any[], productName: string, category: any, bas
     return v;
   });
 
-  const stockStatus: 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK' = totalStock === 0 ? 'OUT_OF_STOCK' : isLowStock ? 'LOW_STOCK' : 'IN_STOCK';
+  const stockStatus: "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK" =
+    totalStock === 0 ? "OUT_OF_STOCK" : isLowStock ? "LOW_STOCK" : "IN_STOCK";
   return { formatted, totalStock, stockStatus };
 }
 
 /** Attaches each product's ProductVariant documents as a `variants` array, matching the old embedded shape. */
-async function attachVariants<T extends { _id: any }>(products: T[]): Promise<(T & { variants: any[] })[]> {
+async function attachVariants<T extends { _id: any }>(
+  products: T[],
+): Promise<(T & { variants: any[] })[]> {
   if (products.length === 0) return products as (T & { variants: any[] })[];
-  const variants = await ProductVariant.find({ productId: { $in: products.map((p) => p._id) } }).lean();
+  const variants = await ProductVariant.find({
+    productId: { $in: products.map((p) => p._id) },
+  }).lean();
   const byProduct = new Map<string, any[]>();
   for (const v of variants) {
     const key = v.productId.toString();
     if (!byProduct.has(key)) byProduct.set(key, []);
     byProduct.get(key)!.push(v);
   }
-  return products.map((p) => ({ ...p, variants: byProduct.get(p._id.toString()) || [] }));
+  return products.map((p) => ({
+    ...p,
+    variants: byProduct.get(p._id.toString()) || [],
+  }));
 }
 
 export async function getProducts(page = 1, limit = 50) {
   try {
-    await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER', 'LEAD_MANAGER']);
+    await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER", "LEAD_MANAGER"]);
     await dbConnect();
     const skip = (page - 1) * limit;
     const products = await Product.find()
-      .populate('category', 'name variantType')
+      .populate("category", "name variantType")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .select('-__v')
+      .select("-__v")
       .lean();
 
     const withVariants = await attachVariants(products);
@@ -167,8 +200,8 @@ export async function getProducts(page = 1, limit = 50) {
         totalCount,
         page,
         limit,
-        totalPages: Math.ceil(totalCount / limit)
-      }
+        totalPages: Math.ceil(totalCount / limit),
+      },
     };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -177,10 +210,12 @@ export async function getProducts(page = 1, limit = 50) {
 
 export async function getProductById(id: string) {
   try {
-    await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER', 'LEAD_MANAGER']);
+    await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER", "LEAD_MANAGER"]);
     await dbConnect();
-    const product: any = await Product.findById(id).populate('category', 'name').lean();
-    if (!product) return { success: false, error: 'Product not found' };
+    const product: any = await Product.findById(id)
+      .populate("category", "name")
+      .lean();
+    if (!product) return { success: false, error: "Product not found" };
     // Sanitize on the way out too, not just on write — covers products
     // stored before the write-time sanitization in createProduct/
     // updateProduct shipped, and this feeds both the admin view page and
@@ -196,7 +231,7 @@ export async function getProductById(id: string) {
 
 export async function createProduct(data: any) {
   try {
-    await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER']);
+    await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER"]);
 
     const parsed = ProductSchema.safeParse(data);
     if (!parsed.success) {
@@ -207,7 +242,9 @@ export async function createProduct(data: any) {
     // lib/sanitize.ts. This is rendered raw on public product pages and
     // inside the admin panel itself, so this is the only real gate.
     validatedData.description = sanitizeRichText(validatedData.description);
-    validatedData.shortDescription = sanitizeRichText(validatedData.shortDescription);
+    validatedData.shortDescription = sanitizeRichText(
+      validatedData.shortDescription,
+    );
 
     await dbConnect();
 
@@ -218,16 +255,18 @@ export async function createProduct(data: any) {
     const mappedData: any = {
       ...validatedData,
       slug,
-      category: validatedData.categoryId || validatedData.category
+      category: validatedData.categoryId || validatedData.category,
     };
     delete mappedData.categoryId;
 
-    const initialVariants = Array.isArray(mappedData.variants) ? mappedData.variants : [];
+    const initialVariants = Array.isArray(mappedData.variants)
+      ? mappedData.variants
+      : [];
     delete mappedData.variants;
 
     // Fetch Category to build SKU
     const categoryObj = await Category.findById(mappedData.category).lean();
-    const categoryName = categoryObj ? categoryObj.name : 'Uncategorized';
+    const categoryName = categoryObj ? categoryObj.name : "Uncategorized";
     const catShort = generateShortname(categoryName);
     const prodShort = generateShortname(mappedData.name);
     const baseSkuPrefix = `A1-${catShort}-${prodShort}`;
@@ -236,11 +275,17 @@ export async function createProduct(data: any) {
       mappedData.baseSku = `${baseSkuPrefix}-001`;
     }
 
-    let stockStatus: 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK' = 'OUT_OF_STOCK';
+    let stockStatus: "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK" = "OUT_OF_STOCK";
     let formattedVariants: any[] = [];
 
     if (mappedData.hasVariants && initialVariants.length > 0) {
-      const result = formatVariants(initialVariants, mappedData.name, categoryObj, baseSkuPrefix, slug);
+      const result = formatVariants(
+        initialVariants,
+        mappedData.name,
+        categoryObj,
+        baseSkuPrefix,
+        slug,
+      );
       formattedVariants = result.formatted;
       stockStatus = result.stockStatus;
     }
@@ -270,7 +315,7 @@ export async function createProduct(data: any) {
             purchaseType: mappedData.purchaseType,
             whatsappEnabled: mappedData.whatsappEnabled,
           })),
-          { session }
+          { session },
         );
       }
 
@@ -283,20 +328,20 @@ export async function createProduct(data: any) {
     }
 
     await logAuditAction({
-      action: 'PRODUCT_CREATED',
-      entity: 'Product',
+      action: "PRODUCT_CREATED",
+      entity: "Product",
       entityId: product._id.toString(),
-      metadata: { name: product.name, slug: product.slug }
+      metadata: { name: product.name, slug: product.slug },
     });
 
-    revalidatePath('/admin/products');
-    revalidatePath('/admin/inventory');
-    revalidatePath('/admin/productvarients');
+    revalidatePath("/admin/products");
+    revalidatePath("/admin/inventory");
+    revalidatePath("/admin/productvarients");
     // Public storefront reads products through unstable_cache (tag
     // 'products', 60s window) — without this, a new/edited/deleted product
     // wouldn't show up on the public site until that window naturally
     // lapsed, no matter how many admin paths above get revalidated.
-    updateTag('products');
+    updateTag("products");
     return { success: true, data: JSON.parse(JSON.stringify(product)) };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -305,7 +350,7 @@ export async function createProduct(data: any) {
 
 export async function updateProduct(id: string, data: any) {
   try {
-    await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER']);
+    await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER"]);
 
     const parsed = ProductSchema.safeParse(data);
     if (!parsed.success) {
@@ -314,7 +359,9 @@ export async function updateProduct(id: string, data: any) {
     const validatedData = parsed.data;
     // SECURITY: see createProduct above / lib/sanitize.ts.
     validatedData.description = sanitizeRichText(validatedData.description);
-    validatedData.shortDescription = sanitizeRichText(validatedData.shortDescription);
+    validatedData.shortDescription = sanitizeRichText(
+      validatedData.shortDescription,
+    );
 
     await dbConnect();
 
@@ -330,10 +377,14 @@ export async function updateProduct(id: string, data: any) {
 
     // Fetch old product to find orphaned images and get original slug if needed
     const oldProduct = await Product.findById(id).lean();
-    if (!oldProduct) throw new Error('Product not found');
+    if (!oldProduct) throw new Error("Product not found");
 
     // Ensure slug is uniquely maintained if name changed
-    if (mappedData.name && !mappedData.slug && mappedData.name !== oldProduct.name) {
+    if (
+      mappedData.name &&
+      !mappedData.slug &&
+      mappedData.name !== oldProduct.name
+    ) {
       mappedData.slug = await generateUniqueProductSlug(mappedData.name, id);
     } else if (!mappedData.slug) {
       mappedData.slug = oldProduct.slug;
@@ -341,7 +392,7 @@ export async function updateProduct(id: string, data: any) {
 
     // Fetch Category to build SKU
     const categoryObj = await Category.findById(mappedData.category).lean();
-    const categoryName = categoryObj ? categoryObj.name : 'Uncategorized';
+    const categoryName = categoryObj ? categoryObj.name : "Uncategorized";
     const catShort = generateShortname(categoryName);
     const prodShort = generateShortname(mappedData.name);
     const baseSkuPrefix = `A1-${catShort}-${prodShort}`;
@@ -350,34 +401,45 @@ export async function updateProduct(id: string, data: any) {
       mappedData.baseSku = `${baseSkuPrefix}-001`;
     }
 
-    const product = await Product.findByIdAndUpdate(id, mappedData, { returnDocument: 'after' });
+    const product = await Product.findByIdAndUpdate(id, mappedData, {
+      returnDocument: "after",
+    });
 
     // Clean up orphaned images asynchronously
     if (oldProduct) {
       const oldImages = new Set<string>();
-      if (oldProduct.primaryImage?.url) oldImages.add(oldProduct.primaryImage.url);
-      if (oldProduct.gallery) oldProduct.gallery.forEach((g: any) => { if (g.url) oldImages.add(g.url); });
+      if (oldProduct.primaryImage?.url)
+        oldImages.add(oldProduct.primaryImage.url);
+      if (oldProduct.gallery)
+        oldProduct.gallery.forEach((g: any) => {
+          if (g.url) oldImages.add(g.url);
+        });
 
       const newImages = new Set<string>();
       if (product.primaryImage?.url) newImages.add(product.primaryImage.url);
-      if (product.gallery) product.gallery.forEach((g: any) => { if (g.url) newImages.add(g.url); });
+      if (product.gallery)
+        product.gallery.forEach((g: any) => {
+          if (g.url) newImages.add(g.url);
+        });
 
-      const orphanedImages = Array.from(oldImages).filter(url => !newImages.has(url));
+      const orphanedImages = Array.from(oldImages).filter(
+        (url) => !newImages.has(url),
+      );
 
       // Fire and forget
-      Promise.allSettled(orphanedImages.map(url => deleteMediaByUrl(url)));
+      Promise.allSettled(orphanedImages.map((url) => deleteMediaByUrl(url)));
     }
 
     await logAuditAction({
-      action: 'PRODUCT_UPDATED',
-      entity: 'Product',
+      action: "PRODUCT_UPDATED",
+      entity: "Product",
       entityId: id,
-      metadata: { name: product?.name }
+      metadata: { name: product?.name },
     });
 
-    revalidatePath('/admin/products');
-    revalidatePath('/admin/inventory');
-    updateTag('products');
+    revalidatePath("/admin/products");
+    revalidatePath("/admin/inventory");
+    updateTag("products");
     return { success: true, data: JSON.parse(JSON.stringify(product)) };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -386,52 +448,66 @@ export async function updateProduct(id: string, data: any) {
 
 export async function deleteProduct(id: string) {
   try {
-    await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER']);
+    await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER"]);
     await dbConnect();
 
     // Check references
-    const orderCount = await Order.countDocuments({ 'items.productId': id });
+    const orderCount = await Order.countDocuments({ "items.productId": id });
     if (orderCount > 0) {
-      throw new Error(`Cannot delete: Product is referenced in ${orderCount} order(s).`);
+      throw new Error(
+        `Cannot delete: Product is referenced in ${orderCount} order(s).`,
+      );
     }
 
     const leadCount = await Lead.countDocuments({ product: id });
     if (leadCount > 0) {
-      throw new Error(`Cannot delete: Product is referenced in ${leadCount} lead(s).`);
+      throw new Error(
+        `Cannot delete: Product is referenced in ${leadCount} lead(s).`,
+      );
     }
 
     const productToDelete = await Product.findById(id).lean();
-    if (!productToDelete) throw new Error('Product not found');
+    if (!productToDelete) throw new Error("Product not found");
 
-    const variantsToDelete = await ProductVariant.find({ productId: id }).lean();
+    const variantsToDelete = await ProductVariant.find({
+      productId: id,
+    }).lean();
 
     await Product.findByIdAndDelete(id);
     await ProductVariant.deleteMany({ productId: id });
 
     // Clean up images asynchronously
     const urlsToDelete = new Set<string>();
-    if (productToDelete.primaryImage?.url) urlsToDelete.add(productToDelete.primaryImage.url);
+    if (productToDelete.primaryImage?.url)
+      urlsToDelete.add(productToDelete.primaryImage.url);
     if (productToDelete.gallery) {
-      productToDelete.gallery.forEach((g: any) => { if (g.url) urlsToDelete.add(g.url); });
+      productToDelete.gallery.forEach((g: any) => {
+        if (g.url) urlsToDelete.add(g.url);
+      });
     }
     for (const v of variantsToDelete as any[]) {
       if (v.primaryImage?.url) urlsToDelete.add(v.primaryImage.url);
-      if (v.gallery) v.gallery.forEach((g: any) => { if (g.url) urlsToDelete.add(g.url); });
+      if (v.gallery)
+        v.gallery.forEach((g: any) => {
+          if (g.url) urlsToDelete.add(g.url);
+        });
     }
 
     // Fire and forget
-    Promise.allSettled(Array.from(urlsToDelete).map(url => deleteMediaByUrl(url)));
+    Promise.allSettled(
+      Array.from(urlsToDelete).map((url) => deleteMediaByUrl(url)),
+    );
 
     await logAuditAction({
-      action: 'PRODUCT_DELETED',
-      entity: 'Product',
+      action: "PRODUCT_DELETED",
+      entity: "Product",
       entityId: id,
     });
 
-    revalidatePath('/admin/products');
-    revalidatePath('/admin/inventory');
-    revalidatePath('/admin/productvarients');
-    updateTag('products');
+    revalidatePath("/admin/products");
+    revalidatePath("/admin/inventory");
+    revalidatePath("/admin/productvarients");
+    updateTag("products");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -441,8 +517,11 @@ export async function deleteProduct(id: string) {
 export async function getVariant(productId: string, variantId: string) {
   try {
     await dbConnect();
-    const variant = await ProductVariant.findOne({ _id: variantId, productId }).lean();
-    if (!variant) throw new Error('Variant not found');
+    const variant = await ProductVariant.findOne({
+      _id: variantId,
+      productId,
+    }).lean();
+    if (!variant) throw new Error("Variant not found");
 
     return { success: true, data: JSON.parse(JSON.stringify(variant)) };
   } catch (error: any) {
@@ -453,11 +532,11 @@ export async function getVariant(productId: string, variantId: string) {
 /** Adds a new variant to an existing product from the standalone Product Variants screens. */
 export async function createVariant(productId: string, data: any) {
   try {
-    await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER']);
+    await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER"]);
     await dbConnect();
 
     const product = await Product.findById(productId).lean();
-    if (!product) throw new Error('Product not found');
+    if (!product) throw new Error("Product not found");
 
     const category = await Category.findById(product.category).lean();
 
@@ -465,28 +544,41 @@ export async function createVariant(productId: string, data: any) {
     // prices per variant value) the variant value are all required to save —
     // mirrors the client-side variantSchema in VariantForm.tsx.
     if (!data.name?.trim()) {
-      return { success: false, error: 'Variant name is required' };
+      return { success: false, error: "Variant name is required" };
     }
-    if (data.price === undefined || data.price === null || Number(data.price) < 0) {
-      return { success: false, error: 'Selling price is required' };
+    if (
+      data.price === undefined ||
+      data.price === null ||
+      Number(data.price) < 0
+    ) {
+      return { success: false, error: "Selling price is required" };
     }
     if (!data.primaryImage?.url?.trim()) {
-      return { success: false, error: 'Cover image is required' };
+      return { success: false, error: "Cover image is required" };
     }
-    if (!Array.isArray(data.gallery) || !data.gallery.some((g: any) => g?.url?.trim())) {
-      return { success: false, error: 'At least one gallery image is required' };
+    if (
+      !Array.isArray(data.gallery) ||
+      !data.gallery.some((g: any) => g?.url?.trim())
+    ) {
+      return {
+        success: false,
+        error: "At least one gallery image is required",
+      };
     }
     if (category?.calculatePriceOnVariantValue && !data.variantValue) {
-      return { success: false, error: `${variantTypeLabel(category.variantType)} value is required for this category` };
+      return {
+        success: false,
+        error: `${variantTypeLabel(category.variantType)} value is required for this category`,
+      };
     }
 
     const existingCount = await ProductVariant.countDocuments({ productId });
 
-    const catShort = generateShortname(category?.name || 'Uncategorized');
+    const catShort = generateShortname(category?.name || "Uncategorized");
     const prodShort = generateShortname(product.name);
     const baseSkuPrefix = `A1-${catShort}-${prodShort}`;
-    const skuVariantType = category?.variantType || 'NONE';
-    const indexStr = String(existingCount + 1).padStart(3, '0');
+    const skuVariantType = category?.variantType || "NONE";
+    const indexStr = String(existingCount + 1).padStart(3, "0");
 
     const name = buildVariantName({
       priceOnValue: !!category?.calculatePriceOnVariantValue,
@@ -502,21 +594,27 @@ export async function createVariant(productId: string, data: any) {
     let variant: any;
     try {
       const created = await ProductVariant.create(
-        [{
-          ...data,
-          productId,
-          categoryId: category?._id,
-          name,
-          sku: data.sku || `${baseSkuPrefix}-${skuVariantType}-${indexStr}`,
-        }],
-        { session }
+        [
+          {
+            ...data,
+            productId,
+            categoryId: category?._id,
+            name,
+            sku: data.sku || `${baseSkuPrefix}-${skuVariantType}-${indexStr}`,
+          },
+        ],
+        { session },
       );
       variant = created[0];
 
       if (existingCount >= 1 && !product.hasVariants) {
         // Second+ variant: this product is no longer single-SKU, so the
         // storefront's variant selector needs to turn on.
-        await Product.findByIdAndUpdate(productId, { hasVariants: true }, { session });
+        await Product.findByIdAndUpdate(
+          productId,
+          { hasVariants: true },
+          { session },
+        );
       }
 
       await recalcProductStockStatus(productId, session);
@@ -530,49 +628,71 @@ export async function createVariant(productId: string, data: any) {
     }
 
     await logAuditAction({
-      action: 'PRODUCT_VARIANT_CREATED',
-      entity: 'Product',
+      action: "PRODUCT_VARIANT_CREATED",
+      entity: "Product",
       entityId: productId,
-      metadata: { variantId: variant._id.toString() }
+      metadata: { variantId: variant._id.toString() },
     });
 
-    revalidatePath('/admin/products');
-    revalidatePath('/admin/productvarients');
-    revalidatePath('/admin/inventory');
-    updateTag('products');
+    revalidatePath("/admin/products");
+    revalidatePath("/admin/productvarients");
+    revalidatePath("/admin/inventory");
+    updateTag("products");
     return { success: true, data: JSON.parse(JSON.stringify(variant)) };
   } catch (error: any) {
     return { success: false, error: error.message };
   }
 }
 
-export async function updateVariant(productId: string, variantId: string, data: any) {
+export async function updateVariant(
+  productId: string,
+  variantId: string,
+  data: any,
+) {
   try {
-    await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER']);
+    await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER"]);
     await dbConnect();
 
-    const existing = await ProductVariant.findOne({ _id: variantId, productId }).lean();
-    if (!existing) throw new Error('Variant not found');
+    const existing = await ProductVariant.findOne({
+      _id: variantId,
+      productId,
+    }).lean();
+    if (!existing) throw new Error("Variant not found");
 
-    const category = await Category.findById(existing.categoryId).select('name variantType calculatePriceOnVariantValue').lean();
+    const category = await Category.findById(existing.categoryId)
+      .select("name variantType calculatePriceOnVariantValue")
+      .lean();
 
     // Basic details, cover image, gallery image, and (when this category
     // prices per variant value) the variant value are all required to save —
     // mirrors the client-side variantSchema in VariantForm.tsx.
     if (!data.name?.trim()) {
-      return { success: false, error: 'Variant name is required' };
+      return { success: false, error: "Variant name is required" };
     }
-    if (data.price === undefined || data.price === null || Number(data.price) < 0) {
-      return { success: false, error: 'Selling price is required' };
+    if (
+      data.price === undefined ||
+      data.price === null ||
+      Number(data.price) < 0
+    ) {
+      return { success: false, error: "Selling price is required" };
     }
     if (!data.primaryImage?.url?.trim()) {
-      return { success: false, error: 'Cover image is required' };
+      return { success: false, error: "Cover image is required" };
     }
-    if (!Array.isArray(data.gallery) || !data.gallery.some((g: any) => g?.url?.trim())) {
-      return { success: false, error: 'At least one gallery image is required' };
+    if (
+      !Array.isArray(data.gallery) ||
+      !data.gallery.some((g: any) => g?.url?.trim())
+    ) {
+      return {
+        success: false,
+        error: "At least one gallery image is required",
+      };
     }
     if (category?.calculatePriceOnVariantValue && !data.variantValue) {
-      return { success: false, error: `${variantTypeLabel(category.variantType)} value is required for this category` };
+      return {
+        success: false,
+        error: `${variantTypeLabel(category.variantType)} value is required for this category`,
+      };
     }
 
     const updateData = { ...data };
@@ -586,14 +706,16 @@ export async function updateVariant(productId: string, variantId: string, data: 
       updateData.variantValue !== undefined &&
       Number(updateData.variantValue) !== Number(existing.variantValue)
     ) {
-      const product = await Product.findById(productId).select('name').lean();
+      const product = await Product.findById(productId).select("name").lean();
 
       if (product && category?.calculatePriceOnVariantValue) {
         const siblings = await ProductVariant.find({ productId })
           .sort({ createdAt: 1 })
-          .select('_id')
+          .select("_id")
           .lean();
-        const position = siblings.findIndex((s) => s._id.toString() === variantId);
+        const position = siblings.findIndex(
+          (s) => s._id.toString() === variantId,
+        );
 
         updateData.name = buildVariantName({
           priceOnValue: true,
@@ -609,20 +731,20 @@ export async function updateVariant(productId: string, variantId: string, data: 
     const variant = await ProductVariant.findOneAndUpdate(
       { _id: variantId, productId },
       { $set: updateData },
-      { returnDocument: 'after' }
+      { returnDocument: "after" },
     );
-    if (!variant) throw new Error('Variant not found');
+    if (!variant) throw new Error("Variant not found");
 
     await logAuditAction({
-      action: 'PRODUCT_VARIANT_UPDATED',
-      entity: 'Product',
+      action: "PRODUCT_VARIANT_UPDATED",
+      entity: "Product",
       entityId: productId,
-      metadata: { variantId }
+      metadata: { variantId },
     });
 
-    revalidatePath('/admin/products');
-    revalidatePath('/admin/productvarients');
-    updateTag('products');
+    revalidatePath("/admin/products");
+    revalidatePath("/admin/productvarients");
+    updateTag("products");
     return { success: true, data: JSON.parse(JSON.stringify(variant)) };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -631,24 +753,32 @@ export async function updateVariant(productId: string, variantId: string, data: 
 
 export async function deleteVariant(variantId: string) {
   try {
-    await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER']);
+    await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER"]);
     await dbConnect();
 
     const variant = await ProductVariant.findById(variantId).lean();
-    if (!variant) throw new Error('Variant not found');
+    if (!variant) throw new Error("Variant not found");
 
     // Order line items carry their own variantId, independent of productId.
-    const orderCount = await Order.countDocuments({ 'items.variantId': variantId });
+    const orderCount = await Order.countDocuments({
+      "items.variantId": variantId,
+    });
     if (orderCount > 0) {
-      throw new Error(`Cannot delete: variant is referenced in ${orderCount} order(s).`);
+      throw new Error(
+        `Cannot delete: variant is referenced in ${orderCount} order(s).`,
+      );
     }
 
     // Every Product must keep at least one ProductVariant — resolveVariant()
     // (lib/inventory.ts) falls back to "the product's only variant", and
     // single-SKU add-to-cart/checkout depends on that invariant.
-    const siblingCount = await ProductVariant.countDocuments({ productId: variant.productId });
+    const siblingCount = await ProductVariant.countDocuments({
+      productId: variant.productId,
+    });
     if (siblingCount <= 1) {
-      throw new Error('Cannot delete: this is the only variant of its product. Delete the product instead, or add another variant first.');
+      throw new Error(
+        "Cannot delete: this is the only variant of its product. Delete the product instead, or add another variant first.",
+      );
     }
 
     await ProductVariant.findByIdAndDelete(variantId);
@@ -656,22 +786,27 @@ export async function deleteVariant(variantId: string) {
     // Clean up images asynchronously
     const urlsToDelete = new Set<string>();
     if (variant.primaryImage?.url) urlsToDelete.add(variant.primaryImage.url);
-    if (variant.gallery) variant.gallery.forEach((g: any) => { if (g.url) urlsToDelete.add(g.url); });
+    if (variant.gallery)
+      variant.gallery.forEach((g: any) => {
+        if (g.url) urlsToDelete.add(g.url);
+      });
 
     // Fire and forget
-    Promise.allSettled(Array.from(urlsToDelete).map(url => deleteMediaByUrl(url)));
+    Promise.allSettled(
+      Array.from(urlsToDelete).map((url) => deleteMediaByUrl(url)),
+    );
 
     await logAuditAction({
-      action: 'PRODUCT_VARIANT_DELETED',
-      entity: 'Product',
+      action: "PRODUCT_VARIANT_DELETED",
+      entity: "Product",
       entityId: variant.productId.toString(),
-      metadata: { variantId }
+      metadata: { variantId },
     });
 
-    revalidatePath('/admin/products');
-    revalidatePath('/admin/productvarients');
-    revalidatePath('/admin/inventory');
-    updateTag('products');
+    revalidatePath("/admin/products");
+    revalidatePath("/admin/productvarients");
+    revalidatePath("/admin/inventory");
+    updateTag("products");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -681,12 +816,12 @@ export async function deleteVariant(variantId: string) {
 /** Flat list of every variant across all products, for the standalone Product Variants admin screen. */
 export async function getAllProductVariants(page = 1, limit = 50) {
   try {
-    await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER', 'LEAD_MANAGER']);
+    await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER", "LEAD_MANAGER"]);
     await dbConnect();
     const skip = (page - 1) * limit;
 
     const variants = await ProductVariant.find()
-      .populate('productId', 'name slug primaryImage')
+      .populate("productId", "name slug primaryImage")
       .sort({ updatedAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -701,8 +836,8 @@ export async function getAllProductVariants(page = 1, limit = 50) {
         totalCount,
         page,
         limit,
-        totalPages: Math.ceil(totalCount / limit)
-      }
+        totalPages: Math.ceil(totalCount / limit),
+      },
     };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -712,16 +847,19 @@ export async function getAllProductVariants(page = 1, limit = 50) {
 /** Single variant + its parent product, for the standalone view/edit screens. */
 export async function getProductVariantById(variantId: string) {
   try {
-    await checkAuth(['SUPER_ADMIN', 'CONTENT_MANAGER', 'LEAD_MANAGER']);
+    await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER", "LEAD_MANAGER"]);
     await dbConnect();
     const variant = await ProductVariant.findById(variantId)
       .populate({
-        path: 'productId',
-        select: 'name slug category',
-        populate: { path: 'category', select: 'name variantType calculatePriceOnVariantValue' },
+        path: "productId",
+        select: "name slug category",
+        populate: {
+          path: "category",
+          select: "name variantType calculatePriceOnVariantValue",
+        },
       })
       .lean();
-    if (!variant) return { success: false, error: 'Variant not found' };
+    if (!variant) return { success: false, error: "Variant not found" };
     return { success: true, data: JSON.parse(JSON.stringify(variant)) };
   } catch (error: any) {
     return { success: false, error: error.message };

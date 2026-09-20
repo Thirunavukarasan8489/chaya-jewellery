@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { CldImage as CldImageBase, type CldImageProps } from 'next-cloudinary';
+import { CldImage as CldImageBase, type CldImageProps } from "next-cloudinary";
 
 /**
  * next-cloudinary's CldImage uses useState internally, but the package's

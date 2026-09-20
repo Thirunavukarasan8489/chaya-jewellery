@@ -21,7 +21,7 @@ function cleanVariantName(
   rawName: string | undefined,
   caratApprox?: number | string,
   size?: string | number,
-  idx: number = 0
+  idx: number = 0,
 ): string {
   let name = rawName || "";
 
@@ -71,7 +71,7 @@ function cleanVariantName(
 
 function getVariantSubtitle(
   variant: ProductVariant,
-  cleanName: string
+  cleanName: string,
 ): string | null {
   const numCarat = variant.caratApprox ? Number(variant.caratApprox) : 0;
   const hasCarat = !isNaN(numCarat) && numCarat > 0;
@@ -132,7 +132,7 @@ export function ProductPurchaseOptions({
         activeVariant.name,
         activeVariant.caratApprox,
         activeVariant.size,
-        selectedVariantIdx
+        selectedVariantIdx,
       )
     : undefined;
 
@@ -205,12 +205,13 @@ export function ProductPurchaseOptions({
           <div className="flex flex-wrap gap-2">
             {product.variants!.map((variant, idx) => {
               const isActive = idx === selectedVariantIdx;
-              const isSoldOut = variant.stock - (variant.reservedQuantity || 0) <= 0;
+              const isSoldOut =
+                variant.stock - (variant.reservedQuantity || 0) <= 0;
               const cleanName = cleanVariantName(
                 variant.name,
                 variant.caratApprox,
                 variant.size,
-                idx
+                idx,
               );
               const subtitle = getVariantSubtitle(variant, cleanName);
 
@@ -224,13 +225,13 @@ export function ProductPurchaseOptions({
                     isActive
                       ? "border-gold-500 bg-gold-50/50 shadow-sm ring-1 ring-gold-500"
                       : "border-plum-200 bg-white hover:border-gold-300 hover:bg-gold-50/30",
-                    isSoldOut && !isActive && "opacity-60"
+                    isSoldOut && !isActive && "opacity-60",
                   )}
                 >
                   <span
                     className={cn(
                       "text-[0.8125rem] font-semibold leading-tight",
-                      isActive ? "text-gold-900" : "text-plum-900"
+                      isActive ? "text-gold-900" : "text-plum-900",
                     )}
                   >
                     {cleanName}
@@ -263,7 +264,9 @@ export function ProductPurchaseOptions({
             variantPrice={activeVariant?.price}
             maxQuantity={activeVariant ? available : undefined}
             variantValue={activeVariant?.variantValue}
-            calculatePriceOnVariantValue={category?.calculatePriceOnVariantValue}
+            calculatePriceOnVariantValue={
+              category?.calculatePriceOnVariantValue
+            }
           />
         )}
 
@@ -281,7 +284,7 @@ export function ProductPurchaseOptions({
               <a
                 href={whatsappLink(
                   business,
-                  `Hi Chaya Jewellery, I am interested in ${product.name} (${product.sku})${activeCleanName ? ` - ${activeCleanName}` : ""}.`
+                  `Hi Chaya Jewellery, I am interested in ${product.name} (${product.sku})${activeCleanName ? ` - ${activeCleanName}` : ""}.`,
                 )}
                 target="_blank"
                 rel="noopener noreferrer"

@@ -21,7 +21,7 @@ export async function getSession() {
   return {
     userId: session.user.id,
     role: session.user.role,
-    name: session.user.name || 'User',
-    email: session.user.email || ''
+    name: session.user.name || "User",
+    email: session.user.email || "",
   };
 }

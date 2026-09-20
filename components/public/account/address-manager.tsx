@@ -50,7 +50,9 @@ export default function AddressManager({
 }: AddressManagerProps) {
   const [addresses, setAddresses] = useState<AddressItem[]>(initialAddresses);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingAddress, setEditingAddress] = useState<AddressItem | null>(null);
+  const [editingAddress, setEditingAddress] = useState<AddressItem | null>(
+    null,
+  );
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -180,7 +182,11 @@ export default function AddressManager({
       <div className="bg-white rounded-2xl border border-plum-100 shadow-sm overflow-hidden">
         <div className="p-6 sm:p-8 border-b border-plum-100 bg-plum-50/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <BackButton fallbackHref="/account/dashboard" label="Back to Dashboard" className="mb-3" />
+            <BackButton
+              fallbackHref="/account/dashboard"
+              label="Back to Dashboard"
+              className="mb-3"
+            />
             <h1 className="text-2xl font-bold font-display text-plum-950">
               Saved Addresses
             </h1>
@@ -291,7 +297,9 @@ export default function AddressManager({
                         <p className="font-medium text-plum-900">
                           {address.city}, {address.state} - {address.zip}
                         </p>
-                        <p className="text-xs text-plum-500">{address.country}</p>
+                        <p className="text-xs text-plum-500">
+                          {address.country}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -516,7 +524,9 @@ export default function AddressManager({
                   ) : (
                     <>
                       <Check size={16} />
-                      <span>{editingAddress ? "Save Changes" : "Save Address"}</span>
+                      <span>
+                        {editingAddress ? "Save Changes" : "Save Address"}
+                      </span>
                     </>
                   )}
                 </button>

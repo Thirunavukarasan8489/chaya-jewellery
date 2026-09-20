@@ -7,8 +7,6 @@ import { getCategories } from "@/lib/services/category-service";
 import { getPolicies } from "@/lib/services/policy-service";
 import { categoryTerms, NAV_DATA, whatsappLink } from "@/lib/utils";
 
-
-
 const WhatsappIcon = () => (
   <svg
     className="w-5 h-5 fill-[#062f16] relative z-10"
@@ -20,9 +18,15 @@ const WhatsappIcon = () => (
 );
 
 export async function SiteFooter() {
-  const [categories, policies] = await Promise.all([getCategories(), getPolicies()]);
+  const [categories, policies] = await Promise.all([
+    getCategories(),
+    getPolicies(),
+  ]);
   const { business, primaryNav, secondaryNav } = NAV_DATA;
-  const legal = policies.map((policy) => ({ label: policy.title, href: `/policies/${policy.slug}` }));
+  const legal = policies.map((policy) => ({
+    label: policy.title,
+    href: `/policies/${policy.slug}`,
+  }));
   return (
     <footer className="bg-plum-950 text-plum-200">
       {/* Newsletter bar */}
@@ -30,7 +34,9 @@ export async function SiteFooter() {
         <div className="shell gutter flex flex-col items-center gap-5 py-9 text-center sm:flex-row sm:justify-between sm:text-left lg:py-11">
           <div>
             <Logo onDark />
-            <p className="mt-3 font-display text-lg text-ivory-100">Be the first to know</p>
+            <p className="mt-3 font-display text-lg text-ivory-100">
+              Be the first to know
+            </p>
             <p className="mt-1 text-sm text-plum-300">
               Get exclusive offers, new arrivals and more.
             </p>
@@ -44,11 +50,12 @@ export async function SiteFooter() {
           <div>
             {/* <Logo onDark /> */}
             <p className="mt-2 max-w-xs text-sm leading-relaxed text-plum-300">
-              Handcrafted gold and diamond jewellery — hallmarked, certified
-              and made to be worn for a lifetime.
+              Handcrafted gold and diamond jewellery — hallmarked, certified and
+              made to be worn for a lifetime.
             </p>
             <a
-              href={whatsappLink(business,
+              href={whatsappLink(
+                business,
                 "Hi Chaya Jewellery, I would like a free consultation.",
               )}
               target="_blank"
