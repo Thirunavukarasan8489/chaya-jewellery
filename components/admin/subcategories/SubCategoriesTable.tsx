@@ -3,43 +3,48 @@
 import { useState, useMemo } from "react";
 import DataTable from "@/components/admin/ui/DataTable";
 import StatusBadge from "@/components/admin/ui/StatusBadge";
-import { Eye, Edit, Filter } from "lucide-react";
+import { Edit, Filter } from "lucide-react";
 import Link from "next/link";
-import { deleteCategory } from "@/lib/actions/category.actions";
+import { deleteSubCategory } from "@/lib/actions/sub-category.actions";
 import DeleteConfirmButton from "@/components/admin/ui/DeleteConfirmButton";
 import { CldImage } from "@/components/shared/CldImage";
-type CategoryRow = {
+
+type SubCategoryRow = {
   _id: string;
   name: string;
   slug: string;
+  type?: "SINGLE" | "COMBO";
+  category?: { _id: string; name: string };
   status?: "ACTIVE" | "DRAFT";
   image?: string;
   productCount?: number;
 };
 
-export default function CategoriesTable({
-  categories,
+export default function SubCategoriesTable({
+  subCategories,
 }: {
-  categories: CategoryRow[];
+  subCategories: SubCategoryRow[];
 }) {
   const [filterOpen, setFilterOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
 
-  const filteredCategories = useMemo(() => {
-    return categories.filter((c) => {
+  const filteredSubCategories = useMemo(() => {
+    return subCategories.filter((c) => {
       if (statusFilter && (c.status ?? "DRAFT") !== statusFilter) return false;
+      if (typeFilter && (c.type ?? "SINGLE") !== typeFilter) return false;
       return true;
     });
-  }, [categories, statusFilter]);
+  }, [subCategories, statusFilter, typeFilter]);
 
   const renderFilter = () => (
     <div className="relative">
       <button
         onClick={() => setFilterOpen(!filterOpen)}
-        className={`p-2 border rounded-lg transition-colors flex items-center gap-2 ${filterOpen || statusFilter ? "bg-gold-50 border-gold-300 text-gold-700" : "border-gray-200 text-gray-700 hover:bg-gray-50"}`}
+        className={`p-2 border rounded-lg transition-colors flex items-center gap-2 ${filterOpen || statusFilter || typeFilter ? "bg-gold-50 border-gold-300 text-gold-700" : "border-gray-200 text-gray-700 hover:bg-gray-50"}`}
       >
         <Filter size={18} />
-        {statusFilter && (
+        {(statusFilter || typeFilter) && (
           <span className="w-2 h-2 rounded-none bg-emerald-500"></span>
         )}
       </button>
@@ -47,10 +52,11 @@ export default function CategoriesTable({
       {filterOpen && (
         <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-20 p-4 space-y-4">
           <div className="flex items-center justify-between border-b pb-2">
-            <h4 className="font-semibold text-sm">Filter Categories</h4>
+            <h4 className="font-semibold text-sm">Filter SubCategories</h4>
             <button
               onClick={() => {
                 setStatusFilter("");
+                setTypeFilter("");
               }}
               className="text-xs text-red-500 hover:underline"
             >
@@ -70,6 +76,19 @@ export default function CategoriesTable({
               <option value="DRAFT">Draft</option>
             </select>
           </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-gray-500">Type</label>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="w-full text-sm border-gray-200 rounded-md"
+            >
+              <option value="">All Types</option>
+              <option value="SINGLE">Single</option>
+              <option value="COMBO">Combo</option>
+            </select>
+          </div>
         </div>
       )}
     </div>
@@ -77,8 +96,8 @@ export default function CategoriesTable({
 
   const columns = [
     {
-      header: "Cover Image",
-      cell: (item: CategoryRow) => (
+      header: "Image",
+      cell: (item: SubCategoryRow) => (
         <div className="w-10 h-10 bg-gold-100 dark:bg-gold-800 rounded-md overflow-hidden flex-shrink-0 border border-gold-200 dark:border-gold-700">
           {item.image ? (
             <CldImage
@@ -97,8 +116,8 @@ export default function CategoriesTable({
       ),
     },
     {
-      header: "Category Name",
-      cell: (item: CategoryRow) => (
+      header: "SubCategory Name",
+      cell: (item: SubCategoryRow) => (
         <div>
           <p className="font-medium text-gold-800 dark:text-gold-200">
             {item.name}
@@ -110,8 +129,25 @@ export default function CategoriesTable({
       ),
     },
     {
-      header: "Total Products",
-      cell: (item: CategoryRow) => (
+      header: "Parent Category",
+      cell: (item: SubCategoryRow) => (
+        <span className="text-gold-700 dark:text-gold-300">
+          {item.category?.name || "Unknown"}
+        </span>
+      ),
+    },
+    {
+      header: "Type",
+      cell: (item: SubCategoryRow) => (
+        <StatusBadge
+          label={item.type || "SINGLE"}
+          variant={item.type === "COMBO" ? "success" : "neutral"}
+        />
+      ),
+    },
+    {
+      header: "Products",
+      cell: (item: SubCategoryRow) => (
         <span className="text-gold-700 dark:text-gold-300">
           {item.productCount ?? 0}
         </span>
@@ -119,7 +155,7 @@ export default function CategoriesTable({
     },
     {
       header: "Status",
-      cell: (item: CategoryRow) => {
+      cell: (item: SubCategoryRow) => {
         const isActive = item.status === "ACTIVE";
         return (
           <StatusBadge
@@ -131,16 +167,10 @@ export default function CategoriesTable({
     },
     {
       header: "Actions",
-      cell: (item: CategoryRow) => (
+      cell: (item: SubCategoryRow) => (
         <div className="flex items-center gap-2">
           <Link
-            href={`/admin/categories/${item._id}`}
-            className="p-1 text-gold-400 hover:text-green-600 dark:hover:text-green-400 transition-colors"
-          >
-            <Eye size={16} />
-          </Link>
-          <Link
-            href={`/admin/categories/${item._id}/edit`}
+            href={`/admin/subcategories/${item._id}/edit`}
             className="p-1 text-gold-400 hover:text-gold-600 dark:hover:text-gold-400 transition-colors"
           >
             <Edit size={16} />
@@ -148,7 +178,7 @@ export default function CategoriesTable({
           <DeleteConfirmButton
             entityId={item._id}
             entityName={item.name}
-            deleteAction={deleteCategory}
+            deleteAction={deleteSubCategory}
           />
         </div>
       ),
@@ -157,9 +187,9 @@ export default function CategoriesTable({
 
   return (
     <DataTable
-      title="All Categories"
+      title="All SubCategories"
       columns={columns}
-      data={filteredCategories}
+      data={filteredSubCategories}
       renderFilter={renderFilter}
     />
   );

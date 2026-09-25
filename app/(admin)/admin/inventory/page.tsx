@@ -12,7 +12,9 @@ import {
   History,
   ChevronLeft,
   ChevronRight,
+  PlusCircle,
 } from "lucide-react";
+import Link from "next/link";
 import { AdminButton } from "@/components/admin/ui/AdminButton";
 import { AdminInput } from "@/components/admin/ui/AdminInput";
 import { AdminSelect } from "@/components/admin/ui/AdminSelect";
@@ -107,7 +109,6 @@ export default function InventoryPage() {
 
     const savePromise = updateStockLevel({
       productId: adjustingItem.productId,
-      variantId: adjustingItem._id,
       adjustment: delta,
       reason: adjustReason.trim() || "Absolute override from Inventory Admin",
     });
@@ -144,11 +145,10 @@ export default function InventoryPage() {
   useEscapeKey(closeHistoryModal, !!historyItem);
 
   const loadHistory = useCallback(
-    async (productId: string, variantId: string, page: number) => {
+    async (productId: string, page: number) => {
       setHistoryLoading(true);
       const res = await getStockHistory({
         productId,
-        variantId,
         page,
         pageSize: 10,
       });
@@ -166,12 +166,12 @@ export default function InventoryPage() {
 
   const handleOpenHistory = (item: any) => {
     setHistoryItem(item);
-    loadHistory(item.productId, item._id, 1);
+    loadHistory(item.productId, 1);
   };
 
   const handleHistoryPageChange = (page: number) => {
     if (!historyItem || page < 1 || page > historyTotalPages) return;
-    loadHistory(historyItem.productId, historyItem._id, page);
+    loadHistory(historyItem.productId, page);
   };
 
   // Category / Stock-status filtered inventory (search itself is handled by DataTable)
@@ -254,13 +254,12 @@ export default function InventoryPage() {
 
   const columns = [
     {
-      header: "Variant / Product",
+      header: "Product",
       cell: (item: any) => (
         <div>
           <p className="font-semibold text-gray-900 dark:text-white">
-            {item.name}
+            {item.productName}
           </p>
-          <p className="text-xs text-gray-500 mt-0.5">{item.productName}</p>
           <p className="text-xs text-gray-400 font-mono mt-0.5">{item.sku}</p>
         </div>
       ),
@@ -315,7 +314,14 @@ export default function InventoryPage() {
             className="px-3 py-1.5 bg-gray-50 dark:bg-plum-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 rounded-lg text-xs font-semibold transition-colors inline-flex items-center gap-1"
           >
             <ArrowUpDown size={13} />
-            Adjust Stock
+            Adjustment
+          </button>
+          <button
+            onClick={() => { /* TODO: implement rack details view if needed */ toast("View Rack Details clicked") }}
+            className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 rounded-lg text-xs font-semibold transition-colors inline-flex items-center gap-1"
+          >
+            <Boxes size={13} />
+            View Rack Details
           </button>
         </div>
       ),
@@ -336,14 +342,22 @@ export default function InventoryPage() {
             inventory adjustments.
           </p>
         </div>
-        <AdminButton
-          variant="outline"
-          onClick={fetchData}
-          className="gap-2 self-start sm:self-auto"
-        >
-          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-          Refresh
-        </AdminButton>
+        <div className="flex items-center gap-3 self-start sm:self-auto">
+          <Link href="/admin/inventory/create">
+            <AdminButton className="gap-2">
+              <PlusCircle size={16} />
+              Create Inventory
+            </AdminButton>
+          </Link>
+          <AdminButton
+            variant="outline"
+            onClick={fetchData}
+            className="gap-2"
+          >
+            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+            Refresh
+          </AdminButton>
+        </div>
       </div>
 
       {/* KPI Highlights */}

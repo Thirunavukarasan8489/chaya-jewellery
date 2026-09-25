@@ -31,8 +31,8 @@ import { availableQuantity } from "@/lib/types";
 export async function generateStaticParams() {
   const products = await getProducts();
   return products
-    .filter((p) => p.published)
-    .map((product) => ({ slug: product.slug }));
+    .filter((p: Product) => p.published)
+    .map((product: Product) => ({ slug: product.slug }));
 }
 
 export async function generateMetadata(

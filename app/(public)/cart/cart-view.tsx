@@ -64,10 +64,7 @@ export function CartView({ settings }: { settings: any }) {
           // server-side lineTotal in checkout.actions.ts — a variant-value
           // priced line (e.g. price per carat) needs unitPrice * quantity *
           // variantValue, not just unitPrice * quantity.
-          const lineTotal =
-            line.calculatePriceOnVariantValue && line.variantValue
-              ? line.unitPrice * line.quantity * line.variantValue
-              : line.unitPrice * line.quantity;
+          const lineTotal = line.unitPrice * line.quantity;
 
           return (
             <li
@@ -109,11 +106,7 @@ export function CartView({ settings }: { settings: any }) {
                 </div>
 
                 <p className="mt-1 text-xs text-ink-muted tabular-nums">
-                  {formatINR(line.unitPrice)} per{" "}
-                  {(line.variantType || "").toLowerCase()}
-                  {line.calculatePriceOnVariantValue && line.variantValue
-                    ? ` × ${line.variantValue} ${(line.variantType || "").toLowerCase()}`
-                    : ""}
+                  {formatINR(line.unitPrice)} each
                 </p>
 
                 <div className="mt-auto flex items-center justify-between gap-3 pt-3">

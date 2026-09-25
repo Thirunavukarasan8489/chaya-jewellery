@@ -20,44 +20,43 @@ import { uploadMedia } from "@/lib/actions/media.actions";
 import { toast } from "react-hot-toast";
 
 import { BasicInfoTab } from "./ui/BasicInfoTab";
-import { PricingVariantsTab } from "./ui/PricingVariantsTab";
+import { WeightAndPriceTab } from "./ui/WeightAndPriceTab";
 import { MediaUploadTab } from "./ui/MediaUploadTab";
+import { SpecificationsTab } from "./ui/SpecificationsTab";
 import { PurchaseRulesTab } from "./ui/PurchaseRulesTab";
 import { SeoTab } from "./ui/SeoTab";
 import { DiscountRulesTab } from "./ui/DiscountRulesTab";
-
-const variantSchema = z.object({
-  variantValue: z.coerce.number().optional(),
-  size: z.string().optional(),
-  price: z.preprocess(
-    (val) => (val === "" ? undefined : val),
-    z.coerce.number().min(0, "Selling Price is required"),
-  ),
-  comparePrice: z.preprocess(
-    (val) => (val === "" ? undefined : val),
-    z.coerce.number().optional(),
-  ),
-  stock: z.preprocess(
-    (val) => (val === "" ? undefined : val),
-    z.coerce.number().min(0, "Stock must be 0 or more").int(),
-  ),
-  lowStockThreshold: z.preprocess(
-    (val) => (val === "" ? undefined : val),
-    z.coerce.number().int().optional(),
-  ),
-});
 
 const productSchema = z.object({
   // Basic
   name: z.string().min(3, "Name must be at least 3 characters"),
   categoryId: z.string().min(1, "Category is required"),
+  subCategoryId: z.string().optional(),
   shortDescription: z.string().optional(),
   description: z.string().optional(),
-  // Variants
-  hasVariants: z.boolean(),
-  variants: z
-    .array(variantSchema)
-    .min(1, "At least one product variant is required"),
+
+  // Pricing & Weights
+  price: z.preprocess(
+    (val) => (val === "" ? undefined : val),
+    z.coerce.number().min(0, "Selling Price is required"),
+  ),
+  // Product level pricing & weight
+  grossWeight: z.preprocess((val) => (val === "" ? undefined : val), z.coerce.number().optional()),
+  netWeight: z.preprocess((val) => (val === "" ? undefined : val), z.coerce.number().optional()),
+  stoneWeight: z.preprocess((val) => (val === "" ? undefined : val), z.coerce.number().optional()),
+  priceCode: z.string().optional(),
+
+  // Specifications
+  specifications: z.object({
+    material: z.string().optional(),
+    purity: z.string().optional(),
+    colour: z.string().optional(),
+    style: z.string().optional(),
+    occasion: z.string().optional(),
+    stoneType: z.string().optional(),
+    stoneColour: z.string().optional(),
+    collectionName: z.string().optional(),
+  }).optional(),
 
   // Purchase Rules
   purchaseType: z.enum(["BUY_ONLY", "ENQUIRE_ONLY", "BUY_ENQUIRE"]),
@@ -125,13 +124,17 @@ export type ProductFormValues = z.infer<typeof productSchema>;
 export default function ProductForm({
   initialData,
   categories = [],
+  subCategories = [],
 }: {
   initialData?: any;
   categories?: {
     label: string;
     value: string;
-    variantType?: string;
-    calculatePriceOnVariantValue?: boolean;
+  }[];
+  subCategories?: {
+    label: string;
+    value: string;
+    category: string;
   }[];
 }) {
   const router = useRouter();
@@ -170,14 +173,15 @@ export default function ProductForm({
       ? {
           ...initialData,
           categoryId: initialData.category?._id || initialData.categoryId || "",
+          subCategoryId: initialData.subCategory?._id || initialData.subCategoryId || "",
         }
       : {
           name: "",
           categoryId: "",
+          subCategoryId: "",
           shortDescription: "",
           description: "",
-          hasVariants: true,
-          variants: [],
+          price: 0,
           purchaseType: "BUY_ENQUIRE",
           whatsappEnabled: false,
           primaryImage: { url: "", altText: "" },
@@ -185,6 +189,11 @@ export default function ProductForm({
           metaTitle: "",
           metaDescription: "",
           status: "ACTIVE",
+          specifications: {
+            material: "Silver",
+            purity: "925",
+            colour: "Silver",
+          },
         },
   });
 
@@ -335,19 +344,21 @@ export default function ProductForm({
 
   const tabs = [
     { id: "basic", label: "1. Basic Details", shortLabel: "Basic" },
-    { id: "media", label: "2. Cover Image & Gallery", shortLabel: "Media" },
-    { id: "variants", label: "3. Price & Variant", shortLabel: "Pricing" },
-    { id: "discount", label: "4. Discount Rule", shortLabel: "Discount" },
-    { id: "purchase", label: "5. Purchase Rule", shortLabel: "Purchase" },
-    { id: "seo", label: "6. SEO", shortLabel: "SEO" },
+    { id: "media", label: "2. Images", shortLabel: "Media" },
+    { id: "specifications", label: "3. Specifications", shortLabel: "Specs" },
+    { id: "pricing", label: "4. Weight & Price", shortLabel: "Pricing" },
+    { id: "purchase", label: "5. Product Rules", shortLabel: "Rules" },
+    { id: "discount", label: "6. Discount Rule", shortLabel: "Discount" },
+    { id: "seo", label: "7. SEO", shortLabel: "SEO" },
   ];
 
   const tabFields: Record<string, (keyof ProductFormValues)[]> = {
-    basic: ["name", "categoryId", "status", "shortDescription", "description"],
+    basic: ["categoryId", "subCategoryId", "name", "status", "shortDescription", "description"],
     media: ["primaryImage", "gallery"],
-    variants: ["hasVariants", "variants"],
-    discount: ["discountRules"],
+    specifications: ["specifications"],
+    pricing: ["price", "grossWeight", "netWeight", "stoneWeight", "priceCode"],
     purchase: ["purchaseType", "whatsappEnabled"],
+    discount: ["discountRules"],
     seo: ["metaTitle", "metaDescription"],
   };
 
@@ -410,7 +421,7 @@ export default function ProductForm({
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-16 relative">
+    <div className="space-y-6 max-w-8xl mx-auto pb-16 relative">
       {/* Sticky Header — z-30, deliberately below the global mobile sidebar's
           overlay (z-40) and drawer (z-50, see Sidebar.tsx) so it never paints
           over the mobile nav when it's open. Title/actions and, on mobile and
@@ -548,10 +559,13 @@ export default function ProductForm({
             <FormProvider {...methods}>
               {/* 1. BASIC DETAILS */}
               <div className={activeTab === "basic" ? "space-y-6" : "hidden"}>
-                <BasicInfoTab categories={categories} isActive={true} />
+                <BasicInfoTab categories={categories} subCategories={subCategories} isActive={true} />
               </div>
 
-              {/* 2. COVER IMAGE & GALLERY */}
+              {/* 2. SPECIFICATIONS */}
+              <SpecificationsTab isActive={activeTab === "specifications"} />
+
+              {/* 3. COVER IMAGE & GALLERY */}
               <MediaUploadTab
                 isActive={activeTab === "media"}
                 coverFile={coverFile}
@@ -562,11 +576,9 @@ export default function ProductForm({
                 removeGalleryImage={removeGalleryImage}
               />
 
-              {/* 3. PRICE & VARIANT */}
-              <PricingVariantsTab
-                isActive={activeTab === "variants"}
-                categories={categories}
-                productId={initialData?._id}
+              {/* 5. WEIGHT & PRICE */}
+              <WeightAndPriceTab
+                isActive={activeTab === "pricing"}
               />
 
               {/* 4. DISCOUNT RULE */}

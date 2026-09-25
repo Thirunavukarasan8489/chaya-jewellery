@@ -201,8 +201,6 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
           name: l.name,
           quantity: l.quantity,
           price: l.unitPrice,
-          variantValue: l.variantValue,
-          calculatePriceOnVariantValue: l.calculatePriceOnVariantValue,
         })),
         paymentMethod: formData.paymentMethod,
         subtotal: totals.subtotal,
@@ -243,8 +241,8 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
         checkoutKey: checkoutAttempt.current.key,
       });
       if (!result.success) {
-        if (result.restartCheckout) forgetAttempt();
-        toast.error(result.error || "Failed to place order.");
+        if ("restartCheckout" in result && result.restartCheckout) forgetAttempt();
+        toast.error((result as any).error || "Failed to place order.");
         setIsSubmitting(false);
         return;
       }
@@ -256,21 +254,21 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
         toast.success("Order placed successfully!");
         forgetAttempt();
         clear();
-        router.push(`/checkout/success?order=${result.data.orderNumber}`);
+        router.push(`/checkout/success?order=${(result as any).data.orderNumber}`);
         return;
       }
 
       const sessionRes = await createCashfreePaymentSession(
-        result.data.orderNumber,
+        (result as any).data.orderNumber,
       );
       if (sessionRes.success && sessionRes.alreadyPaid) {
         forgetAttempt();
-        router.push(`/checkout/success?order=${result.data.orderNumber}`);
+        router.push(`/checkout/success?order=${(result as any).data.orderNumber}`);
         return;
       }
       if (!sessionRes.success || !sessionRes.paymentSessionId) {
-        if (sessionRes.restartCheckout) forgetAttempt();
-        toast.error(sessionRes.error || "Failed to initiate payment.");
+        if ("restartCheckout" in sessionRes && sessionRes.restartCheckout) forgetAttempt();
+        toast.error((sessionRes as any).error || "Failed to initiate payment.");
         setIsSubmitting(false);
         return;
       }
@@ -295,7 +293,7 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
           redirectTarget: "_modal",
         });
       } catch (error) {
-        await recordCashfreeCheckoutResult(result.data.orderNumber, {
+        await recordCashfreeCheckoutResult((result as any).data.orderNumber, {
           error: {
             message:
               error instanceof Error
@@ -306,13 +304,13 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
         throw error;
       }
       const verification = await recordCashfreeCheckoutResult(
-        result.data.orderNumber,
+        (result as any).data.orderNumber,
         checkoutResult || {},
       );
       if (verification?.success && verification.paymentStatus === "CONFIRMED") {
         forgetAttempt();
         if (!verification.requiresReview) clear();
-        router.push(`/checkout/success?order=${result.data.orderNumber}`);
+        router.push(`/checkout/success?order=${(result as any).data.orderNumber}`);
         return;
       }
 
@@ -337,7 +335,7 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
       if (checkoutResult?.paymentDetails) {
         // Arrival and SDK messages do not prove payment; the return page polls
         // the verified server status while retaining the cart if still pending.
-        router.push(`/checkout/success?order=${result.data.orderNumber}`);
+        router.push(`/checkout/success?order=${(result as any).data.orderNumber}`);
         return;
       }
 
@@ -725,10 +723,7 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
               // server-side lineTotal in checkout.actions.ts — a variant-value
               // priced line (e.g. price per carat) needs unitPrice * quantity *
               // variantValue, not just unitPrice * quantity.
-              const lineTotal =
-                item.calculatePriceOnVariantValue && item.variantValue
-                  ? item.unitPrice * item.quantity * item.variantValue
-                  : item.unitPrice * item.quantity;
+              const lineTotal = item.unitPrice * item.quantity;
 
               return (
                 <div

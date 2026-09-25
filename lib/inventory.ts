@@ -20,9 +20,11 @@ export function calculateAvailability(
  */
 export async function recalcProductStockStatus(
   productId: string,
-  session: mongoose.ClientSession,
+  session?: mongoose.ClientSession | null,
 ) {
-  const variants = await ProductVariant.find({ productId }).session(session);
+  const query = ProductVariant.find({ productId });
+  if (session) query.session(session);
+  const variants = await query;
 
   let totalAvailable = 0;
   let lowestThreshold = Infinity;

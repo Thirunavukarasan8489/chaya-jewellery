@@ -116,17 +116,6 @@ export async function updateCategory(id: string, data: any) {
 
     await dbConnect();
 
-    // Same rule as deleteCategory below: once any product references this
-    // category, the category is locked (not just its variant-shaping
-    // fields) — reassign or delete those products first.
-    const productCount = await Product.countDocuments({ category: id });
-    if (productCount > 0) {
-      return {
-        success: false,
-        error: `Cannot update category: it is currently used by ${productCount} product(s). Please reassign or delete them first.`,
-      };
-    }
-
     // We don't want to accidentally overwrite an existing slug on update
     // If we wanted to, we would check if the name changed, but it's safer
     // to leave the slug alone unless explicitly requested.

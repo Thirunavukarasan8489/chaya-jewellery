@@ -41,7 +41,7 @@ export default function AdminLayout({
 
         {/* Scrollable Page Content */}
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-8xl">
             <Breadcrumbs />
             {children}
           </div>

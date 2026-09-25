@@ -23,23 +23,6 @@ export interface Category {
   calculatePriceOnVariantValue?: boolean;
 }
 
-export interface ProductVariant {
-  id: string;
-  name: string;
-  slug: string;
-  sku?: string;
-  caratApprox?: number;
-  variantValue?: number;
-  size?: string;
-  price: number;
-  comparePrice?: number;
-  stock: number;
-  reservedQuantity: number;
-  lowStockThreshold: number;
-  image?: { url: string; altText?: string };
-  primaryImage?: { url: string; altText?: string };
-  gallery?: { url: string; altText?: string }[];
-}
 
 export interface ProductSeo {
   metaTitle?: string;
@@ -75,14 +58,6 @@ export interface Product {
   primaryImage?: { url: string; altText?: string };
   images?: { url: string; altText?: string }[];
 
-  hasVariants: boolean;
-  variants?: ProductVariant[];
-  /** From the product's category — true when variant price is a per-unit
-   *  rate (e.g. per carat) that must be multiplied by variantValue. */
-  calculatePriceOnVariantValue?: boolean;
-  /** Human label for the category's variantType (e.g. "Carat", "Weight") —
-   *  see lib/utils.ts's variantTypeLabel(). */
-  variantType?: string;
 
   seo?: ProductSeo;
 
@@ -133,12 +108,6 @@ export interface CartLine {
   unitPrice: number;
   quantity: number;
   variantName?: string;
-  variantValue?: number;
-  calculatePriceOnVariantValue?: boolean;
-  /** Human label for the category's variantType (e.g. "Carat") — see
-   *  lib/utils.ts's variantTypeLabel(). Absent on lines added before this
-   *  field existed, so callers must not assume it's always set. */
-  variantType?: string;
 }
 
 export interface LeadNote {

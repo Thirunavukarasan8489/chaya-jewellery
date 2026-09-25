@@ -44,6 +44,8 @@ export const ProductSchema = z.object({
   baseSku: z.string().optional(),
   category: z.string().optional(),
   categoryId: z.string().optional(),
+  subCategory: z.string().optional(),
+  subCategoryId: z.string().optional(),
   shortDescription: z.string().optional(),
   description: z.string().optional(),
 
@@ -53,6 +55,24 @@ export const ProductSchema = z.object({
   variants: z
     .array(VariantSchema)
     .min(1, "At least one product variant is required"),
+
+  grossWeight: z.coerce.number().optional(),
+  netWeight: z.coerce.number().optional(),
+  stoneWeight: z.coerce.number().optional(),
+  priceCode: z.string().optional(),
+
+  specifications: z
+    .object({
+      material: z.string().optional(),
+      purity: z.string().optional(),
+      colour: z.string().optional(),
+      style: z.string().optional(),
+      occasion: z.string().optional(),
+      stoneType: z.string().optional(),
+      stoneColour: z.string().optional(),
+      collectionName: z.string().optional(),
+    })
+    .optional(),
 
   reservedQuantity: z.coerce.number().int().min(0).default(0),
   stockStatus: z

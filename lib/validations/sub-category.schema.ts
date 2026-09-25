@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-export const CategorySchema = z.object({
+export const SubCategorySchema = z.object({
+  category: z.string().min(1, "Category is required"),
+  type: z.enum(["SINGLE", "COMBO"]).default("SINGLE"),
+  comboIncludes: z.array(z.string()).optional(),
+  comboDiscount: z.coerce.number().min(0).optional().default(0),
   name: z
     .string()
     .min(1, "Name is required")
@@ -13,4 +17,4 @@ export const CategorySchema = z.object({
   image: z.string().url("Must be a valid URL").optional().or(z.literal("")),
 });
 
-export type CategoryInput = z.infer<typeof CategorySchema>;
+export type SubCategoryInput = z.infer<typeof SubCategorySchema>;

@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema(
       enum: ["SUPER_ADMIN", "CONTENT_MANAGER", "LEAD_MANAGER"],
       default: "SUPER_ADMIN",
     },
-    isActive: { type: Boolean, default: true },
+    status: { type: String, default: "ACTIVE" },
   },
   { timestamps: true },
 );
@@ -47,13 +47,17 @@ async function seed() {
         email: adminEmail,
         password: hashedPassword,
         role: "SUPER_ADMIN",
+        status: "ACTIVE"
       });
       await systemUser.save();
       console.log(
         "System Admin created successfully! (admin@chayajewellery.com / admin123)",
       );
     } else {
-      console.log("System Admin already exists.");
+      existingAdmin.password = hashedPassword;
+      existingAdmin.status = "ACTIVE";
+      await existingAdmin.save();
+      console.log("System Admin password reset to admin123 and status set to ACTIVE.");
     }
 
     if (!existingProjectAdmin) {
@@ -62,13 +66,17 @@ async function seed() {
         email: projectAdminEmail,
         password: hashedPassword,
         role: "CONTENT_MANAGER",
+        status: "ACTIVE"
       });
       await projectUser.save();
       console.log(
         "Project Admin created successfully! (project@chayajewellery.com / admin123)",
       );
     } else {
-      console.log("Project Admin already exists.");
+      existingProjectAdmin.password = hashedPassword;
+      existingProjectAdmin.status = "ACTIVE";
+      await existingProjectAdmin.save();
+      console.log("Project Admin password reset to admin123 and status set to ACTIVE.");
     }
   } catch (error) {
     console.error("Error seeding database:", error);

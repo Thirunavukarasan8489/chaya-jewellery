@@ -61,7 +61,6 @@ export default function AdminLogin() {
         email: data.email,
         password: data.password,
       });
-
       if (result?.error) {
         setLoginError("Invalid credentials. Please try again.");
         console.error(result.error);

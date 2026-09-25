@@ -6,17 +6,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/** Human-readable label for a Category's `variantType`, shared between the admin variant form and the server-side variant name/SKU generation so they stay in sync. */
-export const VARIANT_TYPE_LABELS: Record<string, string> = {
-  CARAT: "Carat",
-  SIZE: "Size",
-  WEIGHT: "Weight",
-  NONE: "Variant Value",
-};
-
-export function variantTypeLabel(variantType?: string) {
-  return VARIANT_TYPE_LABELS[variantType || "NONE"] || "Variant Value";
-}
 
 const inr = new Intl.NumberFormat("en-IN", {
   style: "currency",
@@ -70,50 +59,7 @@ export function slugify(value: string) {
 }
 
 export function flattenVariants(products: Product[]): Product[] {
-  const flattened: Product[] = [];
-
-  for (const product of products) {
-    if (
-      product.hasVariants &&
-      product.variants &&
-      product.variants.length > 0
-    ) {
-      for (let i = 0; i < product.variants.length; i++) {
-        const variant = product.variants[i];
-
-        // Skip variants with 0 stock unless we explicitly want to show out of stock
-        // Wait, normally we show all products, just marked as "Sold Out"
-
-        const variantProduct: Product = {
-          ...product,
-          id: product.id, // keep the same base product id for cart
-          slug: variant.slug || `${product.slug}-${slugify(variant.name)}`,
-          name: `${product.name} - ${variant.name}`,
-          sellingPrice: variant.price,
-          comparePrice: variant.comparePrice,
-          stockQuantity: variant.stock,
-          reservedQuantity: variant.reservedQuantity || 0,
-          lowStockThreshold:
-            variant.lowStockThreshold || product.lowStockThreshold,
-          primaryImage: variant.primaryImage?.url
-            ? variant.primaryImage
-            : product.primaryImage,
-          selectedVariantName: variant.name,
-          // Keep the variant on the flattened product (instead of discarding
-          // it via hasVariants: false) so the purchase flow still knows the
-          // variant's id/sku — otherwise Add to Cart can't reserve inventory
-          // for products reached directly via a variant-specific slug.
-          hasVariants: true,
-          variants: [variant],
-        };
-        flattened.push(variantProduct);
-      }
-    } else {
-      flattened.push(product);
-    }
-  }
-
-  return flattened;
+  return products;
 }
 
 /**

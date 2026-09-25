@@ -19,7 +19,7 @@ function FormSection({
 
 export function ProductForm() {
   return (
-    <form className="max-w-4xl">
+    <form className="max-w-8xl">
       <FormSection title="Basic Information">
         <div className="grid grid-cols-2 gap-4">
           <div>
