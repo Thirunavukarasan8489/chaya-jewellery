@@ -20,9 +20,6 @@ export default function CategoryForm({ initialData }: { initialData?: any }) {
     metaTitle: initialData?.metaTitle || "",
     metaDescription: initialData?.metaDescription || "",
     image: initialData?.image || "",
-    variantType: initialData?.variantType || "NONE",
-    calculatePriceOnVariantValue:
-      initialData?.calculatePriceOnVariantValue || false,
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -184,81 +181,7 @@ export default function CategoryForm({ initialData }: { initialData?: any }) {
                 />
               </div>
 
-              <div className="pt-4 border-t border-gold-200 dark:border-gold-800">
-                <h4 className="text-md font-semibold text-gold-800 dark:text-white mb-3">
-                  Variant Settings
-                </h4>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gold-700 dark:text-gold-300 mb-1">
-                      Variant Type *
-                    </label>
-                    <AdminSelect
-                      name="variantType"
-                      value={
-                        [
-                          { value: "CARAT", label: "Carat" },
-                          { value: "SIZE", label: "Size" },
-                          { value: "WEIGHT", label: "Weight" },
-                          { value: "NONE", label: "None" },
-                        ].find((o) => o.value === formData.variantType) || {
-                          value: "NONE",
-                          label: "None",
-                        }
-                      }
-                      onChange={(opt: any) =>
-                        handleChange({
-                          target: {
-                            name: "variantType",
-                            value: opt ? opt.value : "NONE",
-                          },
-                        } as any)
-                      }
-                      options={[
-                        { value: "CARAT", label: "Carat" },
-                        { value: "SIZE", label: "Size" },
-                        { value: "WEIGHT", label: "Weight" },
-                        { value: "NONE", label: "None" },
-                      ]}
-                    />
-                    <p className="text-xs text-gold-500 mt-1">
-                      If products in this category have variants, what type are
-                      they?
-                    </p>
-                  </div>
 
-                  <div className="flex items-start gap-3">
-                    <div className="flex items-center h-5">
-                      <input
-                        id="calculatePriceOnVariantValue"
-                        name="calculatePriceOnVariantValue"
-                        type="checkbox"
-                        checked={formData.calculatePriceOnVariantValue}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            calculatePriceOnVariantValue: e.target.checked,
-                          })
-                        }
-                        className="h-4 w-4 rounded border-plum-300 text-gold-600 focus:ring-gold-500"
-                      />
-                    </div>
-                    <div className="ml-3 text-sm">
-                      <label
-                        htmlFor="calculatePriceOnVariantValue"
-                        className="font-medium text-gold-700 dark:text-gold-300"
-                      >
-                        Price Calculation Rule (Per Variant Unit)
-                      </label>
-                      <p className="text-gold-500 dark:text-gold-400">
-                        If checked, the product price will be calculated as
-                        Variant Value × Quantity × Price. If unchecked, it will
-                        be Quantity × Price.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 

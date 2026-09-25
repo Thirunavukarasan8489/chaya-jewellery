@@ -17,11 +17,8 @@ type CartContextValue = {
     quantity?: number,
     variantName?: string,
     variantPrice?: number,
-    variantValue?: number,
-    calculatePriceOnVariantValue?: boolean,
     variantId?: string,
     sku?: string,
-    variantType?: string,
   ) => void;
   setQuantity: (
     productId: string,
@@ -104,11 +101,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       quantity = 1,
       variantName?: string,
       variantPrice?: number,
-      variantValue?: number,
-      calculatePriceOnVariantValue?: boolean,
       variantId?: string,
       sku?: string,
-      variantType?: string,
     ) => {
       const line: CartLine = {
         productId: product.id,
@@ -121,9 +115,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         unitPrice: variantPrice ?? product.sellingPrice,
         quantity,
         variantName,
-        variantValue,
-        calculatePriceOnVariantValue,
-        variantType,
       };
 
       setLines((current) => {
@@ -181,9 +172,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       hydrated,
       count: lines.reduce((n, l) => n + l.quantity, 0),
       subtotal: lines.reduce((n, l) => {
-        if (l.calculatePriceOnVariantValue && l.variantValue) {
-          return n + l.unitPrice * l.quantity * l.variantValue;
-        }
         return n + l.unitPrice * l.quantity;
       }, 0),
       add,

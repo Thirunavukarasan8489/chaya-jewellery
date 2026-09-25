@@ -12,7 +12,6 @@ interface EnquireModalProps {
   categoryId?: string;
   productName: string;
   categoryName?: string;
-  variantName?: string;
   buyable: boolean;
 }
 
@@ -21,15 +20,12 @@ export function EnquireModal({
   categoryId,
   productName,
   categoryName,
-  variantName,
   buyable,
 }: EnquireModalProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const productNameText = variantName
-    ? `${productName} - ${variantName}`
-    : productName;
+  const productNameText = productName;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

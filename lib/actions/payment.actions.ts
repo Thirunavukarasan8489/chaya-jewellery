@@ -107,10 +107,9 @@ export async function createPayment(data: {
           order.paymentStatus = "CONFIRMED";
           await order.save({ session });
           for (const item of order.items) {
-            if (item.productId && item.variantId) {
+            if (item.productId) {
               await finalizeInventory(
                 item.productId.toString(),
-                item.variantId,
                 item.quantity,
                 session,
               );
@@ -176,10 +175,9 @@ export async function updatePaymentStatus(
             await order.save({ session });
             if (validatedStatus === "COMPLETED") {
               for (const item of order.items) {
-                if (item.productId && item.variantId) {
+                if (item.productId) {
                   await finalizeInventory(
                     item.productId.toString(),
-                    item.variantId,
                     item.quantity,
                     session,
                   );

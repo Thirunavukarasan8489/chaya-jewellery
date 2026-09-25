@@ -36,9 +36,7 @@ export function DiscountRulesTab({ isActive }: DiscountRulesTabProps) {
             Bulk Discount Rules
           </h2>
           <p className="text-xs text-plum-500 mt-1">
-            Add quantity-based discounts. If the category evaluates based on
-            Variant Value, &apos;Qty&apos; refers to the total value (e.g.
-            Carats) instead of pieces.
+            Add quantity-based discounts.
           </p>
         </div>
         <AdminButton
@@ -68,7 +66,7 @@ export function DiscountRulesTab({ isActive }: DiscountRulesTabProps) {
               <AdminInput
                 type="text"
                 onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                  if (!/[0-9]/.test(e.key)) e.preventDefault();
+                  if (e.charCode < 48 || e.charCode > 57) e.preventDefault();
                 }}
                 label="Min Qty"
                 {...register(`discountRules.${index}.minQty`)}
@@ -77,7 +75,7 @@ export function DiscountRulesTab({ isActive }: DiscountRulesTabProps) {
               <AdminInput
                 type="text"
                 onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                  if (!/[0-9]/.test(e.key)) e.preventDefault();
+                  if (e.charCode < 48 || e.charCode > 57) e.preventDefault();
                 }}
                 label="Max Qty"
                 {...register(`discountRules.${index}.maxQty`)}
@@ -86,7 +84,8 @@ export function DiscountRulesTab({ isActive }: DiscountRulesTabProps) {
               <AdminInput
                 type="text"
                 onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                  if (!/[0-9.]/.test(e.key)) e.preventDefault();
+                  // Allow . for discount percentage if needed, but strictly charCode 48-57 as requested:
+                  if (e.charCode < 48 || e.charCode > 57) e.preventDefault();
                 }}
                 label="Discount (%)"
                 {...register(`discountRules.${index}.discountPercentage`)}

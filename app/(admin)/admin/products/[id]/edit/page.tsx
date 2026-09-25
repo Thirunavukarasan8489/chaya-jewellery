@@ -1,6 +1,7 @@
 import ProductForm from "@/components/admin/products/ProductForm";
 import { getProductById } from "@/lib/actions/product.actions";
 import { getCategories } from "@/lib/actions/category.actions";
+import { getSubCategories } from "@/lib/actions/sub-category.actions";
 import { notFound } from "next/navigation";
 
 export default async function EditProductPage({
@@ -10,9 +11,10 @@ export default async function EditProductPage({
 }) {
   const resolvedParams = await params;
 
-  const [productRes, categoriesRes] = await Promise.all([
+  const [productRes, categoriesRes, subCategoriesRes] = await Promise.all([
     getProductById(resolvedParams.id),
     getCategories(),
+    getSubCategories(),
   ]);
 
   if (!productRes.success || !productRes.data) {
@@ -23,9 +25,16 @@ export default async function EditProductPage({
     categoriesRes.success && categoriesRes.data
       ? categoriesRes.data.map((c: any) => ({
           label: c.name,
-          value: c._id,
-          variantType: c.variantType,
-          calculatePriceOnVariantValue: c.calculatePriceOnVariantValue,
+          value: String(c._id),
+        }))
+      : [];
+
+  const subCategories =
+    subCategoriesRes.success && subCategoriesRes.data
+      ? subCategoriesRes.data.map((sc: any) => ({
+          label: sc.name,
+          value: String(sc._id),
+          category: String(sc.category?._id || sc.category),
         }))
       : [];
 
@@ -39,5 +48,5 @@ export default async function EditProductPage({
       })) || [],
   };
 
-  return <ProductForm initialData={formattedData} categories={categories} />;
+  return <ProductForm initialData={formattedData} categories={categories} subCategories={subCategories} />;
 }

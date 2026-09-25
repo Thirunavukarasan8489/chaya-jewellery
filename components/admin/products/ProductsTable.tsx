@@ -9,17 +9,17 @@ import { deleteProduct } from "@/lib/actions/product.actions";
 import DeleteConfirmButton from "@/components/admin/ui/DeleteConfirmButton";
 
 import { CldImage } from "@/components/shared/CldImage";
-import { variantTypeLabel } from "@/lib/utils";
 
 type ProductRow = {
   _id: string;
   name: string;
   slug: string;
-  category?: { name: string; variantType?: string } | null;
+  category?: { name: string } | null;
   stockStatus?: string;
   status?: string;
   primaryImage?: { url: string; altText?: string };
-  variants?: { price?: number; stock?: number; sku?: string }[];
+  price?: number;
+  availableStock?: number;
 };
 
 export default function ProductsTable({
@@ -31,18 +31,12 @@ export default function ProductsTable({
   const [categoryFilter, setCategoryFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [stockStatusFilter, setStockStatusFilter] = useState("");
-  const [variantTypeFilter, setVariantTypeFilter] = useState("");
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       if (categoryFilter && p.category?.name !== categoryFilter) return false;
       if (statusFilter && p.status !== statusFilter) return false;
       if (stockStatusFilter && p.stockStatus !== stockStatusFilter)
-        return false;
-      if (
-        variantTypeFilter &&
-        (p.category?.variantType ?? "NONE") !== variantTypeFilter
-      )
         return false;
       return true;
     });
@@ -51,27 +45,22 @@ export default function ProductsTable({
     categoryFilter,
     statusFilter,
     stockStatusFilter,
-    variantTypeFilter,
   ]);
 
   const uniqueCategories = Array.from(
     new Set(products.map((p) => p.category?.name).filter(Boolean)),
-  );
-  const uniqueVariantTypes = Array.from(
-    new Set(products.map((p) => p.category?.variantType).filter(Boolean)),
   );
 
   const renderFilter = () => (
     <div className="relative">
       <button
         onClick={() => setFilterOpen(!filterOpen)}
-        className={`p-2 border rounded-lg transition-colors flex items-center gap-2 ${filterOpen || categoryFilter || statusFilter || stockStatusFilter || variantTypeFilter ? "bg-gold-50 border-gold-300 text-gold-700" : "border-gray-200 text-gray-700 hover:bg-gray-50"}`}
+        className={`p-2 border rounded-lg transition-colors flex items-center gap-2 ${filterOpen || categoryFilter || statusFilter || stockStatusFilter ? "bg-gold-50 border-gold-300 text-gold-700" : "border-gray-200 text-gray-700 hover:bg-gray-50"}`}
       >
         <Filter size={18} />
         {(categoryFilter ||
           statusFilter ||
-          stockStatusFilter ||
-          variantTypeFilter) && (
+          stockStatusFilter) && (
           <span className="w-2 h-2 rounded-none bg-emerald-500"></span>
         )}
       </button>
@@ -85,7 +74,6 @@ export default function ProductsTable({
                 setCategoryFilter("");
                 setStatusFilter("");
                 setStockStatusFilter("");
-                setVariantTypeFilter("");
               }}
               className="text-xs text-red-500 hover:underline"
             >
@@ -139,24 +127,6 @@ export default function ProductsTable({
               <option value="OUT_OF_STOCK">Out of Stock</option>
             </select>
           </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-gray-500">
-              Variant Type
-            </label>
-            <select
-              value={variantTypeFilter}
-              onChange={(e) => setVariantTypeFilter(e.target.value)}
-              className="w-full text-sm border-gray-200 rounded-md"
-            >
-              <option value="">All Variant Types</option>
-              {uniqueVariantTypes.map((t) => (
-                <option key={t} value={t}>
-                  {variantTypeLabel(t)}
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
       )}
     </div>
@@ -204,21 +174,9 @@ export default function ProductsTable({
     {
       header: "Price",
       cell: (item: ProductRow) => {
-        let priceText = "—";
-        if (item.variants && item.variants.length > 0) {
-          const prices = item.variants
-            .map((v: any) => Number(v.price) || 0)
-            .filter((p) => p > 0);
-          if (prices.length > 0) {
-            const minPrice = Math.min(...prices);
-            const maxPrice = Math.max(...prices);
-            if (minPrice === maxPrice) {
-              priceText = `₹${minPrice.toLocaleString("en-IN")}`;
-            } else {
-              priceText = `₹${minPrice.toLocaleString("en-IN")} - ₹${maxPrice.toLocaleString("en-IN")}`;
-            }
-          }
-        }
+        const priceText = item.price
+          ? `₹${item.price.toLocaleString("en-IN")}`
+          : "—";
         return (
           <span className="font-medium text-gold-700 dark:text-gold-300">
             {priceText}
@@ -227,10 +185,9 @@ export default function ProductsTable({
       },
     },
     {
-      header: "Stock",
+      header: "Available Stock",
       cell: (item: ProductRow) => {
-        const qty =
-          item.variants?.reduce((sum, v) => sum + (v.stock || 0), 0) ?? 0;
+        const qty = item.availableStock ?? 0;
         return (
           <span
             className={
@@ -244,14 +201,7 @@ export default function ProductsTable({
         );
       },
     },
-    {
-      header: "Variants",
-      cell: (item: ProductRow) => (
-        <span className="text-gold-700 dark:text-gold-300">
-          {item.variants?.length ?? 0}
-        </span>
-      ),
-    },
+
     {
       header: "Status",
       cell: (item: ProductRow) => {
@@ -309,7 +259,6 @@ export default function ProductsTable({
           item.name,
           item.slug,
           item.category?.name,
-          ...(item.variants ?? []).map((v) => v.sku),
         ]
           .filter(Boolean)
           .join(" ")

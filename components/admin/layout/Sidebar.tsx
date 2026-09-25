@@ -48,6 +48,7 @@ const hasAccess = (itemHref: string, role: string) => {
     if (itemHref === "/admin") return true;
     if (
       itemHref.startsWith("/admin/categories") ||
+      itemHref.startsWith("/admin/subcategories") ||
       itemHref.startsWith("/admin/products") ||
       itemHref.startsWith("/admin/productvarients") ||
       itemHref.startsWith("/admin/inventory") ||
@@ -70,8 +71,8 @@ const sidebarGroups = [
     title: "CATALOGUE",
     items: [
       { name: "Categories", href: "/admin/categories", icon: Layers },
+      { name: "Sub Categories", href: "/admin/subcategories", icon: Layers },
       { name: "Products", href: "/admin/products", icon: Package },
-      { name: "Product Variants", href: "/admin/productvarients", icon: List },
       { name: "Inventory", href: "/admin/inventory", icon: Boxes },
     ],
   },

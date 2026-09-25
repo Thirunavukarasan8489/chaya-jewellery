@@ -8,20 +8,14 @@ import Link from "next/link";
 import { deleteCategory } from "@/lib/actions/category.actions";
 import DeleteConfirmButton from "@/components/admin/ui/DeleteConfirmButton";
 import { CldImage } from "@/components/shared/CldImage";
-import { variantTypeLabel } from "@/lib/utils";
-
 type CategoryRow = {
   _id: string;
   name: string;
   slug: string;
   status?: "ACTIVE" | "DRAFT";
   image?: string;
-  variantType?: string;
   productCount?: number;
-  calculatePriceOnVariantValue?: boolean;
 };
-
-const VARIANT_TYPES = ["CARAT", "SIZE", "WEIGHT", "NONE"];
 
 export default function CategoriesTable({
   categories,
@@ -30,25 +24,22 @@ export default function CategoriesTable({
 }) {
   const [filterOpen, setFilterOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("");
-  const [variantTypeFilter, setVariantTypeFilter] = useState("");
 
   const filteredCategories = useMemo(() => {
     return categories.filter((c) => {
       if (statusFilter && (c.status ?? "DRAFT") !== statusFilter) return false;
-      if (variantTypeFilter && (c.variantType ?? "NONE") !== variantTypeFilter)
-        return false;
       return true;
     });
-  }, [categories, statusFilter, variantTypeFilter]);
+  }, [categories, statusFilter]);
 
   const renderFilter = () => (
     <div className="relative">
       <button
         onClick={() => setFilterOpen(!filterOpen)}
-        className={`p-2 border rounded-lg transition-colors flex items-center gap-2 ${filterOpen || statusFilter || variantTypeFilter ? "bg-gold-50 border-gold-300 text-gold-700" : "border-gray-200 text-gray-700 hover:bg-gray-50"}`}
+        className={`p-2 border rounded-lg transition-colors flex items-center gap-2 ${filterOpen || statusFilter ? "bg-gold-50 border-gold-300 text-gold-700" : "border-gray-200 text-gray-700 hover:bg-gray-50"}`}
       >
         <Filter size={18} />
-        {(statusFilter || variantTypeFilter) && (
+        {statusFilter && (
           <span className="w-2 h-2 rounded-none bg-emerald-500"></span>
         )}
       </button>
@@ -60,7 +51,6 @@ export default function CategoriesTable({
             <button
               onClick={() => {
                 setStatusFilter("");
-                setVariantTypeFilter("");
               }}
               className="text-xs text-red-500 hover:underline"
             >
@@ -78,24 +68,6 @@ export default function CategoriesTable({
               <option value="">All Statuses</option>
               <option value="ACTIVE">Active</option>
               <option value="DRAFT">Draft</option>
-            </select>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-gray-500">
-              Variant Type
-            </label>
-            <select
-              value={variantTypeFilter}
-              onChange={(e) => setVariantTypeFilter(e.target.value)}
-              className="w-full text-sm border-gray-200 rounded-md"
-            >
-              <option value="">All Variant Types</option>
-              {VARIANT_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {variantTypeLabel(t)}
-                </option>
-              ))}
             </select>
           </div>
         </div>
@@ -138,28 +110,11 @@ export default function CategoriesTable({
       ),
     },
     {
-      header: "Variant Type",
-      cell: (item: CategoryRow) => (
-        <span className="text-gold-700 dark:text-gold-300">
-          {variantTypeLabel(item.variantType)}
-        </span>
-      ),
-    },
-    {
       header: "Total Products",
       cell: (item: CategoryRow) => (
         <span className="text-gold-700 dark:text-gold-300">
           {item.productCount ?? 0}
         </span>
-      ),
-    },
-    {
-      header: "Price by Variant Value",
-      cell: (item: CategoryRow) => (
-        <StatusBadge
-          label={item.calculatePriceOnVariantValue ? "Yes" : "No"}
-          variant={item.calculatePriceOnVariantValue ? "success" : "neutral"}
-        />
       ),
     },
     {

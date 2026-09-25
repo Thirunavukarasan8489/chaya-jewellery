@@ -1,13 +1,14 @@
 "use server";
 
 import dbConnect from "@/lib/db";
-import { ProductVariant } from "@/lib/models/product-variant";
-import { StockHistory } from "@/lib/models/stock-history";
+import { Product } from "@/lib/models/product";
+import { Inventory } from "@/lib/models/inventory";
+import { InventoryRack } from "@/lib/models/inventory-rack";
+import { InventoryMovement } from "@/lib/models/inventory-movement";
 import { getSession } from "@/lib/auth";
 import { logAuditAction } from "@/lib/actions/audit";
 import { revalidatePath, updateTag } from "next/cache";
 import mongoose from "mongoose";
-import { recalcProductStockStatus, adjustInventory } from "@/lib/inventory";
 
 async function checkAuth(allowedRoles: string[]) {
   const session = await getSession();
@@ -18,58 +19,47 @@ async function checkAuth(allowedRoles: string[]) {
   return session;
 }
 
-// Variant-level list — every ProductVariant is a distinct stock-holding
-// document (even single-SKU products store stock on exactly one variant, per
-// lib/inventory.ts's resolveVariant()), so inventory rows/adjustments are
-// scoped to a single variant rather than aggregated across a product's
-// variants.
 export async function getInventoryList() {
   try {
     await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER", "LEAD_MANAGER"]);
     await dbConnect();
 
-    const variants = await ProductVariant.find()
-      .populate({
-        path: "productId",
-        select: "name slug baseSku category",
-        populate: { path: "category", select: "name" },
-      })
+    const products = await Product.find()
+      .populate("category", "name")
       .sort({ updatedAt: -1 })
       .lean();
 
-    const inventoryItems = variants
-      .filter((v: any) => v.productId)
-      .map((v: any) => {
-        const product = v.productId;
-        const stock = Number(v.stock) || 0;
-        const reserved = Number(v.reservedQuantity) || 0;
-        const available = Math.max(0, stock - reserved);
-        const threshold = Number(v.lowStockThreshold) || 5;
+    const inventoryRecords = await Inventory.find().lean();
+    const inventoryMap = new Map(inventoryRecords.map((inv: any) => [inv.productId.toString(), inv]));
 
-        let status = "IN_STOCK";
-        if (available === 0) {
-          status = "OUT_OF_STOCK";
-        } else if (available <= threshold) {
-          status = "LOW_STOCK";
-        }
+    const inventoryItems = products.map((p: any) => {
+      const inv: any = inventoryMap.get(p._id.toString()) || null;
+      const stock = inv ? inv.availableStock : 0;
+      const reserved = inv ? inv.reservedStock : 0;
+      const threshold = inv ? inv.lowStockThreshold : 5;
 
-        return {
-          _id: v._id.toString(),
-          productId: product._id.toString(),
-          productName: product.name,
-          name: v.name,
-          slug: v.slug,
-          sku: v.sku || product.baseSku || "N/A",
-          category: product.category?.name || "Uncategorized",
-          categoryId: product.category?._id?.toString() || "",
-          stock,
-          reserved,
-          available,
-          lowStockThreshold: threshold,
-          status,
-          updatedAt: v.updatedAt?.toISOString(),
-        };
-      });
+      let status = "IN_STOCK";
+      if (stock === 0) status = "OUT_OF_STOCK";
+      else if (stock <= threshold) status = "LOW_STOCK";
+
+      return {
+        _id: p._id.toString(), // mapping _id to productId for existing UI compatibility
+        productId: p._id.toString(),
+        inventoryId: inv ? inv._id.toString() : null,
+        productName: p.name,
+        name: p.name,
+        slug: p.slug,
+        sku: p.productCode || "N/A",
+        category: p.category?.name || "Uncategorized",
+        categoryId: p.category?._id?.toString() || "",
+        stock,
+        reserved,
+        available: stock,
+        lowStockThreshold: threshold,
+        status,
+        updatedAt: inv ? inv.updatedAt?.toISOString() : p.updatedAt?.toISOString(),
+      };
+    });
 
     return { success: true, data: inventoryItems };
   } catch (error: any) {
@@ -77,11 +67,11 @@ export async function getInventoryList() {
   }
 }
 
-export async function updateStockLevel(params: {
+export async function createInventory(params: {
   productId: string;
-  variantId?: string;
-  adjustment: number; // positive to add, negative to subtract
-  reason?: string;
+  openingStock: number;
+  lowStockThreshold: number;
+  rackCapacity: number;
 }) {
   try {
     const authSession = await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER"]);
@@ -91,85 +81,72 @@ export async function updateStockLevel(params: {
     session.startTransaction();
 
     try {
-      const variant = params.variantId
-        ? await ProductVariant.findOne({
-            _id: params.variantId,
-            productId: params.productId,
-          }).session(session)
-        : await ProductVariant.findOne({ productId: params.productId }).session(
-            session,
-          );
-
-      if (!variant) {
-        throw new Error("Variant not found");
+      // Ensure inventory doesn't already exist
+      const existing = await Inventory.findOne({ productId: params.productId }).session(session);
+      if (existing) {
+        throw new Error("Inventory already exists for this product.");
       }
 
-      const { previousStock, newStock: variantNewStock } =
-        await adjustInventory(
-          params.productId,
-          variant._id.toString(),
-          params.adjustment,
-          session,
-        );
+      const product = await Product.findById(params.productId).session(session);
+      if (!product) {
+        throw new Error("Product not found.");
+      }
 
-      const reason = params.reason || "Manual Adjustment";
+      // Create master Inventory record
+      const inventory = new Inventory({
+        productId: params.productId,
+        openingStock: params.openingStock,
+        availableStock: params.openingStock,
+        reservedStock: 0,
+        soldStock: 0,
+        lowStockThreshold: params.lowStockThreshold,
+        rackCapacity: params.rackCapacity,
+      });
+      await inventory.save({ session });
 
-      await StockHistory.create(
-        [
-          {
-            productId: params.productId,
-            variantId: variant._id,
-            previousStock,
-            adjustment: params.adjustment,
-            newStock: variantNewStock,
-            reason,
-            createdBy: authSession.userId,
-          },
-        ],
-        { session },
-      );
+      // Rack allocation logic
+      let remainingStock = params.openingStock;
+      let rackNumber = 1;
+      const racksToCreate = [];
 
-      const { totalAvailable, stockStatus } = await recalcProductStockStatus(
-        params.productId,
-        session,
-      );
+      while (remainingStock > 0) {
+        const qtyToAllocate = Math.min(remainingStock, params.rackCapacity);
+        racksToCreate.push({
+          inventoryId: inventory._id,
+          productId: params.productId,
+          rackNumber: rackNumber,
+          internalProductCode: `${product.productCode}-R${rackNumber}`,
+          quantity: qtyToAllocate,
+          capacity: params.rackCapacity,
+          status: qtyToAllocate === params.rackCapacity ? "FULL" : "AVAILABLE",
+        });
+        remainingStock -= qtyToAllocate;
+        rackNumber++;
+      }
 
-      const totalStock = await ProductVariant.aggregate([
-        {
-          $match: { productId: new mongoose.Types.ObjectId(params.productId) },
-        },
-        { $group: { _id: null, total: { $sum: "$stock" } } },
-      ]).session(session);
+      if (racksToCreate.length > 0) {
+        await InventoryRack.insertMany(racksToCreate, { session });
+      }
+
+      // Record initial movement
+      await InventoryMovement.create([{
+        inventoryId: inventory._id,
+        productId: params.productId,
+        type: "STOCK_IN",
+        quantity: params.openingStock,
+        previousQuantity: 0,
+        newQuantity: params.openingStock,
+        reason: "Initial Stock Allocation",
+        createdByName: authSession.name || "Admin",
+      }], { session });
 
       await session.commitTransaction();
       session.endSession();
 
-      const newStock = totalStock[0]?.total || 0;
-
-      await logAuditAction({
-        action: "INVENTORY_STOCK_ADJUSTED",
-        entity: "Product",
-        entityId: params.productId,
-        metadata: {
-          variantId: params.variantId,
-          adjustment: params.adjustment,
-          newStockQuantity: newStock,
-          reason,
-        },
-      });
-
       revalidatePath("/admin/inventory");
-      revalidatePath("/admin/products");
-      // A manual stock adjustment changes what the public product page shows
-      // (in stock / low stock / sold out) — bust the same 'products' tag the
-      // storefront's cached reads use, not just the admin views.
       updateTag("products");
-      return {
-        success: true,
-        newStock,
-        stockStatus,
-        available: totalAvailable,
-      };
+
+      return { success: true };
     } catch (txError: any) {
       await session.abortTransaction();
       session.endSession();
@@ -180,49 +157,126 @@ export async function updateStockLevel(params: {
   }
 }
 
-export async function getStockHistory(params: {
+export async function updateStockLevel(params: {
   productId: string;
-  variantId?: string;
-  page?: number;
-  pageSize?: number;
+  adjustment: number;
+  reason?: string;
 }) {
+  try {
+    const authSession = await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER"]);
+    await dbConnect();
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      const inventory = await Inventory.findOne({ productId: params.productId }).session(session);
+      if (!inventory) {
+        throw new Error("Inventory not found for this product.");
+      }
+
+      const prevStock = inventory.availableStock;
+      const newStock = prevStock + params.adjustment;
+
+      if (newStock < 0) {
+        throw new Error("Adjustment results in negative stock.");
+      }
+
+      inventory.availableStock = newStock;
+      await inventory.save({ session });
+
+      // Note: A full implementation would apply this adjustment to individual racks.
+      // For now, this is a simplified global adjustment since the UI doesn't specify which rack to adjust.
+
+      await InventoryMovement.create([{
+        inventoryId: inventory._id,
+        productId: params.productId,
+        type: "MANUAL_ADJUSTMENT",
+        quantity: params.adjustment,
+        previousQuantity: prevStock,
+        newQuantity: newStock,
+        reason: params.reason || "Manual Stock Adjustment",
+        createdByName: authSession.name || "Admin",
+      }], { session });
+
+      await session.commitTransaction();
+      session.endSession();
+
+      revalidatePath("/admin/inventory");
+      updateTag("products");
+
+      return { success: true, newStock };
+    } catch (txError: any) {
+      await session.abortTransaction();
+      session.endSession();
+      throw txError;
+    }
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getStockHistory(params: { productId: string; page?: number; pageSize?: number }) {
   try {
     await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER", "LEAD_MANAGER"]);
     await dbConnect();
 
     const page = params.page && params.page > 0 ? params.page : 1;
-    const pageSize =
-      params.pageSize && params.pageSize > 0 ? params.pageSize : 10;
-
-    const query: Record<string, unknown> = { productId: params.productId };
-    if (params.variantId) query.variantId = params.variantId;
+    const pageSize = params.pageSize && params.pageSize > 0 ? params.pageSize : 10;
+    const query = { productId: params.productId };
 
     const [entries, total] = await Promise.all([
-      StockHistory.find(query)
+      InventoryMovement.find(query)
         .sort({ createdAt: -1 })
         .skip((page - 1) * pageSize)
         .limit(pageSize)
-        .populate("createdBy", "name")
         .lean(),
-      StockHistory.countDocuments(query),
+      InventoryMovement.countDocuments(query),
     ]);
 
     return {
       success: true,
       data: entries.map((e: any) => ({
         _id: e._id.toString(),
-        variantId: e.variantId?.toString(),
-        previousStock: e.previousStock,
-        adjustment: e.adjustment,
-        newStock: e.newStock,
+        type: e.type,
+        previousStock: e.previousQuantity,
+        adjustment: e.quantity,
+        newStock: e.newQuantity,
         reason: e.reason || "",
-        createdByName: e.createdBy?.name || "Unknown",
+        createdByName: e.createdByName || "System",
         createdAt: e.createdAt?.toISOString(),
       })),
       total,
       page,
       pageSize,
       totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getProductsWithoutInventory() {
+  try {
+    await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER", "LEAD_MANAGER"]);
+    await dbConnect();
+
+    const existingInventory = await Inventory.find().select("productId").lean();
+    const productIdsWithInventory = existingInventory.map((inv: any) => inv.productId);
+
+    const products = await Product.find({
+      _id: { $nin: productIdsWithInventory }
+    })
+      .select("_id name productCode")
+      .lean();
+
+    return {
+      success: true,
+      data: products.map((p: any) => ({
+        _id: p._id.toString(),
+        name: p.name,
+        productCode: p.productCode || "N/A"
+      }))
     };
   } catch (error: any) {
     return { success: false, error: error.message };

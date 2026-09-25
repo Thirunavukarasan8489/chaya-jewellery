@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useFormContext, Controller } from "react-hook-form";
 import { Package } from "lucide-react";
 import { AdminInput } from "@/components/admin/ui/AdminInput";
@@ -14,15 +14,33 @@ const QuillEditor = dynamic(() => import("@/components/admin/ui/QuillEditor"), {
 
 interface BasicInfoTabProps {
   categories: { value: string; label: string }[];
+  subCategories: { value: string; label: string; category: string }[];
   isActive: boolean;
 }
 
-export function BasicInfoTab({ categories, isActive }: BasicInfoTabProps) {
+export function BasicInfoTab({ categories, subCategories, isActive }: BasicInfoTabProps) {
   const {
     register,
     control,
     formState: { errors },
+    watch,
+    setValue,
   } = useFormContext<ProductFormValues>();
+
+  const selectedCategoryId = watch("categoryId");
+  const filteredSubCategories = subCategories.filter(
+    (sc) => sc.category === selectedCategoryId
+  );
+
+  const selectedSubCategoryId = watch("subCategoryId");
+  useEffect(() => {
+    if (selectedSubCategoryId && selectedCategoryId) {
+      const isValid = filteredSubCategories.some(sc => sc.value === selectedSubCategoryId);
+      if (!isValid) {
+        setValue("subCategoryId", undefined, { shouldValidate: true });
+      }
+    }
+  }, [selectedCategoryId, selectedSubCategoryId, filteredSubCategories, setValue]);
 
   return (
     <div className={isActive ? "space-y-6" : "hidden"}>
@@ -30,13 +48,6 @@ export function BasicInfoTab({ categories, isActive }: BasicInfoTabProps) {
         <Package size={20} className="text-gold-500" />
         Basic Details
       </h2>
-
-      <AdminInput
-        label="Product Title *"
-        placeholder="e.g. Natural Ceylon Blue Sapphire 5.62 Carat"
-        {...register("name")}
-        error={errors.name?.message}
-      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
@@ -59,27 +70,52 @@ export function BasicInfoTab({ categories, isActive }: BasicInfoTabProps) {
         <div>
           <Controller
             control={control}
-            name="status"
+            name="subCategoryId"
             render={({ field }) => (
               <AdminSelect
-                label="Catalog Status"
-                options={[
-                  { value: "ACTIVE", label: "Active (Visible on Store)" },
-                  { value: "DRAFT", label: "Draft (Hidden)" },
-                ]}
-                value={
-                  [
-                    { value: "ACTIVE", label: "Active (Visible on Store)" },
-                    { value: "DRAFT", label: "Draft (Hidden)" },
-                  ].find((o) => o.value === field.value) || null
-                }
-                onChange={(opt: any) =>
-                  field.onChange(opt ? opt.value : "ACTIVE")
-                }
+                label="SubCategory *"
+                placeholder="Choose subcategory"
+                options={filteredSubCategories}
+                value={filteredSubCategories.find((sc) => sc.value === field.value) || null}
+                onChange={(opt: any) => field.onChange(opt ? opt.value : "")}
+                error={errors.subCategoryId?.message}
+                isDisabled={!selectedCategoryId}
               />
             )}
           />
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <AdminInput
+          label="Product Title *"
+          placeholder="e.g. Natural Ceylon Blue Sapphire 5.62 Carat"
+          {...register("name")}
+          error={errors.name?.message}
+        />
+
+        <Controller
+          control={control}
+          name="status"
+          render={({ field }) => (
+            <AdminSelect
+              label="Catalog Status"
+              options={[
+                { value: "ACTIVE", label: "Active (Visible on Store)" },
+                { value: "DRAFT", label: "Draft (Hidden)" },
+              ]}
+              value={
+                [
+                  { value: "ACTIVE", label: "Active (Visible on Store)" },
+                  { value: "DRAFT", label: "Draft (Hidden)" },
+                ].find((o) => o.value === field.value) || null
+              }
+              onChange={(opt: any) =>
+                field.onChange(opt ? opt.value : "ACTIVE")
+              }
+            />
+          )}
+        />
       </div>
 
       <div>

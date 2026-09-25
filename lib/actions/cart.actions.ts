@@ -3,7 +3,7 @@
 import dbConnect from "@/lib/db";
 import { TemporaryCart } from "@/lib/models/cart";
 import { Product } from "@/lib/models/product";
-import { ProductVariant } from "@/lib/models/product-variant";
+import { Inventory } from "@/lib/models/inventory";
 import { CartLine } from "@/lib/types";
 
 export async function syncCart(sessionId: string, lines: CartLine[]) {
@@ -17,8 +17,6 @@ export async function syncCart(sessionId: string, lines: CartLine[]) {
       variantId: line.variantId,
       quantity: line.quantity,
       priceSnapshot: line.unitPrice,
-      variantValue: line.variantValue,
-      calculatePriceOnVariantValue: line.calculatePriceOnVariantValue,
     }));
 
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
@@ -56,19 +54,17 @@ export async function validateCart(sessionId: string) {
     const productIds = [
       ...new Set(cart.items.map((item: any) => String(item.productId))),
     ];
-    const [products, variants] = await Promise.all([
+    const [products, inventories] = await Promise.all([
       Product.find({ _id: { $in: productIds } }).lean(),
-      ProductVariant.find({ productId: { $in: productIds } }).lean(),
+      Inventory.find({ productId: { $in: productIds } }).lean(),
     ]);
 
     const productById = new Map(
       products.map((p: any) => [p._id.toString(), p]),
     );
-    const variantsByProduct = new Map<string, any[]>();
-    for (const v of variants) {
-      const key = v.productId.toString();
-      if (!variantsByProduct.has(key)) variantsByProduct.set(key, []);
-      variantsByProduct.get(key)!.push(v);
+    const inventoryByProduct = new Map<string, any>();
+    for (const inv of inventories) {
+      inventoryByProduct.set(inv.productId.toString(), inv);
     }
 
     const validations = [];
@@ -86,28 +82,8 @@ export async function validateCart(sessionId: string) {
         continue;
       }
 
-      const productVariants =
-        variantsByProduct.get(String(item.productId)) || [];
-      let stock = 0;
-      let reserved = 0;
-      if (item.variantId) {
-        const variant = productVariants.find(
-          (v) => v._id.toString() === String(item.variantId),
-        );
-        if (variant) {
-          stock = variant.stock || 0;
-          reserved = variant.reservedQuantity || 0;
-        }
-      } else {
-        // No specific variant selected — validate against the product's total stock.
-        stock = productVariants.reduce((acc, v) => acc + (v.stock || 0), 0);
-        reserved = productVariants.reduce(
-          (acc, v) => acc + (v.reservedQuantity || 0),
-          0,
-        );
-      }
-
-      const available = Math.max(0, stock - reserved);
+      const inv = inventoryByProduct.get(String(item.productId));
+      const available = inv ? inv.availableStock : 0;
       if (item.quantity > available) {
         validations.push(`Only ${available} left for ${product.name}.`);
       }

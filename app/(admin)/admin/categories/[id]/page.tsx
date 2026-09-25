@@ -15,12 +15,7 @@ import StatusBadge from "@/components/admin/ui/StatusBadge";
 
 export const dynamic = "force-dynamic";
 
-const variantTypeLabels: Record<string, string> = {
-  CARAT: "Carat",
-  SIZE: "Size",
-  WEIGHT: "Weight",
-  NONE: "No variants",
-};
+
 
 export default async function ViewCategoryPage({
   params,
@@ -38,7 +33,7 @@ export default async function ViewCategoryPage({
   const isActive = category.status !== "DRAFT";
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-16">
+    <div className="space-y-6 max-w-8xl mx-auto pb-16">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -131,36 +126,7 @@ export default async function ViewCategoryPage({
             </div>
           </div>
 
-          {/* 3. Variant Configuration */}
-          <div className="bg-white dark:bg-gold-900 border border-gold-200 dark:border-gold-800 rounded-xl shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-gold-100 dark:border-gold-800 flex items-center gap-2">
-              <Layers size={18} className="text-gold-500 dark:text-gold-400" />
-              <h2 className="font-semibold text-gold-800 dark:text-white">
-                Variant Configuration
-              </h2>
-            </div>
-            <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-gold-50 dark:bg-gold-800/50 p-3 rounded-lg border border-gold-100 dark:border-gold-800">
-                <h3 className="text-xs font-medium text-gold-500 dark:text-gold-400 uppercase tracking-wider mb-1">
-                  Variant Type
-                </h3>
-                <p className="text-gold-800 dark:text-gold-200 font-medium">
-                  {variantTypeLabels[category.variantType] ||
-                    category.variantType}
-                </p>
-              </div>
-              <div className="bg-gold-50 dark:bg-gold-800/50 p-3 rounded-lg border border-gold-100 dark:border-gold-800">
-                <h3 className="text-xs font-medium text-gold-500 dark:text-gold-400 uppercase tracking-wider mb-1">
-                  Price by Variant Value
-                </h3>
-                <p className="text-gold-800 dark:text-gold-200 font-medium">
-                  {category.calculatePriceOnVariantValue
-                    ? "Enabled"
-                    : "Disabled"}
-                </p>
-              </div>
-            </div>
-          </div>
+
         </div>
 
         {/* RIGHT COLUMN: Meta Info */}

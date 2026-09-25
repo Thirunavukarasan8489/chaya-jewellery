@@ -11,8 +11,6 @@ export const CategorySchema = z.object({
   metaTitle: z.string().optional(),
   metaDescription: z.string().optional(),
   image: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  variantType: z.enum(["CARAT", "SIZE", "WEIGHT", "NONE"]).default("NONE"),
-  calculatePriceOnVariantValue: z.boolean().default(false),
 });
 
 export type CategoryInput = z.infer<typeof CategorySchema>;

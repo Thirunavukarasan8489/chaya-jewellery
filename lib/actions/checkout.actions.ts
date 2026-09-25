@@ -3,7 +3,6 @@
 import dbConnect from "@/lib/db";
 import { Order } from "@/lib/models/order";
 import { Customer } from "@/lib/models/customer";
-import { ProductVariant } from "@/lib/models/product-variant";
 import { Product } from "@/lib/models/product";
 import { Payment } from "@/lib/models/payment";
 import { Category } from "@/lib/models/category";
@@ -49,7 +48,6 @@ async function resolveOrderItems(items: any[]) {
     throw new Error("Cart is empty");
   }
 
-  const variantIds = items.map((i) => i?.variantId).filter(Boolean);
   const products = await Product.find({
     _id: { $in: items.map((item) => item.productId) },
     status: "ACTIVE",
@@ -57,31 +55,10 @@ async function resolveOrderItems(items: any[]) {
   const productById = new Map(
     products.map((product: any) => [String(product._id), product]),
   );
-  const productIdsNeedingFallback = items
-    .filter((i) => !i?.variantId)
-    .map((i) => i?.productId)
-    .filter(Boolean);
-
-  const [variantsById, fallbackVariants] = await Promise.all([
-    variantIds.length ? ProductVariant.find({ _id: { $in: variantIds } }) : [],
-    productIdsNeedingFallback.length
-      ? ProductVariant.find({ productId: { $in: productIdsNeedingFallback } })
-      : [],
-  ]);
-
-  const variantByIdMap = new Map(
-    variantsById.map((v: any) => [v._id.toString(), v]),
-  );
-  const fallbackByProductMap = new Map<string, any>();
-  for (const v of fallbackVariants) {
-    const pid = v.productId.toString();
-    // A product with multiple variants requires an explicit selection.
-    fallbackByProductMap.set(pid, fallbackByProductMap.has(pid) ? null : v);
-  }
 
   const categoryIds = new Set<string>();
-  for (const v of [...variantsById, ...fallbackVariants]) {
-    if (v.categoryId) categoryIds.add(v.categoryId.toString());
+  for (const p of products) {
+    if (p.category) categoryIds.add(p.category.toString());
   }
   const categories = categoryIds.size
     ? await Category.find({ _id: { $in: Array.from(categoryIds) } })
@@ -95,7 +72,6 @@ async function resolveOrderItems(items: any[]) {
 
   const resolved: Array<{
     productId: string;
-    variantId: string;
     sku?: string;
     name: string;
     quantity: number;
@@ -117,28 +93,13 @@ async function resolveOrderItems(items: any[]) {
       throw new Error("Invalid item quantity");
     }
 
-    let variant = item?.variantId
-      ? variantByIdMap.get(String(item.variantId))
-      : undefined;
-    if (!variant && item?.productId)
-      variant = fallbackByProductMap.get(String(item.productId));
-    if (
-      !variant ||
-      String(variant.productId) !== String(item.productId) ||
-      variant.purchaseType === "ENQUIRE_ONLY"
-    ) {
-      throw new Error("One of the items in your cart is no longer available.");
-    }
-
-    const calcOnValue = variant.categoryId
-      ? !!calcOnValueByCategory.get(variant.categoryId.toString())
+    const calcOnValue = product.category
+      ? !!calcOnValueByCategory.get(product.category.toString())
       : false;
-    const price = variant.price; // canonical, from the database — never from `item.price`
-    const variantValue = variant.variantValue;
-    const lineTotal =
-      calcOnValue && variantValue
-        ? price * quantity * variantValue
-        : price * quantity;
+    const price = product.price; // canonical, from the database
+    const variantValue = undefined; // No variants anymore
+    const lineTotal = price * quantity;
+    
     if (
       !Number.isFinite(price) ||
       price <= 0 ||
@@ -149,10 +110,9 @@ async function resolveOrderItems(items: any[]) {
     }
 
     resolved.push({
-      productId: variant.productId.toString(),
-      variantId: variant._id.toString(),
-      sku: variant.sku,
-      name: variant.name,
+      productId: product._id.toString(),
+      sku: product.productCode || product.sku,
+      name: product.name,
       quantity,
       price,
       variantValue,
@@ -224,7 +184,6 @@ export async function placeOrder(input: unknown) {
         for (const item of resolvedItems) {
           await reserveInventory(
             item.productId,
-            item.variantId,
             item.quantity,
             dbSession,
           );
@@ -358,12 +317,10 @@ export async function placeOrder(input: unknown) {
           purchaseType: "PERSONAL",
           items: resolvedItems.map((item) => ({
             productId: item.productId,
-            variantId: item.variantId,
             sku: item.sku,
             name: item.name,
             quantity: item.quantity,
             price: item.price,
-            variantValue: item.variantValue,
             calculatePriceOnVariantValue: item.calculatePriceOnVariantValue,
           })),
           subtotal: totals.subtotal,
