@@ -128,11 +128,10 @@ export async function createOrder(data: any) {
 
       // 3. Update Product Inventory
       for (const item of validatedData.items) {
-        if (!item.productId || !item.variantId) continue;
+        if (!item.productId) continue;
 
         await reserveInventory(
           item.productId.toString(),
-          item.variantId,
           item.quantity,
           session,
         );
@@ -141,7 +140,6 @@ export async function createOrder(data: any) {
         if (validatedData.paymentStatus === "CONFIRMED") {
           await finalizeInventory(
             item.productId.toString(),
-            item.variantId,
             item.quantity,
             session,
           );
@@ -224,12 +222,11 @@ export async function cancelOrder(id: string, reason: string) {
 
       // Restock or release inventory depending on payment status
       for (const item of order.items) {
-        if (!item.productId || !item.variantId) continue;
+        if (!item.productId) continue;
         if (order.paymentStatus !== "CONFIRMED") {
           // It was only reserved
           await releaseInventory(
             item.productId.toString(),
-            item.variantId,
             item.quantity,
             session,
           );
@@ -237,7 +234,6 @@ export async function cancelOrder(id: string, reason: string) {
           // It was paid and finalized, so restock it
           await restockInventory(
             item.productId.toString(),
-            item.variantId,
             item.quantity,
             session,
           );

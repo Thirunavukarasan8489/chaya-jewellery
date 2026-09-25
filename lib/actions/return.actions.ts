@@ -128,10 +128,9 @@ export async function processReturn(
         returnReq.status === "PENDING_INSPECTION"
       ) {
         for (const item of returnReq.items) {
-          if (!item.productId || !item.variantId) continue;
+          if (!item.productId) continue;
           await restockInventory(
             item.productId.toString(),
-            item.variantId,
             item.quantity,
             session,
           );

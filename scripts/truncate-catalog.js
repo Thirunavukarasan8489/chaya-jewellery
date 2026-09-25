@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { loadEnvConfig } = require("@next/env");
 loadEnvConfig(process.cwd());
 const mongoose = require("mongoose");

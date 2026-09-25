@@ -72,7 +72,6 @@ async function resolveOrderItems(items: any[]) {
 
   const resolved: Array<{
     productId: string;
-    variantId?: string;
     sku?: string;
     name: string;
     quantity: number;
@@ -112,7 +111,6 @@ async function resolveOrderItems(items: any[]) {
 
     resolved.push({
       productId: product._id.toString(),
-      variantId: item.variantId || undefined,
       sku: product.productCode || product.sku,
       name: product.name,
       quantity,
@@ -186,7 +184,6 @@ export async function placeOrder(input: unknown) {
         for (const item of resolvedItems) {
           await reserveInventory(
             item.productId,
-            item.variantId,
             item.quantity,
             dbSession,
           );
@@ -320,12 +317,10 @@ export async function placeOrder(input: unknown) {
           purchaseType: "PERSONAL",
           items: resolvedItems.map((item) => ({
             productId: item.productId,
-            variantId: item.variantId,
             sku: item.sku,
             name: item.name,
             quantity: item.quantity,
             price: item.price,
-            variantValue: item.variantValue,
             calculatePriceOnVariantValue: item.calculatePriceOnVariantValue,
           })),
           subtotal: totals.subtotal,

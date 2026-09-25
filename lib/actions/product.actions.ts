@@ -337,12 +337,15 @@ export async function deleteProduct(id: string) {
     const productToDelete = await Product.findById(id).lean();
     if (!productToDelete) throw new Error("Product not found");
 
-    const variantsToDelete = await ProductVariant.find({
-      productId: id,
-    }).lean();
-
     await Product.findByIdAndDelete(id);
-    await ProductVariant.deleteMany({ productId: id });
+    
+    // Cleanup new Inventory records
+    const inventories = await mongoose.models.Inventory.find({ productId: id });
+    for (const inv of inventories) {
+      await mongoose.models.InventoryRack.deleteMany({ inventoryId: inv._id });
+      await mongoose.models.InventoryMovement.deleteMany({ inventoryId: inv._id });
+    }
+    await mongoose.models.Inventory.deleteMany({ productId: id });
 
     // Clean up images asynchronously
     const urlsToDelete = new Set<string>();
@@ -353,13 +356,7 @@ export async function deleteProduct(id: string) {
         if (g.url) urlsToDelete.add(g.url);
       });
     }
-    for (const v of variantsToDelete as any[]) {
-      if (v.primaryImage?.url) urlsToDelete.add(v.primaryImage.url);
-      if (v.gallery)
-        v.gallery.forEach((g: any) => {
-          if (g.url) urlsToDelete.add(g.url);
-        });
-    }
+    // No variants to delete images for
 
     // Fire and forget
     Promise.allSettled(

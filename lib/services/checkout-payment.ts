@@ -135,7 +135,6 @@ async function applyGatewayProof(localOrderId: string, proof: GatewayProof) {
           for (const item of order.items) {
             await finalizeInventory(
               String(item.productId),
-              item.variantId,
               item.quantity,
               session,
             );
@@ -315,7 +314,6 @@ export async function expireCashfreeCheckout(localOrderId: string) {
       for (const item of cancelled.items) {
         await releaseInventory(
           String(item.productId),
-          item.variantId,
           item.quantity,
           session,
         );

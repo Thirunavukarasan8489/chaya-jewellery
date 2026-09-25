@@ -93,14 +93,13 @@ export function QuickAdd({ product }: { product: Product }) {
       aria-label={soldOut ? "Sold out" : `Add ${product.name} to cart`}
       onClick={(e) => {
         e.preventDefault();
-        const variant = product.variants?.[0];
         add(
           product,
           1,
-          product.selectedVariantName,
+          undefined,
           product.sellingPrice,
-          variant?.id,
-          variant?.sku,
+          undefined,
+          product.sku,
         );
       }}
       className="grid size-11 shrink-0 place-items-center rounded-none bg-plum-900 text-ivory-100 shadow-md transition-[background-color,transform] duration-200 hover:bg-gold-500 hover:text-plum-950 active:scale-95 disabled:pointer-events-none disabled:opacity-35"

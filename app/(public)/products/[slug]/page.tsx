@@ -26,7 +26,7 @@ import {
   getRelatedProducts,
 } from "@/lib/services/product-service";
 import { NAV_DATA } from "@/lib/utils";
-import { availableQuantity } from "@/lib/types";
+import { availableQuantity, type Product } from "@/lib/types";
 
 export async function generateStaticParams() {
   const products = await getProducts();
