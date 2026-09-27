@@ -115,7 +115,7 @@ export default async function AccountDashboardPage() {
       </div>
 
       {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-plum-900 to-plum-800 rounded-3xl p-8 sm:p-10 text-white relative overflow-hidden shadow-lg shadow-plum-900/20">
+      <div className="bg-linear-to-r from-plum-900 to-plum-800 rounded-3xl p-8 sm:p-10 text-white relative overflow-hidden shadow-lg shadow-plum-900/20">
         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-none bg-gold-400/20 blur-3xl mix-blend-screen"></div>
         <div className="relative z-10">
           <h1 className="text-3xl font-display font-bold">

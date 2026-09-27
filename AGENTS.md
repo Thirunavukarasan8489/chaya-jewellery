@@ -1061,6 +1061,40 @@ and requested Google OAuth login/registration support for customers.
 full `npm run build` with Turbopack and static optimization completed cleanly
 with all 36 routes and dynamic endpoints prerendered.
 
+## 2026-09-27 guest checkout, email OTP order history, proxy.ts & /products overhaul
+
+Comprehensive platform update addressing friction-free guest checkout, returning customer order lookup via passwordless email OTP, Next.js 16 file-convention proxy routing, dynamic subcategory filtering in admin, public catalog search/filter calibration, and security/performance indexing.
+
+**1. Friction-Free Guest Checkout (`/checkout`):**
+
+- **Zero-barrier checkout:** Removed mandatory login or OAuth callback prompts prior to checkout. Customers clicking "Checkout" from the bag or product pages navigate directly to `/checkout`.
+- **`proxy.ts` (Next.js 16 conventions):** Removed `/checkout` from `isPublicProtectedRoute` and the route matcher config in `proxy.ts`. Only `/account`, `/admin`, and private user profile routes remain protected.
+- **`CheckoutClient.tsx`:** Removed Google Sign-in auth banner blocks and redirect handlers. The single-page checkout focuses strictly on collecting shipping address, customer email/phone, and payment initiation.
+- **Order attribution:** Guest orders store the customer's email, phone, and shipping address on the `Order` model with `userId: null` (or linked automatically if a customer session exists).
+
+**2. Customer Revisit & Passwordless Email OTP Order Sync:**
+
+- **Order Lookup via Email:** Returning customers can access their order history anytime by logging in with the email address used during guest checkout.
+- **Email OTP Authentication:** `/login` supports 6-digit email OTP (backed by `EmailOtp` collection, bcrypt hashing, 10-minute expiry, and Resend transactional email dispatch).
+- **Unified Order History:** `getOrdersByUser()` in `lib/services/order-service.ts` queries orders using `$or: [{ userId: userObjId }, { email: { $regex: ... } }]`, automatically associating past guest purchases with the authenticated user profile on `/account/orders`.
+
+**3. Admin SubCategory & Combo Settings:**
+
+- `components/admin/SubCategoryForm.tsx`: Updated the "Combo Includes" selection to dynamically filter available subcategories by the selected Parent Category, preventing invalid cross-category combo assignments.
+
+**4. Public Catalog (`/products`) Calibration:**
+
+- **Price band calibration (`lib/filters.ts`):** Replaced legacy paise-denominated filter thresholds with actual INR price bands (`under-1500`, `1500-3500`, `3500-7500`, `7500-15000`, `above-15000`) matching the store's catalogue prices.
+- **Dynamic Filters & Active Bar:** Added dynamic subcategory and product item type (`SINGLE` vs `COMBO`) filtering in `product-filters.tsx`, along with a dismissible `ActiveFiltersBar` above the product grid.
+- **Branding & SEO:** Updated catalog metadata, page title, and empty-state copy from legacy gemstone references to Chaya Jewellery luxury collections.
+
+**5. Database & Security Hardening:**
+
+- **Compound MongoDB Indexes:** Added compound indexes to `lib/models/product.ts` (`{ status: 1, createdAt: -1 }`, `{ category: 1, status: 1 }`, `{ subCategory: 1, status: 1 }`, `{ status: 1, featured: 1 }`, `{ status: 1, bestseller: 1 }`) and `lib/models/order.ts` (`{ orderStatus: 1, paymentStatus: 1, createdAt: -1 }`, `{ userId: 1, createdAt: -1 }`, `{ email: 1, createdAt: -1 }`).
+- **Lead Submission Rate Limiting:** Added 60-second in-memory anti-flood protection in `createLead` (`lib/actions/lead.actions.ts`).
+
+**Verification:** `npx tsc --noEmit` verified clean (0 errors); all server actions, models, and client components typecheck cleanly.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

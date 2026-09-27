@@ -335,7 +335,7 @@ export function FilterBar({
 
   return (
     <>
-      <div className="sticky top-[5.75rem] z-30 -mx-4 border-y border-ivory-300 bg-ivory-100/92 px-4 py-2.5 backdrop-blur-md sm:-mx-6 sm:px-6 lg:top-[6.5rem]">
+      <div className="sticky top-23 z-30 -mx-4 border-y border-ivory-300 bg-ivory-100/92 px-4 py-2.5 backdrop-blur-md sm:-mx-6 sm:px-6 lg:top-26">
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
@@ -394,7 +394,7 @@ export function FilterBar({
             role="dialog"
             aria-modal="true"
             aria-label="Filter products"
-            className="absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col rounded-t-3xl bg-ivory-100 pb-[env(safe-area-inset-bottom)]"
+            className="absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col rounded-t-3xl bg-ivory-100 safe-b"
             style={{ animation: "sheet-in .3s var(--ease-out-soft) both" }}
           >
             <div className="relative flex shrink-0 items-center justify-between border-b border-ivory-300 px-4 pt-4 pb-3">
@@ -459,7 +459,7 @@ export function FilterSidebar({
 
   return (
     <aside className="hidden lg:block">
-      <div className="sticky top-[9.5rem]">
+      <div className="sticky top-38">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-plum-900">Refine</h2>
           {count > 0 && (

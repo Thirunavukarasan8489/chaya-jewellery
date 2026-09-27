@@ -81,14 +81,13 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  // Guest checkout is no longer allowed — /checkout now requires a signed-in
-  // CUSTOMER, same as /account/*.
+  // Protected customer account routes (/account/*, /dashboard).
+  // Note: /checkout is 100% friction-free guest checkout — no login required.
   const isPublicProtectedRoute =
     pathname === "/dashboard" ||
-    pathname.startsWith("/account") ||
-    pathname.startsWith("/checkout");
+    pathname.startsWith("/account");
 
-  // Protection logic for /account and /checkout routes
+  // Protection logic for /account routes
   if (isPublicProtectedRoute) {
     if (token && token.role !== "CUSTOMER") {
       return NextResponse.redirect(new URL("/admin", req.url));
@@ -180,8 +179,6 @@ export const config = {
     "/admin/:path*",
     "/account/:path*",
     "/dashboard",
-    "/checkout/:path*",
-    "/checkout",
     "/login",
     "/register",
     "/forgot-password",

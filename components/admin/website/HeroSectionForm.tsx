@@ -354,9 +354,9 @@ export default function HeroSectionForm({
             </div>
 
             {/* Preview */}
-            <div className="flex flex-col items-center justify-center w-full h-full min-h-[160px] bg-gold-50/50 dark:bg-gold-900/50 rounded-lg border border-gold-200 dark:border-gold-800 p-2">
+            <div className="flex flex-col items-center justify-center w-full h-full min-h-40 bg-gold-50/50 dark:bg-gold-900/50 rounded-lg border border-gold-200 dark:border-gold-800 p-2">
               {imagePreview || formData.image ? (
-                <div className="relative w-full h-full min-h-[160px] rounded-md overflow-hidden group shadow-sm">
+                <div className="relative w-full h-full min-h-40 rounded-md overflow-hidden group shadow-sm">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={imagePreview || formData.image}

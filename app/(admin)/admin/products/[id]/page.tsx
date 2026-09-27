@@ -285,7 +285,7 @@ async function ProductViewLoader({ id }: { id: string }) {
                     ))}
                   </div>
                 ) : (
-                  <div className="h-full min-h-[120px] flex items-center justify-center border-2 border-dashed border-gold-200 dark:border-gold-800 rounded-xl bg-gold-50/50 dark:bg-gold-900/20">
+                  <div className="h-full min-h-30 flex items-center justify-center border-2 border-dashed border-gold-200 dark:border-gold-800 rounded-xl bg-gold-50/50 dark:bg-gold-900/20">
                     <p className="text-sm text-gold-500 dark:text-gold-400">
                       No gallery images uploaded.
                     </p>

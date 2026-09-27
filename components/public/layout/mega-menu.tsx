@@ -31,13 +31,13 @@ export function MegaMenu({ data, onClose }: MegaMenuProps) {
 
   return (
     <div
-      className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[920px] max-w-[95vw] rounded-2xl border border-gold-500/30 bg-ivory-50/98 backdrop-blur-xl shadow-2xl shadow-plum-950/20 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+      className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-230 max-w-[95vw] rounded-2xl border border-gold-500/30 bg-ivory-50/98 backdrop-blur-xl shadow-2xl shadow-plum-950/20 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200"
       onMouseLeave={onClose}
     >
       {/* Top Luxury Accent Strip */}
-      <div className="h-1 w-full bg-gradient-to-r from-plum-900 via-gold-500 to-plum-900" />
+      <div className="h-1 w-full bg-linear-to-r from-plum-900 via-gold-500 to-plum-900" />
 
-      <div className="grid grid-cols-[280px_1fr] min-h-[420px]">
+      <div className="grid grid-cols-[280px_1fr] min-h-105">
         {/* Left Column: Categories & Combos selector */}
         <div className="border-r border-ivory-300 bg-ivory-100/70 p-4 flex flex-col justify-between">
           <div className="space-y-1">
@@ -50,7 +50,7 @@ export function MegaMenu({ data, onClose }: MegaMenuProps) {
               </span>
             </div>
 
-            <div className="space-y-1 max-h-[290px] overflow-y-auto pr-1">
+            <div className="space-y-1 max-h-72.5 overflow-y-auto pr-1">
               {categories.map((cat) => {
                 const isActive = selectedKey === cat.id;
                 const subCount = cat.subCategories?.length || 0;
@@ -108,7 +108,7 @@ export function MegaMenu({ data, onClose }: MegaMenuProps) {
                 onClick={() => setSelectedKey("combos")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-left transition-all border ${
                   isComboSelected
-                    ? "bg-gradient-to-r from-plum-950 to-plum-900 text-gold-300 border-gold-500/50 shadow-md"
+                    ? "bg-linear-to-r from-plum-950 to-plum-900 text-gold-300 border-gold-500/50 shadow-md"
                     : "bg-gold-500/10 hover:bg-gold-500/20 text-plum-950 border-gold-500/30"
                 }`}
               >
@@ -143,7 +143,7 @@ export function MegaMenu({ data, onClose }: MegaMenuProps) {
         </div>
 
         {/* Right Column: Subcategories or Grouped Combos */}
-        <div className="p-6 bg-ivory-50 flex flex-col justify-between max-h-[460px] overflow-y-auto">
+        <div className="p-6 bg-ivory-50 flex flex-col justify-between max-h-115 overflow-y-auto">
           {/* View 1: Category Subcategories */}
           {!isComboSelected && activeCategory && (
             <div className="space-y-4">
