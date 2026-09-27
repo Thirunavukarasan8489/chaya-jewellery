@@ -108,8 +108,9 @@ const OrderSchema = new mongoose.Schema(
 
 OrderSchema.index({ orderStatus: 1 });
 OrderSchema.index({ paymentStatus: 1 });
-// PERFORMANCE: the admin order list's default sort (order.actions.ts) is
-// createdAt descending with no status filter — unindexed before this.
+OrderSchema.index({ orderStatus: 1, paymentStatus: 1, createdAt: -1 });
+OrderSchema.index({ userId: 1, createdAt: -1 });
+OrderSchema.index({ email: 1, createdAt: -1 });
 OrderSchema.index({ createdAt: -1 });
 
 export const Order =

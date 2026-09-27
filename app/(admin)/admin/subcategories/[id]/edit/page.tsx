@@ -31,6 +31,9 @@ export default async function EditSubCategoryPage({
     ? subCategoriesRes.data.map((sc: any) => ({
         label: sc.name,
         value: String(sc._id),
+        category: String(sc.category?._id || sc.category || ""),
+        categoryName: sc.category?.name || "",
+        type: sc.type || "SINGLE",
       }))
     : [];
 

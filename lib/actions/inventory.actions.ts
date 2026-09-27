@@ -161,6 +161,7 @@ export async function updateStockLevel(params: {
   productId: string;
   adjustment: number;
   reason?: string;
+  rackId?: string;
 }) {
   try {
     const authSession = await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER"]);
@@ -185,19 +186,112 @@ export async function updateStockLevel(params: {
       inventory.availableStock = newStock;
       await inventory.save({ session });
 
-      // Note: A full implementation would apply this adjustment to individual racks.
-      // For now, this is a simplified global adjustment since the UI doesn't specify which rack to adjust.
+      const rackCapacity = inventory.rackCapacity || 20;
 
-      await InventoryMovement.create([{
-        inventoryId: inventory._id,
-        productId: params.productId,
-        type: "MANUAL_ADJUSTMENT",
-        quantity: params.adjustment,
-        previousQuantity: prevStock,
-        newQuantity: newStock,
-        reason: params.reason || "Manual Stock Adjustment",
-        createdByName: authSession.name || "Admin",
-      }], { session });
+      // ── RACK FLOW SYNCHRONIZATION ──
+      if (params.rackId) {
+        // Specific targeted rack adjustment
+        const targetRack = await InventoryRack.findById(params.rackId).session(session);
+        if (!targetRack) {
+          throw new Error("Target rack not found.");
+        }
+        const updatedQty = targetRack.quantity + params.adjustment;
+        if (updatedQty < 0) {
+          throw new Error(`Rack ${targetRack.rackNumber} does not have enough stock to deduct.`);
+        }
+        if (updatedQty > targetRack.capacity) {
+          throw new Error(`Rack ${targetRack.rackNumber} cannot exceed its capacity of ${targetRack.capacity}.`);
+        }
+        targetRack.quantity = updatedQty;
+        targetRack.status =
+          updatedQty === targetRack.capacity ? "FULL" : updatedQty === 0 ? "EMPTY" : "AVAILABLE";
+        await targetRack.save({ session });
+      } else if (params.adjustment > 0) {
+        // ── STOCK INCREASE (+Δ): Fill existing racks ascending, spawn new on overflow ──
+        const existingRacks = await InventoryRack.find({ productId: params.productId })
+          .sort({ rackNumber: 1 })
+          .session(session);
+
+        let remainingToAdd = params.adjustment;
+
+        // 1. Fill available space in existing racks
+        for (const rack of existingRacks) {
+          if (remainingToAdd <= 0) break;
+          const availableSpace = rack.capacity - rack.quantity;
+          if (availableSpace > 0) {
+            const qtyToAdd = Math.min(remainingToAdd, availableSpace);
+            rack.quantity += qtyToAdd;
+            rack.status = rack.quantity === rack.capacity ? "FULL" : "AVAILABLE";
+            remainingToAdd -= qtyToAdd;
+            await rack.save({ session });
+          }
+        }
+
+        // 2. Spawn new sequential racks if stock exceeds existing capacity
+        if (remainingToAdd > 0) {
+          const product = await Product.findById(params.productId).session(session);
+          const productCode =
+            product?.productCode || product?.sku || `PRD-${params.productId.substring(0, 6)}`;
+          let lastRackNumber =
+            existingRacks.length > 0
+              ? Math.max(...existingRacks.map((r: any) => r.rackNumber))
+              : 0;
+
+          const newRacksToInsert = [];
+          while (remainingToAdd > 0) {
+            lastRackNumber++;
+            const qtyInThisRack = Math.min(remainingToAdd, rackCapacity);
+            newRacksToInsert.push({
+              inventoryId: inventory._id,
+              productId: params.productId,
+              rackNumber: lastRackNumber,
+              internalProductCode: `${productCode}-R${lastRackNumber}`,
+              capacity: rackCapacity,
+              quantity: qtyInThisRack,
+              status: qtyInThisRack === rackCapacity ? "FULL" : "AVAILABLE",
+            });
+            remainingToAdd -= qtyInThisRack;
+          }
+
+          if (newRacksToInsert.length > 0) {
+            await InventoryRack.insertMany(newRacksToInsert, { session });
+          }
+        }
+      } else if (params.adjustment < 0) {
+        // ── STOCK DECREASE (-Δ): LIFO drain from highest rack downwards ──
+        const existingRacks = await InventoryRack.find({ productId: params.productId })
+          .sort({ rackNumber: -1 })
+          .session(session);
+
+        let remainingToDeduct = Math.abs(params.adjustment);
+
+        for (const rack of existingRacks) {
+          if (remainingToDeduct <= 0) break;
+          if (rack.quantity > 0) {
+            const qtyToDeduct = Math.min(remainingToDeduct, rack.quantity);
+            rack.quantity -= qtyToDeduct;
+            rack.status = rack.quantity === 0 ? "EMPTY" : "AVAILABLE";
+            remainingToDeduct -= qtyToDeduct;
+            await rack.save({ session });
+          }
+        }
+      }
+
+      await InventoryMovement.create(
+        [
+          {
+            inventoryId: inventory._id,
+            productId: params.productId,
+            type: "MANUAL_ADJUSTMENT",
+            quantity: params.adjustment,
+            previousQuantity: prevStock,
+            newQuantity: newStock,
+            reason: params.reason || "Manual Stock Adjustment",
+            createdByName: authSession.name || "Admin",
+          },
+        ],
+        { session },
+      );
 
       await session.commitTransaction();
       session.endSession();
@@ -282,3 +376,48 @@ export async function getProductsWithoutInventory() {
     return { success: false, error: error.message };
   }
 }
+
+export async function getInventoryRacks(productId: string) {
+  try {
+    await checkAuth(["SUPER_ADMIN", "CONTENT_MANAGER", "LEAD_MANAGER"]);
+    await dbConnect();
+
+    const [racks, product, inventory] = await Promise.all([
+      InventoryRack.find({ productId }).sort({ rackNumber: 1 }).lean(),
+      Product.findById(productId).select("name productCode").lean(),
+      Inventory.findOne({ productId }).lean(),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        product: product
+          ? {
+              _id: (product as any)._id.toString(),
+              name: (product as any).name,
+              productCode: (product as any).productCode,
+            }
+          : null,
+        inventory: inventory
+          ? {
+              availableStock: (inventory as any).availableStock,
+              lowStockThreshold: (inventory as any).lowStockThreshold,
+              rackCapacity: (inventory as any).rackCapacity,
+            }
+          : null,
+        racks: racks.map((r: any) => ({
+          _id: r._id.toString(),
+          rackNumber: r.rackNumber,
+          internalProductCode: r.internalProductCode || `Rack ${r.rackNumber}`,
+          quantity: r.quantity,
+          capacity: r.capacity,
+          status: r.status,
+          updatedAt: r.updatedAt?.toISOString(),
+        })),
+      },
+    };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+

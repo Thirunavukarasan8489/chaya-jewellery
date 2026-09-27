@@ -10,7 +10,8 @@ import {
   recordCashfreeCheckoutResult,
 } from "@/lib/actions/checkout.actions";
 import toast from "react-hot-toast";
-import { CheckCircle2, ChevronRight } from "lucide-react";
+import { CheckCircle2, ChevronRight, Sparkles, UserCheck } from "lucide-react";
+import { GoogleSignInButton } from "@/components/public/auth/google-sign-in-button";
 
 type FormData = {
   firstName: string;
@@ -443,69 +444,103 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
           {step > 1 ? (
             <p className="text-sm text-plum-600 line-clamp-2">{step1Summary}</p>
           ) : (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-plum-900 mb-1">
-                  First Name *
-                </label>
-                <input
-                  required
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  className="w-full rounded-xl border border-plum-200 px-4 py-2.5 focus:ring-2 focus:ring-gold-500 outline-none text-sm"
-                  placeholder="Jane"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-plum-900 mb-1">
-                  Last Name *
-                </label>
-                <input
-                  required
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  className="w-full rounded-xl border border-plum-200 px-4 py-2.5 focus:ring-2 focus:ring-gold-500 outline-none text-sm"
-                  placeholder="Doe"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-plum-900 mb-1">
-                  Email *
-                </label>
-                <input
-                  required
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full rounded-xl border border-plum-200 px-4 py-2.5 focus:ring-2 focus:ring-gold-500 outline-none text-sm"
-                  placeholder="you@example.com"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-plum-900 mb-1">
-                  Phone *
-                </label>
-                <input
-                  required
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="w-full rounded-xl border border-plum-200 px-4 py-2.5 focus:ring-2 focus:ring-gold-500 outline-none text-sm"
-                  placeholder="+91 98765 43210"
-                />
-              </div>
+            <div className="space-y-4">
+              {/* Google Fast Checkout or Guest Indicator */}
+              {!customer ? (
+                <div className="p-4 rounded-xl bg-ivory-100/90 border border-ivory-300 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold text-plum-950 flex items-center gap-1.5">
+                      <Sparkles size={14} className="text-gold-600" />
+                      <span>Speed up checkout with Google</span>
+                    </p>
+                    <p className="text-[11px] text-plum-600 mt-0.5">
+                      1-click autofill with your verified Google account, or continue as guest below.
+                    </p>
+                  </div>
+                  <div className="shrink-0">
+                    <GoogleSignInButton callbackUrl="/checkout" label="Sign In with Google" />
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-200 flex items-center gap-2 text-xs text-emerald-800">
+                  <UserCheck size={16} className="text-emerald-600 shrink-0" />
+                  <span>
+                    Checking out as <strong>{customer?.contact?.email || formData.email}</strong>
+                  </span>
+                </div>
+              )}
 
-              <div className="col-span-2 flex justify-end mt-2">
-                <button
-                  type="button"
-                  onClick={() => goToStep(2)}
-                  className="bg-plum-900 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-plum-800 transition-colors"
-                >
-                  Continue to Shipping →
-                </button>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-plum-900 mb-1">
+                    First Name *
+                  </label>
+                  <input
+                    required
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-plum-200 px-4 py-2.5 focus:ring-2 focus:ring-gold-500 outline-none text-sm"
+                    placeholder="Jane"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-plum-900 mb-1">
+                    Last Name *
+                  </label>
+                  <input
+                    required
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-plum-200 px-4 py-2.5 focus:ring-2 focus:ring-gold-500 outline-none text-sm"
+                    placeholder="Doe"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-plum-900 mb-1">
+                    Email *
+                  </label>
+                  <input
+                    required
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-plum-200 px-4 py-2.5 focus:ring-2 focus:ring-gold-500 outline-none text-sm"
+                    placeholder="you@example.com"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-plum-900 mb-1">
+                    Phone *
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    inputMode="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                      if (!/[0-9+ -]/.test(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    className="w-full rounded-xl border border-plum-200 px-4 py-2.5 focus:ring-2 focus:ring-gold-500 outline-none text-sm"
+                    placeholder="+91 98765 43210"
+                  />
+                </div>
+
+                <div className="col-span-2 flex justify-end mt-2">
+                  <button
+                    type="button"
+                    onClick={() => goToStep(2)}
+                    className="bg-plum-900 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-plum-800 transition-colors"
+                  >
+                    Continue to Shipping →
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -603,9 +638,17 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
                   </label>
                   <input
                     required
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
                     name="zip"
                     value={formData.zip}
                     onChange={handleChange}
+                    onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                      if (!/[0-9]/.test(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     className="w-full rounded-xl border border-plum-200 px-4 py-2.5 focus:ring-2 focus:ring-gold-500 outline-none text-sm"
                     placeholder="400001"
                   />

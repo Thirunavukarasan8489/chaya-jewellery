@@ -4,10 +4,35 @@ export interface AdminInputProps extends React.InputHTMLAttributes<HTMLInputElem
   label?: string;
   error?: string;
   icon?: React.ReactNode;
+  onlyNumbers?: boolean;
+  allowDecimal?: boolean;
 }
 
 const AdminInput = React.forwardRef<HTMLInputElement, AdminInputProps>(
-  ({ className = "", type = "text", label, error, icon, ...props }, ref) => {
+  (
+    {
+      className = "",
+      type = "text",
+      label,
+      error,
+      icon,
+      onlyNumbers,
+      allowDecimal = false,
+      onKeyPress,
+      ...props
+    },
+    ref,
+  ) => {
+    const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (onlyNumbers) {
+        const regex = allowDecimal ? /[0-9.]/ : /[0-9]/;
+        if (!regex.test(e.key)) {
+          e.preventDefault();
+        }
+      }
+      onKeyPress?.(e);
+    };
+
     return (
       <div className="w-full">
         {label && (
@@ -23,6 +48,7 @@ const AdminInput = React.forwardRef<HTMLInputElement, AdminInputProps>(
           )}
           <input
             type={type}
+            onKeyPress={handleKeyPress}
             className={`block w-full rounded-lg bg-white dark:bg-plum-950 text-plum-900 dark:text-ivory-100 placeholder-plum-400 focus:outline-none focus:ring-2 sm:text-sm transition-colors
               ${icon ? "pl-10" : "pl-3"} pr-3 py-2.5 
               ${

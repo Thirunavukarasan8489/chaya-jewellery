@@ -83,10 +83,10 @@ const ProductSchema = new mongoose.Schema(
 );
 
 ProductSchema.index({ status: 1, stockStatus: 1 });
-ProductSchema.index({ category: 1 });
-// PERFORMANCE: getNewArrivals() (product-service.ts) filters status=ACTIVE
-// and sorts createdAt desc — neither existing index covers that sort, so
-// Mongo had to filter via the index above then sort the results in memory.
+ProductSchema.index({ category: 1, status: 1 });
+ProductSchema.index({ subCategory: 1, status: 1 });
+ProductSchema.index({ status: 1, featured: 1 });
+ProductSchema.index({ status: 1, bestseller: 1 });
 ProductSchema.index({ status: 1, createdAt: -1 });
 
 export const Product =

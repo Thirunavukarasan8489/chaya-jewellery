@@ -174,6 +174,16 @@ export default function ProductForm({
           ...initialData,
           categoryId: initialData.category?._id || initialData.categoryId || "",
           subCategoryId: initialData.subCategory?._id || initialData.subCategoryId || "",
+          specifications: {
+            material: initialData.specifications?.material || "",
+            purity: initialData.specifications?.purity || "",
+            colour: initialData.specifications?.colour || "",
+            style: initialData.specifications?.style || "",
+            occasion: initialData.specifications?.occasion || "",
+            stoneType: initialData.specifications?.stoneType || "",
+            stoneColour: initialData.specifications?.stoneColour || "",
+            collectionName: initialData.specifications?.collectionName || "",
+          },
         }
       : {
           name: "",
@@ -181,7 +191,11 @@ export default function ProductForm({
           subCategoryId: "",
           shortDescription: "",
           description: "",
-          price: 0,
+          price: "" as any,
+          grossWeight: "" as any,
+          netWeight: "" as any,
+          stoneWeight: "" as any,
+          priceCode: "",
           purchaseType: "BUY_ENQUIRE",
           whatsappEnabled: false,
           primaryImage: { url: "", altText: "" },
@@ -190,9 +204,14 @@ export default function ProductForm({
           metaDescription: "",
           status: "ACTIVE",
           specifications: {
-            material: "Silver",
-            purity: "925",
-            colour: "Silver",
+            material: "",
+            purity: "",
+            colour: "",
+            style: "",
+            occasion: "",
+            stoneType: "",
+            stoneColour: "",
+            collectionName: "",
           },
         },
   });
@@ -456,21 +475,34 @@ export default function ProductForm({
             >
               Cancel
             </AdminButton>
-            <AdminButton
-              onClick={handleFormSubmit}
-              isLoading={isSubmitting}
-              className="gap-2"
-            >
-              <Save size={18} />
-              {initialData ? "Update Product" : "Publish Product"}
-            </AdminButton>
+            {initialData || activeTab === tabs[tabs.length - 1].id ? (
+              <AdminButton
+                onClick={handleFormSubmit}
+                isLoading={isSubmitting}
+                className="gap-2"
+              >
+                <Save size={18} />
+                {initialData ? "Update Product" : "Publish Product"}
+              </AdminButton>
+            ) : (
+              <AdminButton
+                type="button"
+                onClick={() => {
+                  const idx = tabs.findIndex((t) => t.id === activeTab);
+                  if (idx < tabs.length - 1) {
+                    setActiveTab(tabs[idx + 1].id);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }
+                }}
+                className="gap-2"
+              >
+                Next Step &rarr;
+              </AdminButton>
+            )}
           </div>
         </div>
 
-        {/* Mobile & tablet step strip — replaces the vertical "Form Steps"
-            sidebar below md, since a 6-item vertical list pinned on screen
-            would eat most of a phone's viewport. Horizontally scrollable,
-            numbered, and part of the same sticky header above. */}
+        {/* Mobile & tablet step strip */}
         <div className="md:hidden overflow-x-auto no-scrollbar border-t border-gray-100 dark:border-plum-800 px-4 py-2.5">
           <div className="flex gap-2 w-max">
             {tabs.map((tab, idx) => {
@@ -481,19 +513,19 @@ export default function ProductForm({
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`shrink-0 flex items-center gap-1.5 pl-2 pr-3 py-1.5 rounded-none text-xs font-medium whitespace-nowrap border transition-colors ${
+                  className={`shrink-0 flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap border transition-all ${
                     isActive
-                      ? "bg-plum-900 dark:bg-ivory-100 text-white dark:text-plum-900 border-plum-900 dark:border-ivory-100"
-                      : "bg-white dark:bg-plum-900 text-plum-600 dark:text-plum-300 border-gray-200 dark:border-plum-700"
+                      ? "bg-plum-900 text-white dark:bg-gold-500 dark:text-plum-950 border-plum-900 dark:border-gold-500 shadow-sm"
+                      : "bg-white dark:bg-plum-900 text-plum-700 dark:text-plum-200 border-gray-200 dark:border-plum-700 hover:bg-gray-50 dark:hover:bg-plum-800"
                   }`}
                 >
                   <span
-                    className={`flex items-center justify-center w-4 h-4 rounded-none text-[10px] font-bold shrink-0 ${
+                    className={`flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold shrink-0 ${
                       isActive
-                        ? "bg-white/25 text-white dark:bg-plum-900/15 dark:text-plum-900"
+                        ? "bg-white/25 text-white dark:bg-plum-950/20 dark:text-plum-950"
                         : hasError
                           ? "bg-rose-500 text-white"
-                          : "bg-gray-100 dark:bg-plum-800 text-plum-500 dark:text-plum-400"
+                          : "bg-gray-100 dark:bg-plum-800 text-plum-600 dark:text-plum-300"
                     }`}
                   >
                     {hasError && !isActive ? "!" : idx + 1}
@@ -507,16 +539,13 @@ export default function ProductForm({
       </div>
 
       <div className="flex flex-col md:flex-row gap-6 items-start">
-        {/* Navigation Tabs Sidebar — desktop/tablet-landscape only (md+); the
-            step strip above covers mobile and tablet-portrait. z-20 is
-            explicitly below the sticky header above (z-30) so a tall header
-            always wins if the two ever overlap while scrolling. */}
+        {/* Navigation Tabs Sidebar — desktop/tablet-landscape only (md+) */}
         <div className="hidden md:block md:w-64 shrink-0 bg-white dark:bg-plum-950 border border-gray-200 dark:border-plum-800 rounded-2xl shadow-sm p-3 sticky top-32 z-20">
           <h3 className="text-xs font-bold uppercase tracking-wider text-plum-400 dark:text-plum-500 mb-3 px-3">
             Form Steps
           </h3>
           <nav className="flex flex-col space-y-1">
-            {tabs.map((tab) => {
+            {tabs.map((tab, idx) => {
               const isActive = activeTab === tab.id;
               const hasError = tabHasError(tab.id);
               return (
@@ -524,20 +553,29 @@ export default function ProductForm({
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`relative text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border-l-[3px] ${
+                  className={`relative text-left px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-between gap-2 border-l-[3px] ${
                     isActive
-                      ? "text-plum-900 dark:text-ivory-100 bg-gray-50 dark:bg-plum-900 border-emerald-500"
-                      : "text-plum-600 dark:text-plum-400 border-transparent hover:bg-gray-50 dark:hover:bg-plum-900/60"
+                      ? "text-plum-900 dark:text-ivory-100 bg-plum-50/70 dark:bg-plum-900 border-gold-500 font-semibold"
+                      : "text-plum-600 dark:text-plum-400 border-transparent hover:bg-gray-50 dark:hover:bg-plum-900/50"
                   }`}
                 >
-                  <span className="flex items-center justify-between gap-2">
-                    <span>{tab.label}</span>
-                    {hasError ? (
-                      <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
-                    ) : isActive ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    ) : null}
+                  <span className="flex items-center gap-2">
+                    <span
+                      className={`flex items-center justify-center size-5 rounded-full text-[10px] font-bold ${
+                        isActive
+                          ? "bg-plum-900 text-white dark:bg-gold-500 dark:text-plum-950"
+                          : "bg-gray-100 dark:bg-plum-800 text-gray-500 dark:text-gray-400"
+                      }`}
+                    >
+                      {idx + 1}
+                    </span>
+                    <span>{tab.label.replace(/^\d+\.\s*/, "")}</span>
                   </span>
+                  {hasError ? (
+                    <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                  ) : isActive ? (
+                    <CheckCircle2 className="w-4 h-4 text-gold-500 shrink-0" />
+                  ) : null}
                 </button>
               );
             })}
@@ -592,7 +630,7 @@ export default function ProductForm({
             </FormProvider>
 
             {/* Form Navigation / Save */}
-            <div className="flex items-center justify-between p-4 mt-6 bg-white dark:bg-plum-950 border-t border-gray-200 dark:border-plum-800 rounded-b-xl -mx-5 -mb-5 lg:-mx-6 lg:-mb-6">
+            <div className="flex items-center justify-between p-4 mt-6 bg-white dark:bg-plum-950 border-t border-gray-200 dark:border-plum-800 rounded-b-xl -mx-5 -mb-5 sm:-mx-6 sm:-mb-6 lg:-mx-8 lg:-mb-8">
               <div>
                 {tabs.findIndex((t) => t.id === activeTab) > 0 && (
                   <AdminButton
@@ -604,7 +642,7 @@ export default function ProductForm({
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
                   >
-                    Previous Step
+                    &larr; Previous Step
                   </AdminButton>
                 )}
               </div>
@@ -613,7 +651,6 @@ export default function ProductForm({
                   tabs.length - 1 && (
                   <AdminButton
                     type="button"
-                    variant="outline"
                     onClick={() => {
                       const idx = tabs.findIndex((t) => t.id === activeTab);
                       if (idx < tabs.length - 1) {
@@ -622,19 +659,21 @@ export default function ProductForm({
                       }
                     }}
                   >
-                    Next Step
+                    Next Step &rarr;
                   </AdminButton>
                 )}
 
-                <AdminButton
-                  type="button"
-                  onClick={handleFormSubmit}
-                  isLoading={isSubmitting}
-                  className="gap-2"
-                >
-                  <Save size={18} />
-                  {initialData ? "Update Product" : "Publish Product"}
-                </AdminButton>
+                {(initialData || activeTab === tabs[tabs.length - 1].id) && (
+                  <AdminButton
+                    type="button"
+                    onClick={handleFormSubmit}
+                    isLoading={isSubmitting}
+                    className="gap-2"
+                  >
+                    <Save size={18} />
+                    {initialData ? "Update Product" : "Publish Product"}
+                  </AdminButton>
+                )}
               </div>
             </div>
           </form>

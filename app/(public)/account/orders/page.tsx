@@ -32,7 +32,7 @@ export default async function OrdersPage() {
   await dbConnect();
 
   const userId = (session.user as any)?.id;
-  const userEmail = session.user?.email;
+  const userEmail = session.user?.email?.toLowerCase().trim();
 
   // Strictly query by authenticated user account identity
   const orderConditions: any[] = [];
@@ -40,7 +40,7 @@ export default async function OrdersPage() {
     orderConditions.push({ userId: new mongoose.Types.ObjectId(userId) });
   }
   if (userEmail) {
-    orderConditions.push({ email: userEmail });
+    orderConditions.push({ email: { $regex: new RegExp(`^${userEmail}$`, "i") } });
   }
 
   if (orderConditions.length > 0) {

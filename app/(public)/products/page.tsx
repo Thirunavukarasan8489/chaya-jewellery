@@ -3,27 +3,29 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { ProductGrid } from "@/components/public/product/product-rail";
 import {
+  ActiveFiltersBar,
   FilterBar,
   FilterSidebar,
 } from "@/components/public/product/product-filters";
 import { buttonStyles } from "@/components/public/ui/button";
 import { EmptyState, PageHeader } from "@/components/public/ui/page-header";
-import { getCategories } from "@/lib/services/category-service";
+import { getCategories, getPublicSubCategories } from "@/lib/services/category-service";
 import { getProducts } from "@/lib/services/product-service";
 import { applyFilters, toQuery } from "@/lib/filters";
 import { flattenVariants } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "All Products",
+  title: "All Products | Chaya Jewellery",
   description:
-    "Browse every certified natural gemstone in the Chaya Jewellery catalogue — ruby, blue sapphire, yellow sapphire, emerald, pearl, coral, bracelets and rudraksha.",
+    "Explore our complete collection of handcrafted jewellery — exquisite necklaces, bridal sets, elegant earrings, bangles, pendants, and curated combo sets.",
 };
 
 export default async function ProductsPage(props: PageProps<"/products">) {
   const query = toQuery(await props.searchParams);
-  const [products, categories] = await Promise.all([
+  const [products, categories, subCategories] = await Promise.all([
     getProducts(),
     getCategories(),
+    getPublicSubCategories(),
   ]);
   const results = flattenVariants(applyFilters(products, query));
 
@@ -32,37 +34,51 @@ export default async function ProductsPage(props: PageProps<"/products">) {
       <PageHeader
         eyebrow="Catalogue"
         title="All Products"
-        body="Every product below is natural and independently certified. Treatments are disclosed on each product page."
+        body="Discover our signature collection of handcrafted jewellery, traditional sets, and contemporary everyday designs."
         breadcrumbs={[{ label: "All Products" }]}
       />
 
       <div className="shell gutter">
         <Suspense fallback={<div className="h-16" />}>
-          <FilterBar total={results.length} categories={categories} />
+          <FilterBar
+            total={results.length}
+            categories={categories}
+            subCategories={subCategories}
+          />
         </Suspense>
 
         <div className="py-8 lg:grid lg:grid-cols-[15rem_1fr] lg:gap-10">
           <Suspense fallback={null}>
-            <FilterSidebar categories={categories} />
+            <FilterSidebar
+              categories={categories}
+              subCategories={subCategories}
+            />
           </Suspense>
 
           <div>
+            <Suspense fallback={null}>
+              <ActiveFiltersBar
+                categories={categories}
+                subCategories={subCategories}
+              />
+            </Suspense>
+
             {results.length > 0 ? (
               <ProductGrid products={results} />
             ) : (
               <EmptyState
-                title="No stones match those filters"
-                body="Try widening the price range, or tell us what you are looking for and we will source it."
+                title="No jewellery matches those filters"
+                body="Try adjusting your filters or clearing some selections to explore our full catalogue."
                 action={
                   <div className="flex flex-col gap-3 sm:flex-row">
                     <Link href="/products" className={buttonStyles()}>
-                      Clear filters
+                      Clear all filters
                     </Link>
                     <Link
                       href="/contact"
                       className={buttonStyles({ variant: "outline" })}
                     >
-                      Request a stone
+                      Contact our stylists
                     </Link>
                   </div>
                 }
@@ -74,3 +90,4 @@ export default async function ProductsPage(props: PageProps<"/products">) {
     </>
   );
 }
+

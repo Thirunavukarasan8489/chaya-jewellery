@@ -36,10 +36,13 @@ export interface Product {
   name: string;
   slug: string;
   categorySlug: string;
+  subCategorySlug?: string;
+  subCategoryName?: string;
+  subCategoryType?: "SINGLE" | "COMBO";
   shortDescription: string;
   description: string;
 
-  /** Money in paise. */
+  /** Selling price in INR (Rupees). */
   sellingPrice: number;
   comparePrice?: number;
 

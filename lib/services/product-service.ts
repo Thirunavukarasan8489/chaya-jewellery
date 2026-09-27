@@ -2,10 +2,12 @@ import dbConnect from "@/lib/db";
 import { Product } from "@/lib/models/product";
 import { Inventory } from "@/lib/models/inventory";
 import { Category } from "@/lib/models/category";
+import { SubCategory } from "@/lib/models/sub-category";
 import type { Product as PublicProduct } from "@/lib/types";
 import { gemColorFor } from "@/lib/utils";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { unstable_cache } from "next/cache";
+
 async function attachInventory(docs: any[]): Promise<any[]> {
   if (docs.length === 0) return docs;
   const inventories = await Inventory.find({
@@ -23,6 +25,7 @@ async function attachInventory(docs: any[]): Promise<any[]> {
 
 // Prevent Turbopack from tree-shaking the models
 if (!Category) console.warn("Category model not loaded");
+if (!SubCategory) console.warn("SubCategory model not loaded");
 
 function mapToPublicProduct(doc: any): PublicProduct {
   const categoryColor =
@@ -33,6 +36,9 @@ function mapToPublicProduct(doc: any): PublicProduct {
     name: doc.name,
     slug: doc.slug,
     categorySlug: doc.category?.slug || "",
+    subCategorySlug: doc.subCategory?.slug || undefined,
+    subCategoryName: doc.subCategory?.name || undefined,
+    subCategoryType: doc.subCategory?.type || "SINGLE",
     shortDescription: sanitizeRichText(doc.shortDescription),
     description: sanitizeRichText(doc.description),
     sellingPrice: doc.price || doc.sellingPrice || 0,
@@ -78,9 +84,13 @@ export const getProducts = unstable_cache(
       await dbConnect();
       let docs = await Product.find({ status: "ACTIVE" })
         .populate("category")
+        .populate("subCategory")
         .lean();
       if (!docs || docs.length === 0) {
-        docs = await Product.find({}).populate("category").lean();
+        docs = await Product.find({})
+          .populate("category")
+          .populate("subCategory")
+          .lean();
       }
       if (docs && docs.length > 0) {
         const withInventory = await attachInventory(docs);
@@ -91,7 +101,7 @@ export const getProducts = unstable_cache(
     }
     return [];
   },
-  ["public-products-v6"],
+  ["public-products-v7"],
   { revalidate: 60, tags: ["products"] },
 );
 
@@ -101,9 +111,13 @@ export const getProductBySlug = unstable_cache(
       await dbConnect();
       let doc = await Product.findOne({ status: "ACTIVE", slug })
         .populate("category")
+        .populate("subCategory")
         .lean();
       if (!doc) {
-        doc = await Product.findOne({ slug }).populate("category").lean();
+        doc = await Product.findOne({ slug })
+          .populate("category")
+          .populate("subCategory")
+          .lean();
       }
 
       if (doc) {
