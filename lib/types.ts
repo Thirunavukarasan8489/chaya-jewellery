@@ -71,6 +71,22 @@ export interface Product {
   published: boolean;
 
   selectedVariantName?: string;
+
+  grossWeight?: number;
+  netWeight?: number;
+  stoneWeight?: number;
+  specifications?: ProductSpecifications;
+}
+
+export interface ProductSpecifications {
+  material?: string;
+  purity?: string;
+  colour?: string;
+  style?: string;
+  occasion?: string;
+  stoneType?: string;
+  stoneColour?: string;
+  collectionName?: string;
 }
 
 /** §13 Inventory Flow: available = stock - reserved */

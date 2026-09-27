@@ -1121,6 +1121,39 @@ them with contextually accurate, domain-related icons from `lucide-react`.
 - `components/public/home/certification-trust-section.tsx`: Replaced `Sparkles` with `CheckCircle2`
   for the "Made to order, checked by hand" craftsmanship guarantee point.
 
+## 2026-09-27 Product Detail Page: Luxury Accordion & Backend Specifications
+
+User requested displaying "About this piece" and "Product Specifications" (sourced dynamically from the backend) in an interactive accordion concept with responsive layout.
+
+**Data & Type Layer:**
+- `lib/types.ts`: Added `ProductSpecifications` interface (`material`, `purity`, `colour`, `style`, `occasion`, `stoneType`, `stoneColour`, `collectionName`) and mapped weights (`grossWeight`, `netWeight`, `stoneWeight`) and `specifications` to the public `Product` interface.
+- `lib/services/product-service.ts`: Updated `mapToPublicProduct` to map `grossWeight`, `netWeight`, `stoneWeight`, and `specifications` from the Mongoose document. Bumped Next.js cache keys (`public-products-v8` and `public-product-by-slug-v7`) so that product details immediately serve the updated schema.
+
+**Frontend Components:**
+- `components/public/product/product-accordion.tsx` (new):
+  - Client-side luxury accordion with expandable sections:
+    1. **About this piece**: Rich-text HTML description with sanitized rendering.
+    2. **Product Specifications**: Responsive 2-column key-value grid rendering Base Metal, Metal Purity, Metal Colour, Style, Occasion, Stone Type, Stone Colour, Collection Name, Gross/Net/Stone Weight, and Product Code (SKU).
+    3. **Shipping & Authenticity**: Bulleted delivery and authenticity guarantees (Insured delivery, 7-day returns, BIS Hallmark / certificate).
+  - Luxury gold/plum accents, smooth rotating indicator chevron, and accessible button triggers.
+- `app/(public)/products/[slug]/page.tsx`:
+  - Integrated `<ProductAccordion product={product} defaultOpenSection="about" />`.
+  - Reorganized trust badges between purchase options and accordion.
+
+## 2026-09-27 Product Detail Page: Gallery Left/Right Navigation Arrows & Multi-Image Aggregation
+
+User requested adding left and right arrow buttons to the product image view on desktop/responsive to navigate next and previous images.
+
+**Frontend Changes:**
+- `components/public/product/product-gallery.tsx`:
+  - Added interactive `<ChevronLeft />` and `<ChevronRight />` navigation buttons layered directly over the main image container.
+  - Buttons styled with luxury circular backdrop blur (`bg-white/95 text-plum-900 border border-ivory-300 shadow-lg hover:bg-plum-900 hover:text-gold-300 hover:border-gold-500/50`).
+  - Added slide index counter pill (`1 / 5`) at bottom-right corner of gallery.
+  - Keyboard arrow navigation support (`ArrowLeft`, `ArrowRight`).
+  - Enhanced desktop thumbnail selector with active indicator scaling and smooth horizontal scrolling if slides exceed 5 items.
+- `app/(public)/products/[slug]/page.tsx`:
+  - Aggregated `product.primaryImage` + `product.images` (deduplicating by URL) so that products with both a cover image and gallery images (e.g. `cross-over-stones-lined-twist-ring` with 1 primary + 4 gallery = 5 images) have all photos available in the gallery.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

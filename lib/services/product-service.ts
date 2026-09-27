@@ -75,6 +75,21 @@ function mapToPublicProduct(doc: any): PublicProduct {
     rating: doc.rating || 5,
     reviewCount: doc.reviewCount || 0,
     published: doc.status === "ACTIVE" || doc.published !== false,
+    grossWeight: typeof doc.grossWeight === "number" ? doc.grossWeight : undefined,
+    netWeight: typeof doc.netWeight === "number" ? doc.netWeight : undefined,
+    stoneWeight: typeof doc.stoneWeight === "number" ? doc.stoneWeight : undefined,
+    specifications: doc.specifications
+      ? {
+          material: doc.specifications.material || undefined,
+          purity: doc.specifications.purity || undefined,
+          colour: doc.specifications.colour || undefined,
+          style: doc.specifications.style || undefined,
+          occasion: doc.specifications.occasion || undefined,
+          stoneType: doc.specifications.stoneType || undefined,
+          stoneColour: doc.specifications.stoneColour || undefined,
+          collectionName: doc.specifications.collectionName || undefined,
+        }
+      : undefined,
   };
 }
 
@@ -101,7 +116,7 @@ export const getProducts = unstable_cache(
     }
     return [];
   },
-  ["public-products-v7"],
+  ["public-products-v8"],
   { revalidate: 60, tags: ["products"] },
 );
 
@@ -129,7 +144,7 @@ export const getProductBySlug = unstable_cache(
     }
     return null;
   },
-  ["public-product-by-slug-v6"],
+  ["public-product-by-slug-v7"],
   { revalidate: 60, tags: ["products"] },
 );
 

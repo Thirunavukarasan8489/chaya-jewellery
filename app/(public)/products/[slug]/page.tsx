@@ -14,9 +14,7 @@ import { Badge } from "@/components/public/ui/badge";
 import { Breadcrumbs } from "@/components/public/ui/page-header";
 import { BackButton } from "@/components/public/ui/back-button";
 import { ProductPurchaseOptions } from "@/components/public/product/product-purchase-options";
-
-import { Accordion } from "@/components/public/ui/accordion";
-import { sanitizeRichText } from "@/lib/sanitize";
+import { ProductAccordion } from "@/components/public/product/product-accordion";
 import { getCategoryBySlug } from "@/lib/services/category-service";
 import { Rating } from "@/components/public/ui/rating";
 import { SectionHeading } from "@/components/public/ui/section-heading";
@@ -66,6 +64,19 @@ export default async function ProductDetailPage(
     getRelatedProducts(product.id, product.categorySlug),
   ]);
 
+  // Combine primary image and gallery images (avoiding duplicates)
+  const allImages: { url: string; altText?: string }[] = [];
+  if (product.primaryImage?.url) {
+    allImages.push(product.primaryImage);
+  }
+  if (product.images && product.images.length > 0) {
+    for (const img of product.images) {
+      if (img?.url && !allImages.some((existing) => existing.url === img.url)) {
+        allImages.push(img);
+      }
+    }
+  }
+
   return (
     <>
       <div className="shell gutter pt-5 pb-1 flex items-center gap-3 flex-wrap">
@@ -91,14 +102,8 @@ export default async function ProductDetailPage(
         <div className="lg:sticky lg:top-28">
           <ProductGallery
             color={product.gemColor}
-            count={product.gallery}
-            images={
-              product.images && product.images.length > 0
-                ? product.images
-                : product.primaryImage
-                  ? [product.primaryImage]
-                  : undefined
-            }
+            count={allImages.length || product.gallery}
+            images={allImages.length > 0 ? allImages : undefined}
             name={product.name}
           />
         </div>
@@ -120,29 +125,11 @@ export default async function ProductDetailPage(
             business={business}
           />
 
-          {/* Long Description (Rich Text HTML from backend) */}
-          {product.description && (
-            <div className="mt-10 border-t border-plum-100 pt-8">
-              <h2 className="text-lg font-semibold text-plum-900 mb-4 font-display">
-                About this piece
-              </h2>
-              <div
-                className="rich-text text-[0.9375rem] leading-relaxed text-plum-800 max-w-none"
-                // Sanitized again at render time (not just on write in
-                // product.actions.ts) so products stored before that fix
-                // shipped are covered too — see lib/sanitize.ts.
-                dangerouslySetInnerHTML={{
-                  __html: sanitizeRichText(product.description),
-                }}
-              />
-            </div>
-          )}
-
-          <ul className="mt-6 grid grid-cols-3 gap-3 border-y border-ivory-300 py-4">
+          <ul className="mt-8 grid grid-cols-3 gap-3 border-y border-ivory-300 py-4">
             {[
               { icon: Truck, label: "Insured delivery" },
               { icon: RefreshCcw, label: "7-day returns" },
-              { icon: ShieldCheck, label: "Natural, disclosed" },
+              { icon: ShieldCheck, label: "Certified authentic" },
             ].map(({ icon: Icon, label }) => (
               <li
                 key={label}
@@ -156,25 +143,8 @@ export default async function ProductDetailPage(
             ))}
           </ul>
 
-          <section className="mt-7">
-            <h2 className="font-display text-xl font-semibold text-plum-900">
-              Shipping &amp; returns
-            </h2>
-            <ul className="mt-3 space-y-2 text-[0.9375rem] leading-relaxed text-plum-800">
-              <li>
-                Dispatched within 2 working days, fully insured with signature
-                on delivery.
-              </li>
-              <li>
-                Flat shipping fee, waived on orders above ₹25,000. Calculated at
-                checkout.
-              </li>
-              <li>
-                Unworn stones can be returned within 7 days in their original
-                sealed packaging with the certificate intact.
-              </li>
-            </ul>
-          </section>
+          {/* Luxury Accordion: About this piece, Specifications & Shipping */}
+          <ProductAccordion product={product} defaultOpenSection="about" />
         </div>
       </div>
 
@@ -182,7 +152,7 @@ export default async function ProductDetailPage(
         <section className="relative w-full max-w-full overflow-hidden shell gutter py-12 sm:py-16">
           <SectionHeading
             eyebrow="You may also like"
-            title="Similar stones"
+            title="Similar Products"
             href="/products"
           />
           <div className="mt-7">
