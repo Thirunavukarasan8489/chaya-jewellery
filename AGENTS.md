@@ -1154,6 +1154,51 @@ User requested adding left and right arrow buttons to the product image view on 
 - `app/(public)/products/[slug]/page.tsx`:
   - Aggregated `product.primaryImage` + `product.images` (deduplicating by URL) so that products with both a cover image and gallery images (e.g. `cross-over-stones-lined-twist-ring` with 1 primary + 4 gallery = 5 images) have all photos available in the gallery.
 
+## 2026-09-27 Product Card: Luxury Visual Redesign & Clickability Polish
+
+User requested redesigning the product card to make it attractive and enticing to click,
+without using ratings.
+
+**Improvements & Aesthetic Enhancements:**
+- `components/public/product/product-card.tsx`:
+  - **Interactive Elevation & Shadow**: `hover:-translate-y-1 hover:border-gold-400/60 hover:shadow-xl hover:shadow-plum-950/8` delivers a tactile luxury lift on hover.
+  - **Dual-Angle Hover Cross-Fade**: If the product has secondary gallery photos, hovering smoothly cross-fades to the alternate angle / worn view (`opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out`).
+  - **Floating Badges**: Replaced plain tags with luxury floating pills (`Bestseller`, `{off}% OFF`, purity pills e.g. `925`, `Few Left`).
+  - **"View Details" Hover Pill**: Floating glassmorphic pill (`View Details` + `ArrowUpRight`) centered at the bottom of the image that smoothly slides up on hover.
+  - **Refined Eyebrow**: Category and Subcategory positioned cleanly above the title in tracking uppercase gold (`text-gold-700`), eliminating the plain gray raw slug below the title.
+  - **Font-Serif Title with Gold Hover Color**: Title turns from deep plum to brand champagne gold on hover (`group-hover:text-gold-700`).
+  - **Micro-Spec Note**: Shows stone type or metal purity beneath the title for luxury context.
+  - **Pricing & Savings Callout**: Clear bold INR selling price, strikethrough compare price, and `Save X%` highlight.
+- `components/public/cart/add-to-cart.tsx`:
+  - Modernized `QuickAdd` button from a harsh square box to a luxury rounded-xl button (`rounded-xl bg-plum-900 text-gold-300 hover:bg-gold-500 hover:text-plum-950 hover:shadow-md hover:scale-105 active:scale-95`).
+- Strictly omitted ratings as instructed.
+
+## 2026-09-27 Homepage: Combos & Matching Sets Showcase Section
+
+User requested adding a new Combos section to the homepage (similar to Bestsellers) to showcase combo products in responsive cards.
+
+**Backend & Data Layer:**
+- `lib/utils.ts`:
+  - Added centralized, client-and-server-safe `isComboProduct(p)` helper checking `subCategoryType === "COMBO"`, `subCategorySlug === "combo"`, and word-bounded `\b(combo|combos)\b` / `\bset\b` patterns.
+- `lib/services/product-service.ts`:
+  - `getBestsellers`: Strictly filters out any combo products (`!isComboProduct(p)`). Regular products are now properly displayed in Bestsellers, while combo sets are excluded completely.
+  - `getComboProducts`: Strictly returns only combo products (`isComboProduct(p)`).
+  - `getFeaturedProducts`: Also isolates standard non-combo products.
+- Database:
+  - Reset `bestseller: false` on combo products to prevent accidental isolation of standard products in case no standard products are explicitly marked.
+
+**Frontend Components:**
+- `components/public/product/product-card.tsx`:
+  - Added dedicated gold pill badge `Combo Set` on the top-left when `isComboProduct(product)` evaluates to true.
+  - Sits gracefully beside discount percentages and material indicators, while `Bestseller` badge is guarded by `!isComboProduct(product)`.
+- `components/public/product/product-rail.tsx`:
+  - Enhanced responsive sizing across phone (`w-[46%] min-w-[10.5rem]`), tablet (`sm:w-[32%] sm:min-w-[12.5rem] md:w-[28%]`), and desktop (`lg:grid` dynamically adapting between 1, 2, 3, and 4 columns to avoid unbalanced gaps).
+- `app/(public)/page.tsx`:
+  - Fetched `getComboProducts()` in the homepage's parallel `Promise.all` pipeline.
+  - Added `<SectionHeading>` with eyebrow `"Combos & Matching Sets"`, title `"Curated Combinations, Made to Match"`, and luxury styling.
+  - Rendered `<ProductRail products={flattenVariants(combos)} />` wrapped in `<Reveal>`, giving smooth mobile swipe snap rails with dots and responsive multi-column desktop grids.
+  - Guaranteed no ratings or `<Sparkles />` icons are used.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

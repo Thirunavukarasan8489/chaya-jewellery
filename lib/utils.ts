@@ -62,6 +62,25 @@ export function flattenVariants(products: Product[]): Product[] {
   return products;
 }
 
+export function isComboProduct(p: {
+  subCategoryType?: string;
+  subCategorySlug?: string;
+  name?: string;
+  slug?: string;
+}): boolean {
+  if (p.subCategoryType === "COMBO" || p.subCategorySlug === "combo") {
+    return true;
+  }
+  const nameStr = (p.name || "").toLowerCase();
+  const slugStr = (p.slug || "").toLowerCase();
+  return (
+    /\b(combo|combos)\b/i.test(nameStr) ||
+    /\b(combo|combos)\b/i.test(slugStr) ||
+    (/\bset\b/i.test(nameStr) && !/\b(offset|reset)\b/i.test(nameStr)) ||
+    (/\bset\b/i.test(slugStr) && !/\b(offset|reset)\b/i.test(slugStr))
+  );
+}
+
 /**
  * Category names are stored "English / Sanskrit" (e.g. "Ruby / Manik"). Buyers
  * in this market search the Sanskrit/rashi-ratna term as often as the English

@@ -4,6 +4,7 @@ import * as React from "react";
 import { Minus, Plus, ShoppingBag } from "lucide-react";
 import { useCart } from "@/components/public/cart/cart-provider";
 import { Button } from "@/components/public/ui/button";
+import { cn } from "@/lib/utils";
 import { availableQuantity, type Product } from "@/lib/types";
 
 export function AddToCart({
@@ -82,7 +83,13 @@ export function AddToCart({
 }
 
 /** Compact variant used on product cards in listings and rails. */
-export function QuickAdd({ product }: { product: Product }) {
+export function QuickAdd({
+  product,
+  className,
+}: {
+  product: Product;
+  className?: string;
+}) {
   const { add } = useCart();
   const soldOut = availableQuantity(product) <= 0;
 
@@ -102,9 +109,12 @@ export function QuickAdd({ product }: { product: Product }) {
           product.sku,
         );
       }}
-      className="grid size-11 shrink-0 place-items-center rounded-none bg-plum-900 text-ivory-100 shadow-md transition-[background-color,transform] duration-200 hover:bg-gold-500 hover:text-plum-950 active:scale-95 disabled:pointer-events-none disabled:opacity-35"
+      className={cn(
+        "grid size-10 shrink-0 place-items-center rounded-xl bg-plum-900 text-gold-300 shadow-sm transition-all duration-200 hover:bg-gold-500 hover:text-plum-950 hover:shadow-md hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-35 cursor-pointer",
+        className,
+      )}
     >
-      <ShoppingBag size={17} strokeWidth={2.25} />
+      <ShoppingBag size={17} strokeWidth={2} />
     </button>
   );
 }

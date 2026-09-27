@@ -4,7 +4,7 @@ import { Inventory } from "@/lib/models/inventory";
 import { Category } from "@/lib/models/category";
 import { SubCategory } from "@/lib/models/sub-category";
 import type { Product as PublicProduct } from "@/lib/types";
-import { gemColorFor } from "@/lib/utils";
+import { gemColorFor, isComboProduct } from "@/lib/utils";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { unstable_cache } from "next/cache";
 
@@ -158,24 +158,45 @@ export const getProductsByCategory = unstable_cache(
   { revalidate: 60, tags: ["products"] },
 );
 
+export { isComboProduct };
+
 export const getFeaturedProducts = unstable_cache(
   async () => {
     const allProducts = await getProducts();
-    const featured = allProducts.filter((p: PublicProduct) => p.featured);
-    return featured.length > 0 ? featured : allProducts;
+    const regularProducts = allProducts.filter((p: PublicProduct) => !isComboProduct(p));
+    const featured = regularProducts.filter((p: PublicProduct) => p.featured);
+    return featured.length > 0 ? featured : regularProducts;
   },
-  ["public-products-featured-v6"],
+  ["public-products-featured-v7"],
   { revalidate: 60, tags: ["products"] },
 );
 
 export const getBestsellers = unstable_cache(
   async () => {
     const allProducts = await getProducts();
-    const bestsellers = allProducts.filter((p: PublicProduct) => p.bestseller);
-    return bestsellers.length > 0 ? bestsellers : allProducts;
+    // Bestseller section strictly shows individual/regular jewellery pieces (NO combos)
+    const regularProducts = allProducts.filter((p: PublicProduct) => !isComboProduct(p));
+    const flaggedBestsellers = regularProducts.filter((p: PublicProduct) => p.bestseller);
+    return flaggedBestsellers.length > 0 ? flaggedBestsellers : regularProducts;
   },
-  ["public-products-bestsellers-v6"],
+  ["public-products-bestsellers-v9"],
   { revalidate: 60, tags: ["products"] },
+);
+
+export const getComboProducts = unstable_cache(
+  async () => {
+    try {
+      const allProducts = await getProducts();
+      // Combo section strictly shows combo products only
+      const combos = allProducts.filter((p: PublicProduct) => isComboProduct(p));
+      return combos;
+    } catch (error) {
+      console.error("Error fetching combo products:", error);
+      return [];
+    }
+  },
+  ["public-products-combos-v3"],
+  { revalidate: 60, tags: ["products", "subcategories"] },
 );
 
 export const getNewArrivals = unstable_cache(
