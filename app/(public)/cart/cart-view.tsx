@@ -92,13 +92,13 @@ export function CartView({ settings }: { settings: any }) {
                 <div className="flex items-start justify-between gap-3">
                   <h2 className="line-2 text-[0.875rem] leading-snug font-semibold text-plum-900 sm:text-base">
                     <Link href={`/products/${line.slug}`}>
-                      {line.variantName}
+                      {line.name}
                     </Link>
                   </h2>
                   <button
                     type="button"
                     onClick={() => remove(line.productId, line.variantId)}
-                    aria-label={`Remove ${line.variantName} from cart`}
+                    aria-label={`Remove ${line.name} from cart`}
                     className="grid size-9 shrink-0 place-items-center rounded-none text-plum-400 transition-colors hover:bg-danger-50 hover:text-danger-600"
                   >
                     <Trash2 size={16} />

@@ -162,14 +162,17 @@ export async function createProduct(data: any) {
     const mappedData: any = {
       ...validatedData,
       slug,
-      category: validatedData.categoryId || validatedData.category,
-      subCategory: validatedData.subCategoryId || validatedData.subCategory,
+      category: validatedData.categoryId || validatedData.category || undefined,
+      subCategory: validatedData.subCategoryId || validatedData.subCategory || undefined,
     };
     delete mappedData.categoryId;
     delete mappedData.subCategoryId;
+    if (!mappedData.category) delete mappedData.category;
+    if (!mappedData.subCategory) delete mappedData.subCategory;
+    delete mappedData.variants;
 
     // Fetch Category and SubCategory to build Product Code
-    const categoryObj = await Category.findById(mappedData.category).lean();
+    const categoryObj = mappedData.category ? await Category.findById(mappedData.category).lean() : null;
     const categoryName = categoryObj ? categoryObj.name : "Uncategorized";
     const subCategoryObj = mappedData.subCategory ? await SubCategory.findById(mappedData.subCategory).lean() : null;
     const subCategoryName = subCategoryObj ? subCategoryObj.name : "GEN";
@@ -209,7 +212,6 @@ export async function createProduct(data: any) {
 
     revalidatePath("/admin/products");
     revalidatePath("/admin/inventory");
-    revalidatePath("/admin/productvarients");
     // Public storefront reads products through unstable_cache (tag
     // 'products', 60s window) — without this, a new/edited/deleted product
     // wouldn't show up on the public site until that window naturally
@@ -241,12 +243,15 @@ export async function updateProduct(id: string, data: any) {
     const mappedData: any = { ...validatedData };
     if (mappedData.categoryId) {
       mappedData.category = mappedData.categoryId;
-      delete mappedData.categoryId;
     }
+    delete mappedData.categoryId;
+    if (!mappedData.category) delete mappedData.category;
+
     if (mappedData.subCategoryId) {
       mappedData.subCategory = mappedData.subCategoryId;
-      delete mappedData.subCategoryId;
     }
+    delete mappedData.subCategoryId;
+    if (!mappedData.subCategory) delete mappedData.subCategory;
 
     delete mappedData.variants;
 
@@ -371,7 +376,6 @@ export async function deleteProduct(id: string) {
 
     revalidatePath("/admin/products");
     revalidatePath("/admin/inventory");
-    revalidatePath("/admin/productvarients");
     updateTag("products");
     return { success: true };
   } catch (error: any) {

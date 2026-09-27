@@ -9,6 +9,14 @@ import { uploadMedia } from "@/lib/actions/media.actions";
 import { AdminSelect } from "@/components/admin/ui/AdminSelect";
 import { toast } from "react-hot-toast";
 
+export interface SubCategoryOption {
+  label: string;
+  value: string;
+  category?: string;
+  categoryName?: string;
+  type?: string;
+}
+
 export default function SubCategoryForm({
   initialData,
   categories,
@@ -16,7 +24,7 @@ export default function SubCategoryForm({
 }: {
   initialData?: any;
   categories: { label: string; value: string }[];
-  subCategories: { label: string; value: string }[];
+  subCategories: SubCategoryOption[];
 }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,6 +41,16 @@ export default function SubCategoryForm({
     metaDescription: initialData?.metaDescription || "",
     image: initialData?.image || "",
   });
+
+  const selectedCategoryId = typeof formData.category === "object" 
+    ? String(formData.category?._id || "") 
+    : String(formData.category || "");
+
+  const selectedCategoryName = categories.find((c) => c.value === selectedCategoryId)?.label || "";
+
+  const availableSubCategories = subCategories.filter(
+    (sc) => sc.value !== initialData?._id && String(sc.category || "") === selectedCategoryId
+  );
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState(initialData?.image || "");
@@ -164,7 +182,7 @@ export default function SubCategoryForm({
                 </label>
                 <AdminSelect
                   name="category"
-                  value={categories.find((o) => o.value === (typeof formData.category === 'object' ? formData.category._id : formData.category)) || null}
+                  value={categories.find((o) => o.value === selectedCategoryId) || null}
                   onChange={(opt: any) =>
                     handleChange({
                       target: {
@@ -243,30 +261,48 @@ export default function SubCategoryForm({
               {formData.type === "COMBO" && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gold-700 dark:text-gold-300 mb-1">
-                      Combo Includes (Select SubCategories)
-                    </label>
-                    <div className="flex flex-col gap-2 border border-gold-200 dark:border-gold-700 p-3 rounded-md max-h-48 overflow-y-auto">
-                      {subCategories.filter(sc => sc.value !== initialData?._id).map((sc) => (
-                        <label key={sc.value} className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={formData.comboIncludes.includes(sc.value)}
-                            onChange={(e) => {
-                              const checked = e.target.checked;
-                              setFormData((prev) => {
-                                const newIncludes = checked
-                                  ? [...prev.comboIncludes, sc.value]
-                                  : prev.comboIncludes.filter((id: string) => id !== sc.value);
-                                return { ...prev, comboIncludes: newIncludes };
-                              });
-                            }}
-                            className="rounded text-gold-600 focus:ring-gold-500"
-                          />
-                          <span className="text-sm text-gold-800 dark:text-gold-200">{sc.label}</span>
-                        </label>
-                      ))}
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-sm font-medium text-gold-700 dark:text-gold-300">
+                        Combo Includes (Select SubCategories)
+                      </label>
+                      {selectedCategoryName && availableSubCategories.length > 0 && (
+                        <span className="text-xs text-gold-600 dark:text-gold-400 font-medium">
+                          Category: {selectedCategoryName} ({formData.comboIncludes.length} selected)
+                        </span>
+                      )}
                     </div>
+
+                    {!selectedCategoryId ? (
+                      <div className="p-4 rounded-lg bg-gold-50 dark:bg-gold-950/40 border border-dashed border-gold-300 dark:border-gold-800 text-sm text-gold-700 dark:text-gold-300 text-center">
+                        Please select a <strong className="font-semibold text-gold-900 dark:text-gold-100">Parent Category</strong> above first to view available subcategories for this combo.
+                      </div>
+                    ) : availableSubCategories.length === 0 ? (
+                      <div className="p-4 rounded-lg bg-gold-50 dark:bg-gold-950/40 border border-dashed border-gold-300 dark:border-gold-800 text-sm text-gold-700 dark:text-gold-300 text-center">
+                        No other subcategories found under <strong className="font-semibold text-gold-900 dark:text-gold-100">{selectedCategoryName}</strong>. Please create individual subcategories under this category first.
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-2 border border-gold-200 dark:border-gold-700 p-3 rounded-md max-h-56 overflow-y-auto bg-white dark:bg-gold-900/50">
+                        {availableSubCategories.map((sc) => (
+                          <label key={sc.value} className="flex items-center gap-2.5 p-1.5 rounded hover:bg-gold-50 dark:hover:bg-gold-800/40 cursor-pointer transition-colors">
+                            <input
+                              type="checkbox"
+                              checked={formData.comboIncludes.includes(sc.value)}
+                              onChange={(e) => {
+                                const checked = e.target.checked;
+                                setFormData((prev) => {
+                                  const newIncludes = checked
+                                    ? [...prev.comboIncludes, sc.value]
+                                    : prev.comboIncludes.filter((id: string) => id !== sc.value);
+                                  return { ...prev, comboIncludes: newIncludes };
+                                });
+                              }}
+                              className="rounded text-gold-600 focus:ring-gold-500 w-4 h-4"
+                            />
+                            <span className="text-sm font-medium text-gold-800 dark:text-gold-200">{sc.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div>

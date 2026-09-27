@@ -398,10 +398,15 @@ export default function HeroSectionForm({
                 Display Order
               </label>
               <input
-                type="number"
+                type="text"
                 name="displayOrder"
                 value={formData.displayOrder}
                 onChange={handleChange}
+                onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
                 placeholder="Leave blank to add at the end"
                 className="w-full px-3 py-2 bg-gold-50 dark:bg-gold-900 border border-gold-200 dark:border-gold-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500"
               />

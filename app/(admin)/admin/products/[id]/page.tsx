@@ -147,79 +147,80 @@ async function ProductViewLoader({ id }: { id: string }) {
             </div>
           </div>
 
-          {/* 2. Pricing & Variants */}
+          {/* 2. Pricing & Weight Details */}
           <div className="bg-white dark:bg-gold-900 border border-gold-200 dark:border-gold-800 rounded-xl shadow-sm overflow-hidden">
             <div className="p-4 border-b border-gold-100 dark:border-gold-800 flex items-center gap-2">
               <Layers size={18} className="text-gold-500 dark:text-gold-400" />
               <h2 className="font-semibold text-gold-800 dark:text-white">
-                Pricing & Inventory
+                Pricing & Weight Details
               </h2>
             </div>
 
-            {product.hasVariants &&
-            product.variants &&
-            product.variants.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-gold-50 dark:bg-gold-800/50 text-gold-600 dark:text-gold-400 text-xs border-b border-gold-200 dark:border-gold-700">
-                    <tr>
-                      <th className="px-4 py-3 font-medium">Carat</th>
-                      <th className="px-4 py-3 font-medium">Size (mm)</th>
-                      <th className="px-4 py-3 font-medium">Price</th>
-                      <th className="px-4 py-3 font-medium">Compare At</th>
-                      <th className="px-4 py-3 font-medium">Stock</th>
-                      <th className="px-4 py-3 font-medium text-right">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gold-100 dark:divide-gold-800">
-                    {product.variants.map((variant: any, idx: number) => (
-                      <tr
+            <div className="p-5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                <div className="bg-gold-50 dark:bg-gold-800/50 p-3 rounded-lg border border-gold-100 dark:border-gold-800">
+                  <h3 className="text-xs font-medium text-gold-500 dark:text-gold-400 uppercase tracking-wider mb-1">
+                    Selling Price
+                  </h3>
+                  <p className="text-gold-900 dark:text-white font-bold text-lg">
+                    ₹{product.price?.toLocaleString("en-IN") || "0"}
+                  </p>
+                </div>
+                <div className="bg-gold-50 dark:bg-gold-800/50 p-3 rounded-lg border border-gold-100 dark:border-gold-800">
+                  <h3 className="text-xs font-medium text-gold-500 dark:text-gold-400 uppercase tracking-wider mb-1">
+                    Gross Weight
+                  </h3>
+                  <p className="text-gold-800 dark:text-gold-200 font-medium">
+                    {product.grossWeight ? `${product.grossWeight} g` : "—"}
+                  </p>
+                </div>
+                <div className="bg-gold-50 dark:bg-gold-800/50 p-3 rounded-lg border border-gold-100 dark:border-gold-800">
+                  <h3 className="text-xs font-medium text-gold-500 dark:text-gold-400 uppercase tracking-wider mb-1">
+                    Net Weight
+                  </h3>
+                  <p className="text-gold-800 dark:text-gold-200 font-medium">
+                    {product.netWeight ? `${product.netWeight} g` : "—"}
+                  </p>
+                </div>
+                <div className="bg-gold-50 dark:bg-gold-800/50 p-3 rounded-lg border border-gold-100 dark:border-gold-800">
+                  <h3 className="text-xs font-medium text-gold-500 dark:text-gold-400 uppercase tracking-wider mb-1">
+                    Stone Weight
+                  </h3>
+                  <p className="text-gold-800 dark:text-gold-200 font-medium">
+                    {product.stoneWeight ? `${product.stoneWeight} ct` : "—"}
+                  </p>
+                </div>
+              </div>
+
+              {product.priceCode && (
+                <div className="text-xs text-gold-600 dark:text-gold-400 mb-3">
+                  <span className="font-semibold">Price Code:</span> {product.priceCode}
+                </div>
+              )}
+
+              {product.discountRules && product.discountRules.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-gold-100 dark:border-gold-800">
+                  <h3 className="text-xs font-semibold uppercase text-gold-500 dark:text-gold-400 mb-2">
+                    Volume Discount Rules
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {product.discountRules.map((rule: any, idx: number) => (
+                      <div
                         key={idx}
-                        className="hover:bg-gold-50 dark:hover:bg-gold-800/30 transition-colors"
+                        className="bg-gold-50/70 dark:bg-gold-800/30 p-2.5 rounded-lg border border-gold-100 dark:border-gold-800 text-xs"
                       >
-                        <td className="px-4 py-3 font-medium text-gold-800 dark:text-gold-200">
-                          {variant.caratApprox || "—"}
-                        </td>
-                        <td className="px-4 py-3 text-gold-600 dark:text-gold-400">
-                          {variant.size || "—"}
-                        </td>
-                        <td className="px-4 py-3 text-gold-900 dark:text-white font-semibold">
-                          ₹{variant.price?.toLocaleString("en-IN") || "0"}
-                        </td>
-                        <td className="px-4 py-3 text-gold-500 dark:text-gold-400 line-through text-xs">
-                          {variant.comparePrice
-                            ? `₹${variant.comparePrice.toLocaleString("en-IN")}`
-                            : "—"}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${variant.stock < (variant.lowStockThreshold || 5) ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"}`}
-                          >
-                            {variant.stock || 0} in stock
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <Link
-                            href={`/admin/productvarients/${variant._id}/edit`}
-                            className="text-emerald-600 hover:underline text-xs font-medium"
-                          >
-                            Edit
-                          </Link>
-                        </td>
-                      </tr>
+                        <span className="font-medium text-gold-800 dark:text-gold-200">
+                          Qty {rule.minQty}–{rule.maxQty}:
+                        </span>{" "}
+                        <span className="font-bold text-emerald-600">
+                          {rule.discountPercentage}% OFF
+                        </span>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="p-6 text-center">
-                <p className="text-sm text-gold-500 dark:text-gold-400">
-                  No variants configured for this product.
-                </p>
-              </div>
-            )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 3. Media & Images */}

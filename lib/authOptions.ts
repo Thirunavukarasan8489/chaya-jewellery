@@ -15,6 +15,108 @@ export const authOptions: NextAuthOptions = {
       clientSecret: requireEnv("GOOGLE_CLIENT_SECRET"),
     }),
     CredentialsProvider({
+      id: "otp",
+      name: "Email OTP",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        otp: { label: "OTP", type: "text" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.otp) {
+          throw new Error("Email and verification code are required.");
+        }
+        const normalizedEmail = credentials.email.toLowerCase().trim();
+        const inputOtp = credentials.otp.trim();
+
+        await connectDB();
+        const { Otp } = await import("@/lib/models/otp");
+
+        const otpRecord = await Otp.findOne({ email: normalizedEmail }).sort({
+          createdAt: -1,
+        });
+        if (!otpRecord) {
+          throw new Error(
+            "Verification code expired or not found. Please request a new code.",
+          );
+        }
+
+        if (new Date(otpRecord.expiresAt).getTime() < Date.now()) {
+          await Otp.deleteMany({ email: normalizedEmail });
+          throw new Error(
+            "Verification code has expired. Please request a new code.",
+          );
+        }
+
+        if ((otpRecord.attempts || 0) >= 5) {
+          await Otp.deleteMany({ email: normalizedEmail });
+          throw new Error(
+            "Too many failed attempts. Please request a new code.",
+          );
+        }
+
+        const isMatch = await bcrypt.compare(inputOtp, otpRecord.otpHash);
+        if (!isMatch) {
+          otpRecord.attempts = (otpRecord.attempts || 0) + 1;
+          await otpRecord.save();
+          throw new Error("Invalid verification code. Please try again.");
+        }
+
+        // OTP is valid! Delete used OTP
+        await Otp.deleteMany({ email: normalizedEmail });
+
+        // Find or create User and Customer account
+        let user = await User.findOne({ email: normalizedEmail });
+        let customer = await Customer.findOne({
+          "contact.email": normalizedEmail,
+        });
+
+        if (!user) {
+          const defaultName = customer?.profile?.firstName
+            ? `${customer.profile.firstName} ${customer.profile.lastName || ""}`.trim()
+            : normalizedEmail.split("@")[0];
+
+          user = await User.create({
+            name: defaultName,
+            email: normalizedEmail,
+            role: "CUSTOMER",
+            status: "ACTIVE",
+            provider: "email_otp",
+          });
+        }
+
+        if (!customer) {
+          customer = await Customer.create({
+            type: "PERSONAL",
+            userId: user._id,
+            contact: { email: normalizedEmail },
+            profile: {
+              firstName: user.name?.split(" ")[0] || "Customer",
+              lastName: user.name?.split(" ").slice(1).join(" ") || "",
+            },
+            addresses: [],
+            metrics: { totalOrders: 0, totalSpend: 0 },
+          });
+        } else if (!customer.userId) {
+          customer.userId = user._id;
+          await customer.save();
+        }
+
+        if (!user.customerProfileId) {
+          user.customerProfileId = customer._id;
+          await user.save();
+        }
+
+        return {
+          id: user._id.toString(),
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          image: user.image || null,
+        };
+      },
+    }),
+    CredentialsProvider({
+      id: "credentials",
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },

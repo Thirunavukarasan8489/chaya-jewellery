@@ -10,20 +10,6 @@ const RequiredImageSchema = z.object({
   altText: z.string().optional(),
 });
 
-export const VariantSchema = z.object({
-  name: z.string().optional(),
-  slug: z.string().optional(),
-  sku: z.string().optional(),
-  variantValue: z.coerce.number().optional(),
-  caratApprox: z.coerce.number().optional(),
-  size: z.string().optional(),
-  price: z.coerce.number().min(0, "Selling Price is required"),
-  comparePrice: z.coerce.number().optional(),
-  stock: z.coerce.number().int().min(0).default(0),
-  lowStockThreshold: z.coerce.number().int().min(0).default(5),
-  image: ImageSchema.optional(),
-});
-
 export const DiscountRuleSchema = z
   .object({
     minQty: z.coerce.number().min(1, "Min quantity must be at least 1"),
@@ -42,6 +28,7 @@ export const ProductSchema = z.object({
   name: z.string().min(1, "Name is required"),
   slug: z.string().optional(),
   baseSku: z.string().optional(),
+  productCode: z.string().optional(),
   category: z.string().optional(),
   categoryId: z.string().optional(),
   subCategory: z.string().optional(),
@@ -51,11 +38,7 @@ export const ProductSchema = z.object({
 
   discountRules: z.array(DiscountRuleSchema).optional(),
 
-  hasVariants: z.boolean().default(true),
-  variants: z
-    .array(VariantSchema)
-    .min(1, "At least one product variant is required"),
-
+  price: z.coerce.number().min(0, "Selling Price is required"),
   grossWeight: z.coerce.number().optional(),
   netWeight: z.coerce.number().optional(),
   stoneWeight: z.coerce.number().optional(),
@@ -92,6 +75,8 @@ export const ProductSchema = z.object({
   metaDescription: z.string().optional(),
   keywords: z.array(z.string()).optional(),
   ogImage: z.string().optional(),
+  featured: z.boolean().optional(),
+  bestseller: z.boolean().optional(),
 });
 
 export type ProductInput = z.infer<typeof ProductSchema>;

@@ -84,27 +84,39 @@ export function InventoryForm() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <AdminInput
             label="Opening Stock *"
-            type="number"
-            min="0"
+            type="text"
             required
             value={openingStock}
             onChange={(e) => setOpeningStock(e.target.value)}
+            onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+              }
+            }}
           />
           <AdminInput
             label="Low Stock Threshold *"
-            type="number"
-            min="0"
+            type="text"
             required
             value={lowStockThreshold}
             onChange={(e) => setLowStockThreshold(e.target.value)}
+            onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+              }
+            }}
           />
           <AdminInput
             label="Rack Capacity *"
-            type="number"
-            min="1"
+            type="text"
             required
             value={rackCapacity}
             onChange={(e) => setRackCapacity(e.target.value)}
+            onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+              }
+            }}
           />
         </div>
       </div>

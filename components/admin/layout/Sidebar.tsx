@@ -50,7 +50,6 @@ const hasAccess = (itemHref: string, role: string) => {
       itemHref.startsWith("/admin/categories") ||
       itemHref.startsWith("/admin/subcategories") ||
       itemHref.startsWith("/admin/products") ||
-      itemHref.startsWith("/admin/productvarients") ||
       itemHref.startsWith("/admin/inventory") ||
       itemHref.startsWith("/admin/website")
     ) {

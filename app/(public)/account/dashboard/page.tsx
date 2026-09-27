@@ -59,7 +59,9 @@ export default async function AccountDashboardPage() {
     orderConditions.push({ userId: new mongoose.Types.ObjectId(userId) });
   }
   if (userEmail) {
-    orderConditions.push({ email: userEmail });
+    orderConditions.push({
+      email: { $regex: new RegExp(`^${userEmail.trim()}$`, "i") },
+    });
   }
 
   let recentOrders: any[] = [];

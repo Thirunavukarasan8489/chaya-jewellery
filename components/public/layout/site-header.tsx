@@ -6,11 +6,14 @@ import { Logo } from "@/components/public/layout/logo";
 import { MobileDrawer } from "@/components/public/layout/mobile-drawer";
 import { PrimaryNav } from "@/components/public/layout/primary-nav";
 import { UserNav } from "@/components/public/layout/user-nav";
-import { getCategories } from "@/lib/services/category-service";
+import { getCategories, getMegaMenuData } from "@/lib/services/category-service";
 import { NAV_DATA } from "@/lib/utils";
 
 export async function SiteHeader() {
-  const categories = await getCategories();
+  const [categories, megaMenuData] = await Promise.all([
+    getCategories(),
+    getMegaMenuData(),
+  ]);
   const business = NAV_DATA.business;
   return (
     <header className="sticky top-0 z-50">
@@ -24,7 +27,7 @@ export async function SiteHeader() {
 
           <Logo className="mr-auto lg:mr-0" />
 
-          <PrimaryNav />
+          <PrimaryNav megaMenuData={megaMenuData} />
 
           <div className="flex shrink-0 items-center gap-1">
             <a

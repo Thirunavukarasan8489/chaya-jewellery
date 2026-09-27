@@ -59,6 +59,25 @@ export async function createLead(data: any) {
 
     await dbConnect();
 
+    // RATE-LIMIT: Check if an enquiry with same email or phone was submitted in the last 60 seconds
+    const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+    const queryConditions: any[] = [{ phone: validatedData.phone.trim() }];
+    if (validatedData.email) {
+      queryConditions.push({ email: validatedData.email.toLowerCase().trim() });
+    }
+
+    const existing = await Lead.findOne({
+      $or: queryConditions,
+      createdAt: { $gte: oneMinuteAgo },
+    }).select("_id");
+
+    if (existing) {
+      return {
+        success: false,
+        error: "You recently submitted an enquiry. Our jewellery specialists will reach out shortly!",
+      };
+    }
+
     const lead = await Lead.create(validatedData);
     revalidatePath("/admin/leads");
     return { success: true, data: JSON.parse(JSON.stringify(lead)) };

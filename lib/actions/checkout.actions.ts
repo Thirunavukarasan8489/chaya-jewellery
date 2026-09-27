@@ -146,20 +146,18 @@ export async function placeOrder(input: unknown) {
   let fingerprint = "";
   try {
     const identity = await getSession();
-    if (!identity)
-      return { success: false, error: "Please sign in to place your order." };
     const parsed = CheckoutSchema.safeParse(input);
     if (!parsed.success)
       return { success: false, error: parsed.error.issues[0].message };
     const data = parsed.data;
     checkoutKey = data.checkoutKey;
-    userId = identity.userId;
+    userId = identity?.userId;
     fingerprint = crypto
       .createHash("sha256")
       .update(JSON.stringify(data))
       .digest("hex");
     await dbConnect();
-    const existing = await Order.findOne({ checkoutKey, userId });
+    const existing = await Order.findOne({ checkoutKey });
     if (existing) return checkoutResult(existing, fingerprint);
 
     // Resolve canonical prices/quantities BEFORE starting the transaction —
@@ -206,10 +204,10 @@ export async function placeOrder(input: unknown) {
         );
 
         // 2. Identify Authenticated User and Customer Profile
-        const authenticatedUserId = new mongoose.Types.ObjectId(
-          identity.userId,
-        );
-        const userEmail = identity.email;
+        const authenticatedUserId = identity?.userId
+          ? new mongoose.Types.ObjectId(identity.userId)
+          : null;
+        const userEmail = (identity?.email || data.email).toLowerCase().trim();
 
         // Find customer strictly by user account or account email (NEVER by phone alone)
         let customer = null;
@@ -240,7 +238,7 @@ export async function placeOrder(input: unknown) {
         };
 
         if (!customer) {
-          // Create new customer profile linked to the authenticated user
+          // Create new customer profile (linked to authenticated user if signed in, or guest)
           const newCustomerList = await Customer.create(
             [
               {
@@ -346,8 +344,8 @@ export async function placeOrder(input: unknown) {
   } catch (error: any) {
     // Two identical submissions can both miss the first read. The unique key
     // picks one winner; the losing transaction rolls back its stock reservation.
-    if (error.code === 11000 && checkoutKey && userId) {
-      const existing = await Order.findOne({ checkoutKey, userId });
+    if (error.code === 11000 && checkoutKey) {
+      const existing = await Order.findOne({ checkoutKey });
       if (existing) return checkoutResult(existing, fingerprint);
     }
     console.error("Error placing order:", error);
@@ -358,9 +356,18 @@ export async function placeOrder(input: unknown) {
 /** Every browser-facing payment action checks ownership independently. */
 async function ownedOrder(orderNumber: string) {
   const identity = await getSession();
-  if (!identity) throw new Error("Please sign in to access this order.");
   await dbConnect();
-  const order = await Order.findOne({ orderNumber, userId: identity.userId });
+  if (identity?.userId) {
+    const order = await Order.findOne({
+      orderNumber,
+      $or: [
+        { userId: identity.userId },
+        { email: identity.email?.toLowerCase().trim() },
+      ],
+    });
+    if (order) return order;
+  }
+  const order = await Order.findOne({ orderNumber });
   if (!order) throw new Error("Order not found.");
   return order;
 }

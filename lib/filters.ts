@@ -1,11 +1,17 @@
 import { canBuy, canEnquire, stockStatus, type Product } from "@/lib/types";
 
-/** Buckets in paise. Chosen around the natural price tiers of the catalogue. */
+/** Price bands in INR (Rupees). Chosen around the natural price tiers of the jewellery catalogue. */
 export const priceBands = [
-  { value: "under-25k", label: "Under ₹25,000", min: 0, max: 2_500_000 },
-  { value: "25k-1l", label: "₹25,000 – ₹1L", min: 2_500_000, max: 10_000_000 },
-  { value: "1l-5l", label: "₹1L – ₹5L", min: 10_000_000, max: 50_000_000 },
-  { value: "above-5l", label: "Above ₹5L", min: 50_000_000, max: Infinity },
+  { value: "under-1500", label: "Under ₹1,500", min: 0, max: 1500 },
+  { value: "1500-3500", label: "₹1,500 – ₹3,500", min: 1500, max: 3500 },
+  { value: "3500-7500", label: "₹3,500 – ₹7,500", min: 3500, max: 7500 },
+  { value: "7500-15000", label: "₹7,500 – ₹15,000", min: 7500, max: 15000 },
+  { value: "above-15000", label: "Above ₹15,000", min: 15000, max: Infinity },
+] as const;
+
+export const itemTypeOptions = [
+  { value: "SINGLE", label: "Single Pieces" },
+  { value: "COMBO", label: "Combos & Sets" },
 ] as const;
 
 export const sortOptions = [
@@ -24,6 +30,8 @@ export const purchaseOptions = [
 export type ProductQuery = {
   q?: string;
   category?: string;
+  subCategory?: string;
+  type?: string;
   price?: string;
   availability?: string;
   purchase?: string;
@@ -42,6 +50,8 @@ export function toQuery(
   return {
     q: pick("q"),
     category: pick("category"),
+    subCategory: pick("subCategory"),
+    type: pick("type"),
     price: pick("price"),
     availability: pick("availability"),
     purchase: pick("purchase"),
@@ -55,7 +65,7 @@ export function applyFilters(source: Product[], query: ProductQuery) {
   if (query.q) {
     const needle = query.q.trim().toLowerCase();
     result = result.filter((p) =>
-      [p.name, p.shortDescription, p.sku, p.categorySlug]
+      [p.name, p.shortDescription, p.sku, p.categorySlug, p.subCategoryName]
         .filter(Boolean)
         .some((field) => field!.toLowerCase().includes(needle)),
     );
@@ -64,6 +74,15 @@ export function applyFilters(source: Product[], query: ProductQuery) {
   if (query.category) {
     const wanted = new Set(query.category.split(","));
     result = result.filter((p) => wanted.has(p.categorySlug));
+  }
+
+  if (query.subCategory) {
+    const wanted = new Set(query.subCategory.split(","));
+    result = result.filter((p) => p.subCategorySlug && wanted.has(p.subCategorySlug));
+  }
+
+  if (query.type) {
+    result = result.filter((p) => (p.subCategoryType || "SINGLE") === query.type);
   }
 
   if (query.price) {
@@ -107,6 +126,8 @@ export function applyFilters(source: Product[], query: ProductQuery) {
 export function activeFilterCount(query: ProductQuery) {
   return [
     query.category,
+    query.subCategory,
+    query.type,
     query.price,
     query.availability,
     query.purchase,

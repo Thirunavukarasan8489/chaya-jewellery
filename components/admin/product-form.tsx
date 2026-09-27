@@ -58,7 +58,12 @@ export function ProductForm() {
               Selling Price (₹)
             </label>
             <input
-              type="number"
+              type="text"
+              onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                if (!/[0-9.]/.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
               className="w-full border border-gold-300 rounded-md p-2"
             />
           </div>
@@ -76,7 +81,12 @@ export function ProductForm() {
               Stock Quantity
             </label>
             <input
-              type="number"
+              type="text"
+              onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                if (!/[0-9]/.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
               className="w-full border border-gold-300 rounded-md p-2"
             />
           </div>
