@@ -1061,6 +1061,66 @@ and requested Google OAuth login/registration support for customers.
 full `npm run build` with Turbopack and static optimization completed cleanly
 with all 36 routes and dynamic endpoints prerendered.
 
+## 2026-09-27 Shop by Category: Backend-driven Interactive Category Tabs & Subcategories
+
+User requested improving the homepage "Shop by Category" section to load both
+top-level categories and subcategories dynamically from the backend, displaying
+subcategories with proper responsiveness. Selected option was an interactive
+tab switcher allowing customers to click top-level categories (or "All") to
+explore subcategories in a responsive circular row.
+
+**Backend & Data Layer (`lib/services/category-service.ts`):**
+- Added `getFeaturedCategoriesWithSubs`: Cached query (`tags: ["categories", "subcategories"]`)
+  that fetches all active `Category` documents and populates all active `SubCategory`
+  documents grouped by parent category.
+- Returns `FeaturedCategoryItem[]` including subcategory metadata (id, name, slug,
+  image, type, comboDiscount, categorySlug, categoryName).
+- Cache invalidation: Covered by existing `updateTag("subcategories")` in
+  `sub-category.actions.ts` and `updateTag("categories")` in `category.actions.ts`.
+
+**Frontend Components:**
+- `components/public/home/featured-categories-client.tsx` (new):
+  - Interactive luxury pill tabs for "All Categories" and each top-level category
+    (Silver Jewellers, Designer Jewellery, Imitation Jewellery) with count badges.
+  - Active tab styling: Deep Plum (`bg-plum-900`) with soft gold text (`text-gold-300`)
+    and gold ring glow (`ring-gold-400/40`).
+  - Circular image cards: Sized `size-24` on mobile and `size-40 lg:size-44` on
+    tablet/desktop with `rounded-full` luxury ring and smooth zoom transitions.
+  - Supports `COMBO` badges for combo packages.
+  - Links directly to filtered catalogue: `/products?category=${catSlug}&subCategory=${subSlug}`.
+  - When in "All" view, displays parent category hints below subcategory names.
+  - When a specific category is selected, provides a quick "Explore all in [Category]"
+    CTA button. If a top-level category has no subcategories (e.g. Silver Jewellers),
+    gracefully displays the main category card and collection link instead of an empty state.
+- `components/public/home/featured-categories.tsx`:
+  - Updated to async server component fetching `getFeaturedCategoriesWithSubs()`,
+    wrapped in `<Reveal>` animation.
+
+**Verification:** `npx tsc --noEmit` clean (0 errors across whole project);
+verified live dev server rendered HTML streams all top-level categories and subcategories
+(Imitation Jewellery -> Necklace, Earing, Combo; Designer Jewellery -> Ring; Silver Jewellers).
+
+## 2026-09-27 Icon Standardization: Sparkles Removal & Domain-Specific Replacement
+
+User requested removing all generic `<Sparkles />` icons from the project and replacing
+them with contextually accurate, domain-related icons from `lucide-react`.
+
+**Replacements completed:**
+- `app/(public)/checkout/CheckoutClient.tsx`: Replaced `Sparkles` with `Zap`
+  (`<Zap size={14} className="text-gold-600" />`) in "Speed up checkout with Google".
+- `app/(public)/login/page.tsx`: Replaced `Sparkles` with `Zap`
+  (`<Zap size={13} className={authMethod === "otp" ? "text-gold-400" : "text-gold-600"} />`)
+  in "Instant OTP" authentication method tab.
+- `components/public/home/featured-categories-client.tsx`: Replaced `Sparkles` with `LayoutGrid`
+  (`<LayoutGrid size={13} className={activeTab === "all" ? "text-gold-400" : "text-plum-400"} />`)
+  in the "All Categories" catalogue tab.
+- `components/public/layout/mega-menu.tsx`: Replaced `Sparkles` with `Layers`
+  (sidebar button, header title, and custom set empty state) for "Combos & Matching Sets".
+- `components/public/home/trust-strip.tsx`: Replaced `Sparkles` with `Gem`
+  for the "Timeless Designs" trust highlight card.
+- `components/public/home/certification-trust-section.tsx`: Replaced `Sparkles` with `CheckCircle2`
+  for the "Made to order, checked by hand" craftsmanship guarantee point.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

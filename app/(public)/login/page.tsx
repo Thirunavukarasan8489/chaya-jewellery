@@ -17,7 +17,7 @@ import {
   KeyRound,
   ArrowRight,
   RefreshCw,
-  Sparkles,
+  Zap,
 } from "lucide-react";
 import { buttonStyles } from "@/components/public/ui/button";
 import { BackButton } from "@/components/public/ui/back-button";
@@ -226,7 +226,7 @@ function LoginForm() {
                     : "text-plum-800 hover:text-plum-950"
                 }`}
               >
-                <Sparkles size={13} className={authMethod === "otp" ? "text-gold-400" : "text-gold-600"} />
+                <Zap size={13} className={authMethod === "otp" ? "text-gold-400" : "text-gold-600"} />
                 <span>Instant OTP</span>
               </button>
               <button

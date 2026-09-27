@@ -10,7 +10,7 @@ import {
   recordCashfreeCheckoutResult,
 } from "@/lib/actions/checkout.actions";
 import toast from "react-hot-toast";
-import { CheckCircle2, ChevronRight, Sparkles, UserCheck } from "lucide-react";
+import { CheckCircle2, ChevronRight, UserCheck, Zap } from "lucide-react";
 import { GoogleSignInButton } from "@/components/public/auth/google-sign-in-button";
 
 type FormData = {
@@ -450,7 +450,7 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
                 <div className="p-4 rounded-xl bg-ivory-100/90 border border-ivory-300 flex flex-col sm:flex-row items-center justify-between gap-3">
                   <div>
                     <p className="text-xs font-bold text-plum-950 flex items-center gap-1.5">
-                      <Sparkles size={14} className="text-gold-600" />
+                      <Zap size={14} className="text-gold-600" />
                       <span>Speed up checkout with Google</span>
                     </p>
                     <p className="text-[11px] text-plum-600 mt-0.5">

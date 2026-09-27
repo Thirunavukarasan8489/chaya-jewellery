@@ -1,4 +1,4 @@
-import { Gift, Heart, ShieldCheck, Sparkles } from "lucide-react";
+import { Gift, Heart, ShieldCheck, Gem } from "lucide-react";
 
 export function TrustStrip({ averageRating }: { averageRating?: number }) {
   const trustHighlights = [
@@ -8,7 +8,7 @@ export function TrustStrip({ averageRating }: { averageRating?: number }) {
       body: "Authenticity you can trust.",
     },
     {
-      icon: Sparkles,
+      icon: Gem,
       title: "Timeless Designs",
       body: "Tradition with a modern touch.",
     },

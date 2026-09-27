@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Award, BadgeCheck, ShieldCheck, Sparkles } from "lucide-react";
+import { Award, BadgeCheck, CheckCircle2, ShieldCheck } from "lucide-react";
 import { buttonStyles } from "@/components/public/ui/button";
 import { OrnamentalDivider } from "@/components/public/ui/ornamental-divider";
 import { Reveal } from "@/components/public/ui/reveal";
@@ -23,7 +23,7 @@ const points = [
     body: "A certificate of authenticity ships with your piece, and diamonds above a carat threshold carry an independent IGI report.",
   },
   {
-    icon: Sparkles,
+    icon: CheckCircle2,
     title: "Made to order, checked by hand",
     body: "Each piece is inspected for finish and weight before it leaves our workshop — not just before it's photographed.",
   },

@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import {
-  Sparkles,
   ChevronRight,
   Gem,
   ArrowUpRight,
@@ -113,7 +112,7 @@ export function MegaMenu({ data, onClose }: MegaMenuProps) {
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Sparkles
+                  <Layers
                     size={15}
                     className={
                       isComboSelected ? "text-gold-300" : "text-gold-600"
@@ -240,7 +239,7 @@ export function MegaMenu({ data, onClose }: MegaMenuProps) {
               <div className="flex items-center justify-between pb-3 border-b border-ivory-300">
                 <div>
                   <h3 className="text-base font-serif font-bold text-plum-950 flex items-center gap-2">
-                    <Sparkles size={18} className="text-gold-600" />
+                    <Layers size={18} className="text-gold-600" />
                     <span>Jewellery Combos & Matching Sets</span>
                   </h3>
                   <p className="text-xs text-plum-700/80 mt-0.5">
@@ -332,7 +331,7 @@ export function MegaMenu({ data, onClose }: MegaMenuProps) {
                 </div>
               ) : (
                 <div className="py-12 px-6 rounded-2xl border border-dashed border-ivory-300 bg-ivory-100/40 text-center space-y-3">
-                  <Sparkles size={28} className="mx-auto text-gold-600/70" />
+                  <Layers size={28} className="mx-auto text-gold-600/70" />
                   <div>
                     <h4 className="text-sm font-bold text-plum-950">
                       Custom Matching Sets & Combos
