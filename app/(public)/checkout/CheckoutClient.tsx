@@ -10,7 +10,12 @@ import {
   recordCashfreeCheckoutResult,
 } from "@/lib/actions/checkout.actions";
 import toast from "react-hot-toast";
+<<<<<<< HEAD
 import { CheckCircle2, ChevronRight, UserCheck } from "lucide-react";
+=======
+import { CheckCircle2, ChevronRight, UserCheck, Zap } from "lucide-react";
+import { GoogleSignInButton } from "@/components/public/auth/google-sign-in-button";
+>>>>>>> e198be1be74959ca66fbf02b9a3c17eaad0a0a27
 
 type FormData = {
   firstName: string;
@@ -444,7 +449,23 @@ export default function CheckoutClient({ customer }: { customer: any | null }) {
             <p className="text-sm text-plum-600 line-clamp-2">{step1Summary}</p>
           ) : (
             <div className="space-y-4">
-              {customer && (
+              {/* Google Fast Checkout or Guest Indicator */}
+              {!customer ? (
+                <div className="p-4 rounded-xl bg-ivory-100/90 border border-ivory-300 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold text-plum-950 flex items-center gap-1.5">
+                      <Zap size={14} className="text-gold-600" />
+                      <span>Speed up checkout with Google</span>
+                    </p>
+                    <p className="text-[11px] text-plum-600 mt-0.5">
+                      1-click autofill with your verified Google account, or continue as guest below.
+                    </p>
+                  </div>
+                  <div className="shrink-0">
+                    <GoogleSignInButton callbackUrl="/checkout" label="Sign In with Google" />
+                  </div>
+                </div>
+              ) : (
                 <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-200 flex items-center gap-2 text-xs text-emerald-800">
                   <UserCheck size={16} className="text-emerald-600 shrink-0" />
                   <span>

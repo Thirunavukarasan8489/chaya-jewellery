@@ -1061,39 +1061,143 @@ and requested Google OAuth login/registration support for customers.
 full `npm run build` with Turbopack and static optimization completed cleanly
 with all 36 routes and dynamic endpoints prerendered.
 
-## 2026-09-27 guest checkout, email OTP order history, proxy.ts & /products overhaul
+## 2026-09-27 Shop by Category: Backend-driven Interactive Category Tabs & Subcategories
 
-Comprehensive platform update addressing friction-free guest checkout, returning customer order lookup via passwordless email OTP, Next.js 16 file-convention proxy routing, dynamic subcategory filtering in admin, public catalog search/filter calibration, and security/performance indexing.
+User requested improving the homepage "Shop by Category" section to load both
+top-level categories and subcategories dynamically from the backend, displaying
+subcategories with proper responsiveness. Selected option was an interactive
+tab switcher allowing customers to click top-level categories (or "All") to
+explore subcategories in a responsive circular row.
 
-**1. Friction-Free Guest Checkout (`/checkout`):**
+**Backend & Data Layer (`lib/services/category-service.ts`):**
+- Added `getFeaturedCategoriesWithSubs`: Cached query (`tags: ["categories", "subcategories"]`)
+  that fetches all active `Category` documents and populates all active `SubCategory`
+  documents grouped by parent category.
+- Returns `FeaturedCategoryItem[]` including subcategory metadata (id, name, slug,
+  image, type, comboDiscount, categorySlug, categoryName).
+- Cache invalidation: Covered by existing `updateTag("subcategories")` in
+  `sub-category.actions.ts` and `updateTag("categories")` in `category.actions.ts`.
 
-- **Zero-barrier checkout:** Removed mandatory login or OAuth callback prompts prior to checkout. Customers clicking "Checkout" from the bag or product pages navigate directly to `/checkout`.
-- **`proxy.ts` (Next.js 16 conventions):** Removed `/checkout` from `isPublicProtectedRoute` and the route matcher config in `proxy.ts`. Only `/account`, `/admin`, and private user profile routes remain protected.
-- **`CheckoutClient.tsx`:** Removed Google Sign-in auth banner blocks and redirect handlers. The single-page checkout focuses strictly on collecting shipping address, customer email/phone, and payment initiation.
-- **Order attribution:** Guest orders store the customer's email, phone, and shipping address on the `Order` model with `userId: null` (or linked automatically if a customer session exists).
+**Frontend Components:**
+- `components/public/home/featured-categories-client.tsx` (new):
+  - Interactive luxury pill tabs for "All Categories" and each top-level category
+    (Silver Jewellers, Designer Jewellery, Imitation Jewellery) with count badges.
+  - Active tab styling: Deep Plum (`bg-plum-900`) with soft gold text (`text-gold-300`)
+    and gold ring glow (`ring-gold-400/40`).
+  - Circular image cards: Sized `size-24` on mobile and `size-40 lg:size-44` on
+    tablet/desktop with `rounded-full` luxury ring and smooth zoom transitions.
+  - Supports `COMBO` badges for combo packages.
+  - Links directly to filtered catalogue: `/products?category=${catSlug}&subCategory=${subSlug}`.
+  - When in "All" view, displays parent category hints below subcategory names.
+  - When a specific category is selected, provides a quick "Explore all in [Category]"
+    CTA button. If a top-level category has no subcategories (e.g. Silver Jewellers),
+    gracefully displays the main category card and collection link instead of an empty state.
+- `components/public/home/featured-categories.tsx`:
+  - Updated to async server component fetching `getFeaturedCategoriesWithSubs()`,
+    wrapped in `<Reveal>` animation.
 
-**2. Customer Revisit & Passwordless Email OTP Order Sync:**
+**Verification:** `npx tsc --noEmit` clean (0 errors across whole project);
+verified live dev server rendered HTML streams all top-level categories and subcategories
+(Imitation Jewellery -> Necklace, Earing, Combo; Designer Jewellery -> Ring; Silver Jewellers).
 
-- **Order Lookup via Email:** Returning customers can access their order history anytime by logging in with the email address used during guest checkout.
-- **Email OTP Authentication:** `/login` supports 6-digit email OTP (backed by `EmailOtp` collection, bcrypt hashing, 10-minute expiry, and Resend transactional email dispatch).
-- **Unified Order History:** `getOrdersByUser()` in `lib/services/order-service.ts` queries orders using `$or: [{ userId: userObjId }, { email: { $regex: ... } }]`, automatically associating past guest purchases with the authenticated user profile on `/account/orders`.
+## 2026-09-27 Icon Standardization: Sparkles Removal & Domain-Specific Replacement
 
-**3. Admin SubCategory & Combo Settings:**
+User requested removing all generic `<Sparkles />` icons from the project and replacing
+them with contextually accurate, domain-related icons from `lucide-react`.
 
-- `components/admin/SubCategoryForm.tsx`: Updated the "Combo Includes" selection to dynamically filter available subcategories by the selected Parent Category, preventing invalid cross-category combo assignments.
+**Replacements completed:**
+- `app/(public)/checkout/CheckoutClient.tsx`: Replaced `Sparkles` with `Zap`
+  (`<Zap size={14} className="text-gold-600" />`) in "Speed up checkout with Google".
+- `app/(public)/login/page.tsx`: Replaced `Sparkles` with `Zap`
+  (`<Zap size={13} className={authMethod === "otp" ? "text-gold-400" : "text-gold-600"} />`)
+  in "Instant OTP" authentication method tab.
+- `components/public/home/featured-categories-client.tsx`: Replaced `Sparkles` with `LayoutGrid`
+  (`<LayoutGrid size={13} className={activeTab === "all" ? "text-gold-400" : "text-plum-400"} />`)
+  in the "All Categories" catalogue tab.
+- `components/public/layout/mega-menu.tsx`: Replaced `Sparkles` with `Layers`
+  (sidebar button, header title, and custom set empty state) for "Combos & Matching Sets".
+- `components/public/home/trust-strip.tsx`: Replaced `Sparkles` with `Gem`
+  for the "Timeless Designs" trust highlight card.
+- `components/public/home/certification-trust-section.tsx`: Replaced `Sparkles` with `CheckCircle2`
+  for the "Made to order, checked by hand" craftsmanship guarantee point.
 
-**4. Public Catalog (`/products`) Calibration:**
+## 2026-09-27 Product Detail Page: Luxury Accordion & Backend Specifications
 
-- **Price band calibration (`lib/filters.ts`):** Replaced legacy paise-denominated filter thresholds with actual INR price bands (`under-1500`, `1500-3500`, `3500-7500`, `7500-15000`, `above-15000`) matching the store's catalogue prices.
-- **Dynamic Filters & Active Bar:** Added dynamic subcategory and product item type (`SINGLE` vs `COMBO`) filtering in `product-filters.tsx`, along with a dismissible `ActiveFiltersBar` above the product grid.
-- **Branding & SEO:** Updated catalog metadata, page title, and empty-state copy from legacy gemstone references to Chaya Jewellery luxury collections.
+User requested displaying "About this piece" and "Product Specifications" (sourced dynamically from the backend) in an interactive accordion concept with responsive layout.
 
-**5. Database & Security Hardening:**
+**Data & Type Layer:**
+- `lib/types.ts`: Added `ProductSpecifications` interface (`material`, `purity`, `colour`, `style`, `occasion`, `stoneType`, `stoneColour`, `collectionName`) and mapped weights (`grossWeight`, `netWeight`, `stoneWeight`) and `specifications` to the public `Product` interface.
+- `lib/services/product-service.ts`: Updated `mapToPublicProduct` to map `grossWeight`, `netWeight`, `stoneWeight`, and `specifications` from the Mongoose document. Bumped Next.js cache keys (`public-products-v8` and `public-product-by-slug-v7`) so that product details immediately serve the updated schema.
 
-- **Compound MongoDB Indexes:** Added compound indexes to `lib/models/product.ts` (`{ status: 1, createdAt: -1 }`, `{ category: 1, status: 1 }`, `{ subCategory: 1, status: 1 }`, `{ status: 1, featured: 1 }`, `{ status: 1, bestseller: 1 }`) and `lib/models/order.ts` (`{ orderStatus: 1, paymentStatus: 1, createdAt: -1 }`, `{ userId: 1, createdAt: -1 }`, `{ email: 1, createdAt: -1 }`).
-- **Lead Submission Rate Limiting:** Added 60-second in-memory anti-flood protection in `createLead` (`lib/actions/lead.actions.ts`).
+**Frontend Components:**
+- `components/public/product/product-accordion.tsx` (new):
+  - Client-side luxury accordion with expandable sections:
+    1. **About this piece**: Rich-text HTML description with sanitized rendering.
+    2. **Product Specifications**: Responsive 2-column key-value grid rendering Base Metal, Metal Purity, Metal Colour, Style, Occasion, Stone Type, Stone Colour, Collection Name, Gross/Net/Stone Weight, and Product Code (SKU).
+    3. **Shipping & Authenticity**: Bulleted delivery and authenticity guarantees (Insured delivery, 7-day returns, BIS Hallmark / certificate).
+  - Luxury gold/plum accents, smooth rotating indicator chevron, and accessible button triggers.
+- `app/(public)/products/[slug]/page.tsx`:
+  - Integrated `<ProductAccordion product={product} defaultOpenSection="about" />`.
+  - Reorganized trust badges between purchase options and accordion.
 
-**Verification:** `npx tsc --noEmit` verified clean (0 errors); all server actions, models, and client components typecheck cleanly.
+## 2026-09-27 Product Detail Page: Gallery Left/Right Navigation Arrows & Multi-Image Aggregation
+
+User requested adding left and right arrow buttons to the product image view on desktop/responsive to navigate next and previous images.
+
+**Frontend Changes:**
+- `components/public/product/product-gallery.tsx`:
+  - Added interactive `<ChevronLeft />` and `<ChevronRight />` navigation buttons layered directly over the main image container.
+  - Buttons styled with luxury circular backdrop blur (`bg-white/95 text-plum-900 border border-ivory-300 shadow-lg hover:bg-plum-900 hover:text-gold-300 hover:border-gold-500/50`).
+  - Added slide index counter pill (`1 / 5`) at bottom-right corner of gallery.
+  - Keyboard arrow navigation support (`ArrowLeft`, `ArrowRight`).
+  - Enhanced desktop thumbnail selector with active indicator scaling and smooth horizontal scrolling if slides exceed 5 items.
+- `app/(public)/products/[slug]/page.tsx`:
+  - Aggregated `product.primaryImage` + `product.images` (deduplicating by URL) so that products with both a cover image and gallery images (e.g. `cross-over-stones-lined-twist-ring` with 1 primary + 4 gallery = 5 images) have all photos available in the gallery.
+
+## 2026-09-27 Product Card: Luxury Visual Redesign & Clickability Polish
+
+User requested redesigning the product card to make it attractive and enticing to click,
+without using ratings.
+
+**Improvements & Aesthetic Enhancements:**
+- `components/public/product/product-card.tsx`:
+  - **Interactive Elevation & Shadow**: `hover:-translate-y-1 hover:border-gold-400/60 hover:shadow-xl hover:shadow-plum-950/8` delivers a tactile luxury lift on hover.
+  - **Dual-Angle Hover Cross-Fade**: If the product has secondary gallery photos, hovering smoothly cross-fades to the alternate angle / worn view (`opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out`).
+  - **Floating Badges**: Replaced plain tags with luxury floating pills (`Bestseller`, `{off}% OFF`, purity pills e.g. `925`, `Few Left`).
+  - **"View Details" Hover Pill**: Floating glassmorphic pill (`View Details` + `ArrowUpRight`) centered at the bottom of the image that smoothly slides up on hover.
+  - **Refined Eyebrow**: Category and Subcategory positioned cleanly above the title in tracking uppercase gold (`text-gold-700`), eliminating the plain gray raw slug below the title.
+  - **Font-Serif Title with Gold Hover Color**: Title turns from deep plum to brand champagne gold on hover (`group-hover:text-gold-700`).
+  - **Micro-Spec Note**: Shows stone type or metal purity beneath the title for luxury context.
+  - **Pricing & Savings Callout**: Clear bold INR selling price, strikethrough compare price, and `Save X%` highlight.
+- `components/public/cart/add-to-cart.tsx`:
+  - Modernized `QuickAdd` button from a harsh square box to a luxury rounded-xl button (`rounded-xl bg-plum-900 text-gold-300 hover:bg-gold-500 hover:text-plum-950 hover:shadow-md hover:scale-105 active:scale-95`).
+- Strictly omitted ratings as instructed.
+
+## 2026-09-27 Homepage: Combos & Matching Sets Showcase Section
+
+User requested adding a new Combos section to the homepage (similar to Bestsellers) to showcase combo products in responsive cards.
+
+**Backend & Data Layer:**
+- `lib/utils.ts`:
+  - Added centralized, client-and-server-safe `isComboProduct(p)` helper checking `subCategoryType === "COMBO"`, `subCategorySlug === "combo"`, and word-bounded `\b(combo|combos)\b` / `\bset\b` patterns.
+- `lib/services/product-service.ts`:
+  - `getBestsellers`: Strictly filters out any combo products (`!isComboProduct(p)`). Regular products are now properly displayed in Bestsellers, while combo sets are excluded completely.
+  - `getComboProducts`: Strictly returns only combo products (`isComboProduct(p)`).
+  - `getFeaturedProducts`: Also isolates standard non-combo products.
+- Database:
+  - Reset `bestseller: false` on combo products to prevent accidental isolation of standard products in case no standard products are explicitly marked.
+
+**Frontend Components:**
+- `components/public/product/product-card.tsx`:
+  - Added dedicated gold pill badge `Combo Set` on the top-left when `isComboProduct(product)` evaluates to true.
+  - Sits gracefully beside discount percentages and material indicators, while `Bestseller` badge is guarded by `!isComboProduct(product)`.
+- `components/public/product/product-rail.tsx`:
+  - Enhanced responsive sizing across phone (`w-[46%] min-w-[10.5rem]`), tablet (`sm:w-[32%] sm:min-w-[12.5rem] md:w-[28%]`), and desktop (`lg:grid` dynamically adapting between 1, 2, 3, and 4 columns to avoid unbalanced gaps).
+- `app/(public)/page.tsx`:
+  - Fetched `getComboProducts()` in the homepage's parallel `Promise.all` pipeline.
+  - Added `<SectionHeading>` with eyebrow `"Combos & Matching Sets"`, title `"Curated Combinations, Made to Match"`, and luxury styling.
+  - Rendered `<ProductRail products={flattenVariants(combos)} />` wrapped in `<Reveal>`, giving smooth mobile swipe snap rails with dots and responsive multi-column desktop grids.
+  - Guaranteed no ratings or `<Sparkles />` icons are used.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

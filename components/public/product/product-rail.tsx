@@ -54,17 +54,17 @@ export function ProductRail({
     <div
       className={cn("relative w-full max-w-full overflow-hidden", className)}
     >
-      {/* Mobile Swipeable Product Rail (Phone & Tablet) */}
+      {/* Mobile & Tablet Swipeable Product Rail */}
       <ul
         ref={trackRef}
         onScroll={handleScroll}
-        className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-hidden pt-1 pb-3 lg:hidden"
+        className="no-scrollbar flex snap-x snap-mandatory gap-3 sm:gap-4 md:gap-5 overflow-x-auto overflow-y-hidden pt-1 pb-3 lg:hidden"
       >
         {displayProducts.map((product, i) => (
           <li
             key={product.slug}
             data-index={i}
-            className="w-[46%] min-w-[10.5rem] shrink-0 snap-start"
+            className="w-[46%] min-w-[10.5rem] sm:w-[32%] sm:min-w-[12.5rem] md:w-[28%] shrink-0 snap-start"
           >
             <ProductCard
               product={product}
@@ -76,7 +76,18 @@ export function ProductRail({
       </ul>
 
       {/* Desktop Grid Layout */}
-      <ul className="hidden gap-5 lg:grid lg:grid-cols-4">
+      <ul
+        className={cn(
+          "hidden gap-5 lg:grid",
+          displayProducts.length === 1
+            ? "lg:grid-cols-3 max-w-sm"
+            : displayProducts.length === 2
+              ? "lg:grid-cols-2 max-w-2xl"
+              : displayProducts.length === 3
+                ? "lg:grid-cols-3"
+                : "lg:grid-cols-4",
+        )}
+      >
         {displayProducts.map((product, i) => (
           <li key={product.slug}>
             <ProductCard

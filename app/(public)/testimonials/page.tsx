@@ -50,7 +50,7 @@ export default async function TestimonialsPage() {
                   {t.quote}
                 </blockquote>
                 <figcaption className="mt-5 border-t border-ivory-300 pt-4">
-                  <Rating value={t.rating} className="mb-2" />
+                  {/* <Rating value={t.rating} className="mb-2" /> */}
                   <p className="text-sm font-semibold text-plum-900">
                     {t.customerName}
                   </p>

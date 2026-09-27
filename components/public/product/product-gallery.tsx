@@ -1,14 +1,15 @@
 "use client";
 
 import * as React from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { CldImage } from "@/components/shared/CldImage";
 import { GemImage } from "@/components/public/ui/gem-image";
 import { cn } from "@/lib/utils";
 
 /**
- * Swipe on mobile, thumbnails on desktop. Native scroll-snap does the paging so
- * the gesture stays at 60fps and works without JavaScript if hydration is slow;
- * an IntersectionObserver only keeps the dots and thumbnails in sync.
+ * Swipe on mobile, thumbnails and left/right arrows on desktop.
+ * Native scroll-snap does the paging so the gesture stays at 60fps;
+ * an IntersectionObserver keeps active slide state and thumbnails in sync.
  */
 export function ProductGallery({
   color,
@@ -48,22 +49,37 @@ export function ProductGallery({
   }, []);
 
   const goTo = (index: number) => {
+    setActive(index);
     const track = trackRef.current;
     const slide = track?.children[index] as HTMLElement | undefined;
     if (!track || !slide) return;
 
-    // Scroll the track itself, not scrollIntoView — scrollIntoView walks
-    // every scrollable ancestor including the page, which can yank the whole
-    // page vertically just to reveal a horizontally-scrolling gallery.
+    // Scroll the track itself, not scrollIntoView
     track.scrollTo({ left: slide.offsetLeft, behavior: "smooth" });
+  };
+
+  const prev = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    const prevIndex = active > 0 ? active - 1 : slides.length - 1;
+    goTo(prevIndex);
+  };
+
+  const next = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    const nextIndex = active < slides.length - 1 ? active + 1 : 0;
+    goTo(nextIndex);
   };
 
   return (
     <div className="relative w-full max-w-full overflow-hidden">
-      <ul
-        ref={trackRef}
-        className="no-scrollbar -mx-4 flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden sm:mx-0 sm:rounded-2xl"
-      >
+      {/* Main Slide Viewport with Left/Right Navigation Arrows */}
+      <div className="relative group/gallery overflow-hidden sm:rounded-2xl">
+        <ul
+          ref={trackRef}
+          className="no-scrollbar -mx-4 flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden sm:mx-0 sm:rounded-2xl"
+        >
         {slides.map((i) => (
           <li
             key={i}
@@ -101,8 +117,40 @@ export function ProductGallery({
         ))}
       </ul>
 
+      {/* Prev & Next Navigation Arrows (Desktop & Mobile) */}
       {slides.length > 1 && (
         <>
+          <button
+            type="button"
+            onClick={prev}
+            aria-label="Previous image"
+            className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-20 flex size-9 sm:size-11 items-center justify-center rounded-full bg-white/95 text-plum-900 border border-ivory-300 shadow-lg backdrop-blur-md transition-all duration-200 hover:bg-plum-900 hover:text-gold-300 hover:border-gold-500/50 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-gold-400 cursor-pointer sm:opacity-90 sm:hover:opacity-100"
+          >
+            <ChevronLeft size={22} className="shrink-0 -translate-x-0.5" />
+          </button>
+
+          <button
+            type="button"
+            onClick={next}
+            aria-label="Next image"
+            className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 z-20 flex size-9 sm:size-11 items-center justify-center rounded-full bg-white/95 text-plum-900 border border-ivory-300 shadow-lg backdrop-blur-md transition-all duration-200 hover:bg-plum-900 hover:text-gold-300 hover:border-gold-500/50 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-gold-400 cursor-pointer sm:opacity-90 sm:hover:opacity-100"
+          >
+            <ChevronRight size={22} className="shrink-0 translate-x-0.5" />
+          </button>
+
+          {/* Luxury Slide Index Pill */}
+          <div className="absolute bottom-3 right-3 z-20 hidden sm:inline-flex items-center gap-1 rounded-full bg-plum-950/75 px-2.5 py-1 text-xs font-semibold text-ivory-100 backdrop-blur-md border border-white/15 shadow-sm">
+            <span>{active + 1}</span>
+            <span className="text-gold-400/80">/</span>
+            <span>{slides.length}</span>
+          </div>
+        </>
+      )}
+    </div>
+
+      {slides.length > 1 && (
+        <>
+          {/* Mobile Dot Indicators */}
           <div className="mt-3 flex justify-center gap-1.5 sm:hidden">
             {slides.map((i) => (
               <button
@@ -119,18 +167,24 @@ export function ProductGallery({
             ))}
           </div>
 
-          <ul className="mt-3 hidden gap-2.5 sm:grid sm:grid-cols-5">
+          {/* Desktop Thumbnail Selector */}
+          <ul
+            className={cn(
+              "mt-3 hidden gap-2.5 sm:flex sm:overflow-x-auto sm:pb-1 no-scrollbar",
+              slides.length <= 5 && "sm:grid sm:grid-cols-5",
+            )}
+          >
             {slides.map((i) => (
-              <li key={i}>
+              <li key={i} className={cn(slides.length > 5 && "shrink-0 w-20")}>
                 <button
                   type="button"
                   onClick={() => goTo(i)}
                   aria-label={`View image ${i + 1}`}
                   className={cn(
-                    "block w-full overflow-hidden rounded-lg ring-2 transition-[--tw-ring-color] duration-200",
+                    "block w-full overflow-hidden rounded-xl ring-2 transition-all duration-200 cursor-pointer",
                     active === i
-                      ? "ring-gold-500"
-                      : "ring-transparent hover:ring-plum-300",
+                      ? "ring-gold-500 scale-[1.02] shadow-sm"
+                      : "ring-transparent hover:ring-plum-300 opacity-70 hover:opacity-100",
                   )}
                 >
                   {hasImages ? (

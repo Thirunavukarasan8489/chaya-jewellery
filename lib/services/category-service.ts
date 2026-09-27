@@ -219,3 +219,89 @@ export const getPublicSubCategories = unstable_cache(
   { revalidate: 60, tags: ["subcategories"] },
 );
 
+export interface FeaturedSubCategory {
+  id: string;
+  name: string;
+  slug: string;
+  image?: string;
+  type: "SINGLE" | "COMBO";
+  comboDiscount?: number;
+  categorySlug: string;
+  categoryName: string;
+}
+
+export interface FeaturedCategoryItem {
+  id: string;
+  name: string;
+  slug: string;
+  image?: string;
+  description?: string;
+  subCategories: FeaturedSubCategory[];
+}
+
+export const getFeaturedCategoriesWithSubs = unstable_cache(
+  async (): Promise<FeaturedCategoryItem[]> => {
+    try {
+      await dbConnect();
+      const { SubCategory } = await import("@/lib/models/sub-category");
+
+      const [categoriesDoc, subCategoriesDoc] = await Promise.all([
+        Category.find({ status: "ACTIVE" })
+          .sort({ displayOrder: 1, createdAt: -1 })
+          .lean(),
+        SubCategory.find({ status: "ACTIVE" })
+          .populate("category", "name slug")
+          .sort({ createdAt: -1 })
+          .lean(),
+      ]);
+
+      let categoriesList = categoriesDoc;
+      if (!categoriesList || categoriesList.length === 0) {
+        categoriesList = await Category.find({})
+          .sort({ displayOrder: 1, createdAt: -1 })
+          .lean();
+      }
+
+      // Group active subcategories by parent category ID
+      const subsByCatId = new Map<string, FeaturedSubCategory[]>();
+
+      for (const sub of (subCategoriesDoc || [])) {
+        const catId =
+          (sub.category as any)?._id?.toString() || sub.category?.toString();
+        if (!catId) continue;
+
+        const list = subsByCatId.get(catId) || [];
+        list.push({
+          id: (sub as any)._id.toString(),
+          name: sub.name,
+          slug: sub.slug,
+          image: sub.image || "",
+          type: sub.type || "SINGLE",
+          comboDiscount: sub.comboDiscount || 0,
+          categorySlug: (sub.category as any)?.slug || "",
+          categoryName: (sub.category as any)?.name || "",
+        });
+        subsByCatId.set(catId, list);
+      }
+
+      return (categoriesList || []).map((cat: any) => ({
+        id: cat._id.toString(),
+        name: cat.name,
+        slug: cat.slug,
+        image: cat.image || "",
+        description: cat.description || "",
+        subCategories: subsByCatId.get(cat._id.toString()) || [],
+      }));
+    } catch (error) {
+      console.error(
+        "Error fetching featured categories with subcategories:",
+        error
+      );
+      return [];
+    }
+  },
+  ["featured-categories-with-subs-v1"],
+  { revalidate: 60, tags: ["categories", "subcategories"] }
+);
+
+

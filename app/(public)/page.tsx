@@ -11,14 +11,15 @@ import { Reveal } from "@/components/public/ui/reveal";
 import { SectionHeading } from "@/components/public/ui/section-heading";
 import { getTestimonials } from "@/lib/services/content-service";
 import { getCategories } from "@/lib/services/category-service";
-import { getBestsellers } from "@/lib/services/product-service";
+import { getBestsellers, getComboProducts } from "@/lib/services/product-service";
 import { getHeroSections } from "@/lib/actions/cms.actions";
 import { flattenVariants } from "@/lib/utils";
 
 export default async function HomePage() {
-  const [bestsellers, categories, sectionsRes, testimonials] =
+  const [bestsellers, combos, categories, sectionsRes, testimonials] =
     await Promise.all([
       getBestsellers(),
+      getComboProducts(),
       getCategories(),
       getHeroSections(),
       getTestimonials(),
@@ -59,7 +60,24 @@ export default async function HomePage() {
         </section>
       </Reveal>
 
-      {/* 5. */}
+      {/* 5. Combos & Matching Sets */}
+      {combos.length > 0 && (
+        <Reveal>
+          <section className="shell gutter py-12 sm:py-16 lg:py-20 border-t border-ivory-300/80">
+            <SectionHeading
+              eyebrow="Combos & Matching Sets"
+              title="Curated Combinations, Made to Match"
+              body="Handcrafted matching jewellery pairs and bridal combo sets with exclusive bundle savings."
+              href="/products?type=combo"
+            />
+            <div className="mt-7">
+              <ProductRail products={flattenVariants(combos)} />
+            </div>
+          </section>
+        </Reveal>
+      )}
+
+      {/* 6. Call to Action Banner */}
       <CallToActionBanner />
 
       {/* 5. Crafted for Generations — editorial */}
