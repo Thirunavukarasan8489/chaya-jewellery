@@ -43,7 +43,7 @@ export function ProductPurchaseOptions({
   return (
     <>
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <Rating value={product.rating} count={product.reviewCount} />
+        {/* <Rating value={product.rating} count={product.reviewCount} /> */}
         {status === "IN_STOCK" && (
           <Badge tone="emerald">
             <PackageCheck size={12} /> In stock

@@ -84,11 +84,14 @@ export function ProductCard({
           </Link>
         </h3>
 
-        <Rating
+        <p className="mt-1.5 text-gray-500 capitalize leading-snug font-sans text-xs md:text-sm">
+          {product.categorySlug.replace("-", " ")}
+        </p>
+        {/* <Rating
           value={product.rating}
           count={product.reviewCount}
           className="mt-1.5"
-        />
+        /> */}
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-3">
           <div className="min-w-0">
