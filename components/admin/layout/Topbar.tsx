@@ -71,7 +71,7 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
         {/* Notifications */}
         <button className="relative p-2 text-plum-600 dark:text-plum-300 hover:bg-plum-100 dark:hover:bg-plum-800 rounded-none transition-colors">
           <Bell size={20} />
-          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 border-2 border-white dark:border-plum-900 rounded-none"></span>
+          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 border-2 border-white dark:border-plum-900 rounded-full"></span>
         </button>
 
         {/* Profile */}

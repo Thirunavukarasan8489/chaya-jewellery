@@ -18,7 +18,7 @@ export default async function EditSubCategoryPage({
   if (!subCategoryRes.success || !subCategoryRes.data) {
     notFound();
   }
-  console.log("Subcategory Data fetched for edit:", subCategoryRes.data);
+  // console.log("Subcategory Data fetched for edit:", subCategoryRes.data);
 
   const categories = categoriesRes.success
     ? categoriesRes.data.map((c: any) => ({
