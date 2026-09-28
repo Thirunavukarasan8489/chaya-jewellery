@@ -10,12 +10,8 @@ import {
   recordCashfreeCheckoutResult,
 } from "@/lib/actions/checkout.actions";
 import toast from "react-hot-toast";
-<<<<<<< HEAD
-import { CheckCircle2, ChevronRight, UserCheck } from "lucide-react";
-=======
 import { CheckCircle2, ChevronRight, UserCheck, Zap } from "lucide-react";
 import { GoogleSignInButton } from "@/components/public/auth/google-sign-in-button";
->>>>>>> e198be1be74959ca66fbf02b9a3c17eaad0a0a27
 
 type FormData = {
   firstName: string;
