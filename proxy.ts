@@ -121,6 +121,7 @@ export async function proxy(req: NextRequest) {
           method: "GET",
           headers: { "Content-Type": "application/json" },
           cache: "no-store",
+          signal: AbortSignal.timeout(2000),
         },
       );
       if (!verifyRes.ok) {

@@ -24,6 +24,8 @@ const HeroSectionSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+HeroSectionSchema.index({ isActive: 1, displayOrder: 1 });
+
 export const HeroSection =
   mongoose.models.HeroSection ||
   mongoose.model("HeroSection", HeroSectionSchema);

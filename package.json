@@ -10,6 +10,7 @@
     "format": "prettier --write .",
     "seed": "node scripts/seed.js",
     "seed:catalog": "node scripts/seed-catalog.js",
+    "seed:10-products": "node scripts/seed-10-products.js",
     "migrate:variants": "node scripts/migrate-variants.js",
     "migrate:category-flags": "node scripts/migrate-category-variant-flags.js"
   },

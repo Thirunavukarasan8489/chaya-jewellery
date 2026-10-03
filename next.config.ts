@@ -95,6 +95,11 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
+    optimizePackageImports: [
+      "lucide-react",
+      "date-fns",
+      "@cashfreepayments/cashfree-js",
+    ],
     serverActions: {
       bodySizeLimit: "10mb",
     },

@@ -22,7 +22,8 @@ const SubCategorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-SubCategorySchema.index({ category: 1 });
+SubCategorySchema.index({ category: 1, status: 1 });
+SubCategorySchema.index({ status: 1 });
 SubCategorySchema.index({ type: 1 });
 
 export const SubCategory =

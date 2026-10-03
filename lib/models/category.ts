@@ -13,5 +13,9 @@ const CategorySchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+CategorySchema.index({ status: 1 });
+CategorySchema.index({ status: 1, createdAt: -1 });
+
 export const Category =
   mongoose.models.Category || mongoose.model("Category", CategorySchema);
+
