@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, ArrowRight, BadgeCheck, MessageCircle } from "lucide-react";
 import { buttonStyles } from "@/components/public/ui/button";
+import { CldImage } from "@/components/shared/CldImage";
 import { GemImage } from "@/components/public/ui/gem-image";
 import { cn } from "@/lib/utils";
 
@@ -47,23 +48,25 @@ function HeroSlide({ slide, index }: { slide: Slide; index: number }) {
   return (
     <div className="relative min-h-36 w-full overflow-hidden sm:min-h-110 lg:min-h-130">
       {slide.image ? (
-        <Image
-          src={slide.image}
-          alt={slide.title || "Chaya Jewellery"}
-          fill
-          priority={index === 0}
-          sizes="100vw"
-          // object-contain on mobile: the slide box (390x360-ish, ~1.1:1) is
-          // much taller/narrower than a typical wide banner creative (this
-          // one is 1600x800, 2:1), so object-cover was scaling the image up
-          // to fill the box height and cropping ~46% of its width — cutting
-          // off exactly the corner ribbon/offer text a designer-provided
-          // banner tends to put near the edges. object-cover from lg: up,
-          // where the box is wide enough that cover only trims a little dead
-          // vertical margin instead of live content. bg-plum-950 above fills
-          // the letterbox bars contain leaves on mobile.
-          className="object-contain lg:object-cover"
-        />
+        slide.image.includes("res.cloudinary.com") || slide.image.includes("cloudinary") ? (
+          <CldImage
+            src={slide.image}
+            alt={slide.title || "Chaya Jewellery"}
+            fill
+            priority={index === 0}
+            sizes="100vw"
+            className="object-contain lg:object-cover"
+          />
+        ) : (
+          <Image
+            src={slide.image}
+            alt={slide.title || "Chaya Jewellery"}
+            fill
+            priority={index === 0}
+            sizes="100vw"
+            className="object-contain lg:object-cover"
+          />
+        )
       ) : (
         <GemImage
           color={slide.gemColor}

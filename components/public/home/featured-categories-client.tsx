@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { CldImage } from "@/components/shared/CldImage";
 import { ArrowRight, LayoutGrid } from "lucide-react";
 import { GemImage } from "@/components/public/ui/gem-image";
 import { gemColorFor } from "@/lib/utils";
@@ -117,15 +118,27 @@ export function FeaturedCategoriesClient({ categories }: FeaturedCategoriesClien
                     >
                       <span className="relative block size-24 shrink-0 overflow-hidden rounded-full ring-1 ring-ivory-300 transition-all duration-300 group-hover:shadow-xl group-hover:ring-2 group-hover:ring-gold-400 group-hover:-translate-y-1 sm:size-40 lg:size-44">
                         {sub.image ? (
-                          <Image
-                            src={sub.image}
-                            alt={sub.name}
-                            width={192}
-                            height={192}
-                            priority={i < 4}
-                            loading={i < 4 ? undefined : "lazy"}
-                            className="size-full object-cover transition-transform duration-500 ease-[var(--ease-out-soft)] group-hover:scale-110"
-                          />
+                          sub.image.includes("res.cloudinary.com") || sub.image.includes("cloudinary") ? (
+                            <CldImage
+                              src={sub.image}
+                              alt={sub.name}
+                              width={192}
+                              height={192}
+                              priority={i < 4}
+                              loading={i < 4 ? undefined : "lazy"}
+                              className="size-full object-cover transition-transform duration-500 ease-[var(--ease-out-soft)] group-hover:scale-110"
+                            />
+                          ) : (
+                            <Image
+                              src={sub.image}
+                              alt={sub.name}
+                              width={192}
+                              height={192}
+                              priority={i < 4}
+                              loading={i < 4 ? undefined : "lazy"}
+                              className="size-full object-cover transition-transform duration-500 ease-[var(--ease-out-soft)] group-hover:scale-110"
+                            />
+                          )
                         ) : (
                           <GemImage
                             color={gemColorFor(sub.slug)}
