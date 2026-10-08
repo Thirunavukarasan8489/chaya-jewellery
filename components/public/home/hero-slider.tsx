@@ -45,7 +45,7 @@ function HeroSlide({ slide, index }: { slide: Slide; index: number }) {
   const wholeSlideHref = !hasOverlay ? slide.ctaHref : undefined;
 
   return (
-    <div className="relative min-h-36 w-full overflow-hidden sm:min-h-[440px] lg:min-h-[520px]">
+    <div className="relative min-h-36 w-full overflow-hidden sm:min-h-110 lg:min-h-130">
       {slide.image ? (
         <Image
           src={slide.image}
@@ -75,7 +75,7 @@ function HeroSlide({ slide, index }: { slide: Slide; index: number }) {
       {hasOverlay && (
         <div
           aria-hidden
-          className="absolute inset-0 bg-gradient-to-t from-plum-950/90 via-plum-950/25 to-transparent"
+          className="absolute inset-0 bg-linear-to-t from-plum-950/90 via-plum-950/25 to-transparent"
         />
       )}
 

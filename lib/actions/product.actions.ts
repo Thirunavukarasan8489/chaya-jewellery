@@ -35,12 +35,12 @@ function generateShortname(name: string, length = 3) {
 
 // Generate encoded price code
 function encodePrice(price: number): string {
-  if (price === undefined || price === null) return "";
+  if (price === undefined || price === null || isNaN(price)) return "";
   const map: Record<string, string> = {
-    '0': 'q', '1': 'm', '2': 'a', '3': 'z', '4': 'r', 
-    '5': 't', '6': 'k', '7': 'p', '8': 'l', '9': 'x'
+    '0': 'S', '1': 'P', '2': 'M', '3': 'Y', '4': 'C', 
+    '5': 'H', '6': 'A', '7': 'K', '8': 'B', '9': 'N'
   };
-  return price.toString().split('').map(char => map[char] || char).join('');
+  return Math.round(price).toString().split('').map(char => map[char] || char).join('');
 }
 
 // Generate guaranteed unique slug from product name

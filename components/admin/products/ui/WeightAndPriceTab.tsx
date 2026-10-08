@@ -7,16 +7,16 @@ import { AdminInput } from "@/components/admin/ui/AdminInput";
 import { ProductFormValues } from "../ProductForm";
 
 const PRICE_CODE_MAP: Record<string, string> = {
-  "0": "q",
-  "1": "m",
-  "2": "a",
-  "3": "z",
-  "4": "r",
-  "5": "t",
-  "6": "k",
-  "7": "p",
-  "8": "l",
-  "9": "x",
+  "0": "S",
+  "1": "P",
+  "2": "M",
+  "3": "Y",
+  "4": "C",
+  "5": "H",
+  "6": "A",
+  "7": "K",
+  "8": "B",
+  "9": "N",
 };
 
 function generatePriceCode(price: number): string {
