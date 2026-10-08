@@ -8,6 +8,7 @@ import { GemImage } from "@/components/public/ui/gem-image";
 import { buttonStyles } from "@/components/public/ui/button";
 import { formatINR } from "@/lib/utils";
 import Image from "next/image";
+import { CldImage } from "@/components/shared/CldImage";
 
 /**
  * Confirmation after "add to cart". Sits above the mobile tab bar so it never
@@ -30,13 +31,23 @@ export function CartToast() {
     >
       <div className="flex items-center gap-3 rounded-2xl border border-plum-900/10 bg-white p-3 shadow-lg">
         {lastAdded.image ? (
-          <Image
-            src={lastAdded.image}
-            alt={lastAdded.name}
-            width={56}
-            height={56}
-            className="size-14 shrink-0 rounded-xl object-cover"
-          />
+          lastAdded.image.includes("res.cloudinary.com") || lastAdded.image.includes("cloudinary") ? (
+            <CldImage
+              src={lastAdded.image}
+              alt={lastAdded.name}
+              width={56}
+              height={56}
+              className="size-14 shrink-0 rounded-xl object-cover"
+            />
+          ) : (
+            <Image
+              src={lastAdded.image}
+              alt={lastAdded.name}
+              width={56}
+              height={56}
+              className="size-14 shrink-0 rounded-xl object-cover"
+            />
+          )
         ) : (
           <GemImage
             color={lastAdded.gemColor}

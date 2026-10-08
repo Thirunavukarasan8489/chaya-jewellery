@@ -8,8 +8,10 @@ import { buttonStyles } from "@/components/public/ui/button";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { validateCart } from "@/lib/actions/cart.actions";
-import { formatINR } from "@/lib/utils";
+import { formatINR, gemColorFor } from "@/lib/utils";
 import Image from "next/image";
+import { CldImage } from "@/components/shared/CldImage";
+import { GemImage } from "@/components/public/ui/gem-image";
 
 export function CartView({ settings }: { settings: any }) {
   const { lines, hydrated, subtotal, setQuantity, remove } = useCart();
@@ -73,19 +75,33 @@ export function CartView({ settings }: { settings: any }) {
             >
               <Link
                 href={`/products/${line.slug}`}
-                className="shrink-0"
+                className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-ivory-100 sm:size-28"
                 aria-label={line.name}
               >
-                {/* <GemImage
-                color={line.gemColor}
-                className="size-20 rounded-xl sm:size-28"
-              /> */}
-                <Image
-                  src={line.image || ""}
-                  alt={line.name}
-                  width={110}
-                  height={110}
-                />
+                {line.image ? (
+                  line.image.includes("res.cloudinary.com") || line.image.includes("cloudinary") ? (
+                    <CldImage
+                      src={line.image}
+                      alt={line.name}
+                      width={112}
+                      height={112}
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    <Image
+                      src={line.image}
+                      alt={line.name}
+                      width={112}
+                      height={112}
+                      className="size-full object-cover"
+                    />
+                  )
+                ) : (
+                  <GemImage
+                    color={line.gemColor || gemColorFor(line.slug || line.name)}
+                    className="size-full"
+                  />
+                )}
               </Link>
 
               <div className="flex min-w-0 flex-1 flex-col">

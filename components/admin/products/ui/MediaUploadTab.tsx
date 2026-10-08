@@ -74,6 +74,7 @@ export function MediaUploadTab({
                 src={coverFile.previewUrl}
                 alt="Cover Preview"
                 fill
+                unoptimized
                 sizes="(max-width: 768px) 100vw, 33vw"
                 className="object-cover"
               />
@@ -144,6 +145,7 @@ export function MediaUploadTab({
                     src={item.previewUrl}
                     alt={`Gallery Preview ${idx + 1}`}
                     fill
+                    unoptimized
                     sizes="(max-width: 768px) 50vw, 20vw"
                     className="object-cover"
                   />
