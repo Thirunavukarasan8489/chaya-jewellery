@@ -101,6 +101,7 @@ export function ProductGallery({
                 height={800}
                 priority={i === 0}
                 loading={i === 0 ? undefined : "lazy"}
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
                 className="aspect-square w-full sm:rounded-2xl object-cover"
               />
             ) : (

@@ -50,6 +50,7 @@ export function ProductCard({
               height={500}
               priority={priority}
               loading={priority ? undefined : "lazy"}
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
             />
 
@@ -61,6 +62,7 @@ export function ProductCard({
                 width={400}
                 height={500}
                 loading="lazy"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 className="absolute inset-0 h-full w-full object-cover opacity-0 transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-105"
               />
             )}

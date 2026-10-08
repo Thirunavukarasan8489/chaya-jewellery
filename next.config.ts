@@ -77,8 +77,10 @@ const nextConfig: NextConfig = {
   // Compress responses with gzip
   compress: true,
 
-  // Configure remote patterns for next/image
+  // Configure remote patterns and modern formats for next/image
   images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 2592000, // 30 days
     remotePatterns: [
       {
         protocol: "https",
@@ -99,6 +101,9 @@ const nextConfig: NextConfig = {
       "lucide-react",
       "date-fns",
       "@cashfreepayments/cashfree-js",
+      "clsx",
+      "tailwind-merge",
+      "react-hot-toast",
     ],
     serverActions: {
       bodySizeLimit: "10mb",

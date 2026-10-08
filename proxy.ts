@@ -119,7 +119,10 @@ export async function proxy(req: NextRequest) {
         `${req.nextUrl.origin}/api/auth/verify?email=${encodeURIComponent(token.email as string)}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-auth": getAuthSecret(),
+          },
           cache: "no-store",
           signal: AbortSignal.timeout(2000),
         },

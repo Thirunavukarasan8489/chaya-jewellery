@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import { User } from "@/lib/models/user";
+import { getAuthSecret } from "@/lib/env";
 
 export async function GET(request: Request) {
   try {
+    const authHeader = request.headers.get("x-internal-auth");
+    if (!authHeader || authHeader !== getAuthSecret()) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const email = searchParams.get("email");
 
